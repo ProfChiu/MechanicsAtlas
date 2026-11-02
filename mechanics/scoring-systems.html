@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Scoring Systems</title>
+<style>
+:root{--bg:#161219;--panel:#261f2a;--panel2:#302834;--ink:#f8f2fa;--muted:#c7b8cd;--line:rgba(240,225,250,.14);
+  --pink:#e93d82;--gold:#ffcc4d;--ok:#6ee08a;--red:#ff6b6b;--ada:#5ba8ff;--bo:#ff9d4a;--cy:#5fd3a0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#34233c 0%,#161219 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#chartC{left:40px;top:134px;width:700px;height:476px;padding:16px 20px}
+#chart{position:absolute;left:20px;top:46px}
+#legend{position:absolute;right:22px;top:14px;display:flex;gap:16px;font-size:19px;font-weight:800}
+#legend i{display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:6px;vertical-align:-2px}
+.ax{stroke:#6b5a72;stroke-width:2}.grid{stroke:rgba(255,255,255,.06)}
+.tick{font:800 17px "Nunito",sans-serif;fill:var(--muted);text-anchor:middle}
+.ln{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.ln.draw{stroke-dasharray:1400;animation:dl 2s ease both}
+@keyframes dl{from{stroke-dashoffset:1400}to{stroke-dashoffset:0}}
+.jump{stroke-width:6;stroke-dasharray:6 6}
+.band{opacity:.22}
+.val{font:900 19px "Nunito",sans-serif;paint-order:stroke;stroke:#161219;stroke-width:5px}
+.q{font:700 30px "Fredoka",sans-serif;fill:var(--gold);text-anchor:middle;paint-order:stroke;stroke:#161219;stroke-width:5px}
+.mark{stroke:var(--pink);stroke-width:3;stroke-dasharray:6 5}
+.markt{font:900 18px "Nunito",sans-serif;fill:var(--pink);text-anchor:middle;paint-order:stroke;stroke:#161219;stroke-width:5px}
+.fcol{fill:rgba(233,61,130,.08)}
+
+#info{left:760px;top:134px;width:480px;height:476px;padding:20px 24px;display:flex;flex-direction:column}
+#sys{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--pink)}
+.rule{padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:21px;line-height:1.35;margin-top:10px}
+.rule b{color:var(--gold)}
+.list{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.list div{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;padding:6px 12px;border-radius:12px;background:rgba(0,0,0,.2)}
+.list b{margin-left:auto;font-family:"Fredoka",sans-serif;font-size:24px;color:var(--gold)}
+.list .in{animation:fadeUp .45s ease both;animation-delay:var(--d)}
+#infoNote{margin-top:auto;font-size:21px;line-height:1.4;border-top:1px solid var(--line);padding-top:12px}
+#infoNote b{color:var(--gold)}#infoNote .g{color:var(--ok)}#infoNote .r{color:#ff9d9d}
+#note{left:40px;right:40px;top:626px;height:40px;font-size:21px;text-align:center;color:var(--muted)}
+
+#cmp{left:40px;right:40px;top:134px;height:492px;padding:24px 32px}
+#cmp h3{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--gold)}
+#cmp table{width:100%;border-collapse:collapse;font-size:21px}
+#cmp th{text-align:left;font-size:17px;color:var(--muted);padding:6px 10px;border-bottom:2px solid var(--line)}
+#cmp td{padding:14px 10px;border-bottom:1px solid var(--line);line-height:1.3}
+#cmp td.s{font-family:"Fredoka",sans-serif;font-size:23px;font-weight:600;color:var(--pink);white-space:nowrap}
+#cmp .w{font-weight:900}
+#cmp p{font-size:21px;line-height:1.4;margin:18px 0 0}
+#cmp p b{color:var(--gold)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:130px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--cy),var(--pink),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:34px;font-weight:700}
+#title .row{display:flex;gap:18px;margin:30px 0 14px;align-items:flex-end}
+#title .row i{width:56px;border-radius:10px 10px 0 0;animation:grow 2.4s ease-in-out infinite}
+#title .row i:nth-child(2){animation-delay:.3s}#title .row i:nth-child(3){animation-delay:.6s}
+@keyframes grow{50%{transform:scaleY(.8)}}
+#title .row i{transform-origin:bottom}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(13,10,15,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(240,225,250,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Scoring Systems</div>
+    <h2>When do players find out who is winning?</h2>
+    <div class="row"><i style="height:90px;background:var(--ada)"></i><i style="height:120px;background:var(--bo)"></i><i style="height:70px;background:var(--cy)"></i></div>
+    <div class="press">Press SPACE to keep score</div>
+  </div>
+
+  <div id="chartC" class="panel card"><div class="lbl" id="chartLbl">SCORE BY ROUND</div>
+    <div id="legend"><span><i style="background:var(--ada)"></i>Ada</span><span><i style="background:var(--bo)"></i>Bo</span><span><i style="background:var(--cy)"></i>Cy</span></div>
+    <svg id="chart" width="660" height="410"></svg></div>
+  <div id="info" class="panel card"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="cmp" class="panel card">
+    <h3>Same game, three scoring systems</h3>
+    <table>
+      <tr><th>SYSTEM</th><th>WINNER</th><th>WINNER CLEAR FROM</th><th>FEEL</th></tr>
+      <tr><td class="s">Running score</td><td class="w" style="color:var(--ada)">Ada, 21</td><td>Round 1</td><td>Clear and simple; trailing players lose hope</td></tr>
+      <tr><td class="s">End-game bonuses</td><td class="w" style="color:var(--bo)">Bo, 25</td><td>Final scoring (if you track it)</td><td>Hope stays alive; rewards long plans</td></tr>
+      <tr><td class="s">Hidden goals</td><td class="w" style="color:var(--cy)">Cy, 25</td><td>The reveal</td><td>Suspense to the end; harder to read the table</td></tr>
+    </table>
+    <p>Three different winners from the same six rounds of play. Scoring does not just count the game; it <b>decides what players chase</b>, and how long everyone stays hopeful.</p>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Running scores show the leader early.</b> Easy to follow, but players far behind can stop caring halfway through.</li>
+      <li><b>End-game bonuses keep hope alive.</b> Bo trailed all game and won on bonuses. Players must be able to track them, or the ending feels random.</li>
+      <li><b>Hidden scoring keeps the table guessing.</b> Nobody knew who led until the reveal. Great for suspense, harder for leaders to be targeted.</li>
+    </ol>
+    <div class="see">You'll see this in: Ticket to Ride, Carcassonne, 7 Wonders, Splendor.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const RUN={A:[0,4,8,12,15,18,21],B:[0,2,5,8,12,15,19],C:[0,3,6,8,11,14,17]};
+const BON={A:0,B:6,C:5},HID={A:2,B:3,C:8};
+const C={A:'var(--ada)',B:'var(--bo)',C:'var(--cy)'},NM={A:'Ada',B:'Bo',C:'Cy'};
+const X=r=>56+r*71,Y=v=>360-v*12;
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',upto:0,from:0,final:null,bands:false,clear:null,info:'',infoNote:'',note:'',list:null}}
+function render(anim){
+  ['title','chartC','info','note','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='cmp'||st.view==='end'){$('cmp').classList.add('on');if(st.view==='end')$('end').classList.add('on');return}
+  ['chartC','info','note'].forEach(id=>$(id).classList.add('on'));
+  let h=`<rect class="fcol" x="${X(6)+30}" y="${Y(28)}" width="${X(7)-X(6)+10}" height="${Y(0)-Y(28)}" rx="8"/>`;
+  for(let v=0;v<=28;v+=4)h+=`<line class="grid" x1="${X(0)}" x2="${X(7)+30}" y1="${Y(v)}" y2="${Y(v)}"/><text class="tick" x="26" y="${Y(v)+6}">${v}</text>`;
+  h+=`<line class="ax" x1="${X(0)}" x2="${X(7)+30}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  for(let r=1;r<=6;r++)h+=`<text class="tick" x="${X(r)}" y="${Y(0)+30}">R${r}</text>`;
+  h+=`<text class="tick" x="${X(7)}" y="${Y(0)+30}">final</text>`;
+  if(st.clear)h+=`<line class="mark" x1="${X(st.clear)}" x2="${X(st.clear)}" y1="${Y(27)}" y2="${Y(0)}"/><text class="markt" x="${X(st.clear)}" y="${Y(27)-6}">leader clear</text>`;
+  for(const k of ['A','B','C']){
+    const a=RUN[k].slice(0,st.upto+1);
+    if(st.bands&&st.upto>0){h+=`<path class="band" fill="${C[k]}" d="M${a.map((v,r)=>X(r)+','+Y(v)).join('L')}L${a.slice().reverse().map((v,i)=>X(a.length-1-i)+','+Y(v+(a.length-1-i?8:0))).join('L')}Z"/>`}
+    if(st.upto>0)h+=`<path class="ln ${anim&&st.upto>st.from?'draw':''}" stroke="${C[k]}" d="${a.map((v,r)=>(r?'L':'M')+X(r)+','+Y(v)).join('')}"/>`;
+    if(st.final){const add=st.final==='bon'?BON[k]:HID[k],f=RUN[k][6]+add;
+      h+=`<line class="jump" stroke="${C[k]}" x1="${X(6)}" y1="${Y(RUN[k][6])}" x2="${X(7)}" y2="${Y(f)}"/><circle cx="${X(7)}" cy="${Y(f)}" r="9" fill="${C[k]}"/>`;
+      }
+    else if(st.upto>0&&!st.bands){const v=a[a.length-1];h+=`<text class="val" x="${X(st.upto)+12}" y="${Y(v)+(k==='A'?-8:k==='B'?18:6)}" fill="${C[k]}">${v}</text>`}
+  }
+  if(st.final){const fs=['A','B','C'].map(k=>[k,RUN[k][6]+(st.final==='bon'?BON[k]:HID[k])]).sort((p,q)=>q[1]-p[1]);
+    let last=-99;fs.forEach(([k,f])=>{let y=Y(f)+6;if(y<last+22)y=last+22;last=y;h+=`<text class="val" x="${X(7)+18}" y="${y}" fill="${C[k]}">${NM[k]} ${f}</text>`})}
+  if(st.bands&&!st.final)h+=`<text class="q" x="${X(7)}" y="${Y(22)}">?</text>`;
+  $('chart').innerHTML=h;
+  $('info').innerHTML=st.info+(st.list?`<div class="list">${st.list.map(([k,t,v],i)=>`<div class="${anim?'in':''}" style="--d:${i*.35}s;color:${C[k]}">${t}<b>${v}</b></div>`).join('')}</div>`:'')+`<div id="infoNote">${st.infoNote}</div>`;
+  $('note').innerHTML=st.note;
+}
+const SY=(n,r)=>`<div id="sys">${n}</div><div class="rule">${r}</div>`;
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='chart';st.info=SY('Six rounds of play','Three players, the same moves, the same points earned each round.');
+   st.infoNote='We will score this one game <b>three different ways</b> and watch when the winner becomes clear.';st.note='The shaded column on the right is final scoring.';
+   setHeader('One game, three ways to keep score','The play never changes. Only the scoring does.')},
+ ()=>{st.upto=3;st.from=0;st.info=SY('Running score','Points go on the track the moment they are earned. Everyone can see them.');
+   st.infoNote='Ada leads from round 1. Everyone can see exactly who is ahead and by how much.';
+   setHeader('System 1: a running score','All points are scored during play.')},
+ ()=>{st.upto=6;st.from=3;st.clear=1;
+   st.infoNote='Ada never loses the lead and wins with <b>21</b>. Bo and Cy knew they were behind all game. <span class="r">Trailing players may stop trying.</span>';
+   setHeader('Running score: the winner was clear early','Ada led every single round.')},
+ ()=>{st.clear=null;st.final='bon';st.info=SY('End-game bonuses','Some points are only scored at the end: longest route, most sets.');
+   st.list=[['B','Bo: longest route','+6'],['C','Cy: most sets','+5'],['A','Ada: no bonus','+0']];
+   st.infoNote='Bo jumps to <b>25</b> and wins. Cy passes Ada too. <span class="g">The leader flipped at the very end.</span>';
+   setHeader('System 2: end-game bonuses','Same play, but some points wait until the end.')},
+ ()=>{st.infoNote='Bonuses keep trailing players hopeful and reward long plans. But players need to <b>track them</b> during play, or the ending feels like a surprise from nowhere.';
+   setHeader('Bonuses keep hope alive','Bo spent the game building the longest route, and it paid off at the end.')},
+ ()=>{st.final=null;st.list=null;st.bands=true;st.info=SY('Hidden goals','Each player has a secret goal card worth 0 to 8 points, revealed at the end.');
+   st.infoNote='The shaded bands show what each player <b>might</b> have. They overlap all game. Nobody knows who is really winning.';
+   setHeader('System 3: hidden goals','Part of every score is secret.')},
+ ()=>{st.final='hid';
+   st.list=[['C','Cy: secret goal','+8'],['B','Bo: secret goal','+3'],['A','Ada: secret goal','+2']];
+   st.infoNote='Cy, last on the track all game, reveals a full goal and wins with <b>25</b>. <span class="g">Suspense lasted to the final card.</span>';
+   setHeader('Hidden goals: the reveal','Secret points come out at the end.')},
+ ()=>{st.view='cmp';setHeader('Three systems, three winners','The same six rounds of play.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Scoring decides when the game is decided.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

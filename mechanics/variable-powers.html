@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Variable Player Powers</title>
+<style>
+:root{--bg:#161319;--panel:#262029;--panel2:#302833;--ink:#f7f2f9;--muted:#c6b8cc;--line:rgba(240,225,250,.14);
+  --pink:#e93d82;--gold:#ffcc4d;--ok:#6ee08a;--red:#ff6b6b;--G:#6cc24a;--T:#ffc24a;--B:#5ba8ff;
+  --ada:#ff9d4a;--bo:#e070ff;--cy:#5fd3a0;--dee:#5ba8ff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#33263b 0%,#161319 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+.ch{width:52px;height:52px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-family:"Fredoka",sans-serif;font-size:24px;font-weight:700;color:#141018;flex-shrink:0;
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.22),0 4px 8px rgba(0,0,0,.4);position:relative}
+.ch.G{background:var(--G)}.ch.T{background:var(--T)}.ch.B{background:var(--B)}
+.ch.e{background:transparent;border:2px dashed rgba(240,225,250,.16);box-shadow:none}
+.ch.in{animation:pop .4s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d)}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+.ch .bon{position:absolute;top:-14px;right:-12px;font-family:"Nunito",sans-serif;font-size:14px;font-weight:900;padding:1px 6px;border-radius:8px;background:var(--gold);color:#3a2600}
+
+#rules{left:40px;right:40px;top:132px;height:100px;padding:12px 18px;display:flex;align-items:center;gap:14px}
+#rules .a{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:800;white-space:nowrap}
+#rules .a .ch{width:40px;height:40px;font-size:20px}
+#rules .sep{width:1px;align-self:stretch;background:var(--line)}
+#rules .base{margin-left:auto;display:flex;align-items:center;gap:4px}
+#rules .base .ch{width:26px;height:26px;font-size:14px;border-radius:7px}
+#rules .base b{font-family:"Fredoka",sans-serif;font-size:24px;color:var(--gold);margin-left:8px;white-space:nowrap}
+
+#rows{left:40px;right:40px;top:246px;height:358px;display:flex;flex-direction:column;gap:10px}
+.row{flex:1;display:flex;align-items:center;gap:16px;padding:0 18px;transition:box-shadow .4s,border-color .4s,opacity .4s}
+.row .who{width:330px;display:flex;flex-direction:column}
+.row .nm{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;color:var(--c)}
+.row .pw{font-size:19px;line-height:1.25}
+.row .pw s{color:var(--muted)}
+.row .tl{display:flex;gap:8px}
+.row .n{margin-left:auto;text-align:center;font-size:16px;font-weight:800;color:var(--muted);width:90px}
+.row .n b{display:block;font-family:"Fredoka",sans-serif;font-size:36px;color:var(--gold);line-height:1}
+.row.bad{border-color:var(--red);box-shadow:0 0 0 3px var(--red),0 0 24px rgba(255,107,107,.4),0 12px 32px rgba(0,0,0,.45)}
+.row.bad .n b{color:var(--red)}
+.row.good{border-color:var(--ok);box-shadow:0 0 0 3px var(--ok),0 0 24px rgba(110,224,138,.35),0 12px 32px rgba(0,0,0,.45)}
+.row.dim{opacity:.45}
+#note{left:40px;right:40px;top:618px;height:50px;font-size:22px;line-height:1.35;text-align:center}
+#note b{color:var(--gold)}#note .r{color:#ff9d9d}#note .g{color:var(--ok)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:116px;font-weight:700;line-height:1;text-align:center;
+  background:linear-gradient(90deg,var(--ada),var(--pink),var(--dee));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:34px;font-weight:700}
+#title .row2{display:flex;gap:18px;margin:30px 0 14px}
+#title .pc{width:120px;height:150px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:"Fredoka",sans-serif;font-size:56px;font-weight:700;color:#141018;
+  box-shadow:0 10px 20px rgba(0,0,0,.45);animation:bob 2.4s ease-in-out infinite}
+#title .pc:nth-child(2){animation-delay:.2s}#title .pc:nth-child(3){animation-delay:.4s}#title .pc:nth-child(4){animation-delay:.6s}
+@keyframes bob{50%{transform:translateY(-12px) rotate(3deg)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(13,10,15,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(240,225,250,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Variable Player<br>Powers</div>
+    <h2>Same rules for all. One ability that is only yours.</h2>
+    <div class="row2"><div class="pc" style="background:var(--ada)">A</div><div class="pc" style="background:var(--bo)">B</div><div class="pc" style="background:var(--cy)">C</div><div class="pc" style="background:var(--dee)">D</div></div>
+    <div class="press">Press SPACE to deal the powers</div>
+  </div>
+
+  <div id="rules" class="panel card">
+    <div class="a"><span class="ch G">G</span>Gather: +2 wood</div>
+    <div class="a"><span class="ch T">T</span>Trade: 2 wood → 1 gold</div>
+    <div class="a"><span class="ch B">B</span>Build: 3 gold → house</div>
+    <div class="sep"></div>
+    <div class="base" id="base"></div>
+  </div>
+  <div id="rows" class="panel"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>One power, a new plan.</b> Each ability changed which moves were best, so every seat played its own game under the same rules.</li>
+      <li><b>Test every power against the base game.</b> Counting turns to a goal showed one power far ahead of the others.</li>
+      <li><b>Fix the outlier, keep the flavour.</b> A small limit brought the Merchant back in line without taking away what makes it fun.</li>
+    </ol>
+    <div class="see">You'll see this in: Cosmic Encounter, Pandemic, Root, Small World.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const P={
+ A:{nm:'Ada, Lumberjack',c:'var(--ada)',pw:'Gather gives <b>3</b> wood instead of 2.',plan:'GGTTTB'},
+ B:{nm:'Bo, Merchant',c:'var(--bo)',pw:'Trade wood for gold at <b>1 : 1</b>, any amount.',plan:'GGTB',fix:'Trade at 1 : 1, but <b>only 2 wood</b> per action.',fplan:'GGTTB'},
+ C:{nm:'Cy, Architect',c:'var(--cy)',pw:'Building costs <b>2</b> gold instead of 3.',plan:'GGTTB'},
+ D:{nm:'Dee, Collector',c:'var(--dee)',pw:'Gain <b>1 gold</b> whenever another player builds.',plan:'GGGTTB',bon:{3:'+1',4:'+1'}}
+};
+const BASE='GGGTTTB';
+const ch=(a,cls='',st='')=>`<span class="ch ${a} ${cls}" style="${st}">${a}</span>`;
+$('base').innerHTML='<span style="font-size:19px;font-weight:800;margin-right:6px;white-space:nowrap">No power:</span>'+BASE.split('').map(a=>ch(a)).join('')+'<b>7 turns</b>';
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',rows:false,shown:[],fresh:null,bad:null,good:null,fixed:false,focus:null,note:''}}
+function render(anim){
+  ['title','rules','rows','note','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  ['rules','note'].forEach(id=>$(id).classList.add('on'));
+  if(st.view==='end')$('end').classList.add('on');
+  if(st.rows){$('rows').classList.add('on');
+    $('rows').innerHTML=['A','B','C','D'].map(k=>{const p=P[k],sh=st.shown.includes(k);
+      const plan=(k==='B'&&st.fixed)?p.fplan:p.plan,fresh=anim&&st.fresh===k;
+      const tl=Array.from({length:7},(_,i)=>{const a=sh?plan[i]:null;
+        if(!a)return '<span class="ch e"></span>';
+        const bon=k==='D'&&p.bon[i]?`<span class="bon">${p.bon[i]}</span>`:'';
+        return `<span class="ch ${a} ${fresh?'in':''}" style="--d:${i*.18}s">${a}${bon}</span>`}).join('');
+      const pw=(k==='B'&&st.fixed)?`<s>Any amount.</s> ${p.fix}`:p.pw;
+      const cls=[st.bad===k?'bad':'',st.good===k?'good':'',st.focus&&st.focus!==k?'dim':''].join(' ');
+      return `<div class="row card ${cls}" style="--c:${p.c}"><div class="who"><span class="nm">${p.nm}</span><span class="pw">${pw}</span></div>
+        <div class="tl">${tl}</div><div class="n">${sh?`<b>${plan.length}</b>turns`:''}</div></div>`}).join('');
+  }
+  $('note').innerHTML=st.note;
+}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='play';
+   st.note='Three actions, one per turn. A house is worth 5 points. With no power, the fastest house takes <b>7 turns</b>: gather 3 times, trade 3 times, build.';
+   setHeader('The base game','Everyone plays by the same rules: gather wood, trade it for gold, build a house.')},
+ ()=>{st.rows=true;
+   st.note='Each player gets one card that bends one rule, just for them.';
+   setHeader('Four players, four powers','Same rules, plus one ability each.')},
+ ()=>{st.shown=['A'];st.fresh='A';st.focus='A';
+   st.note='Two gathers already give 6 wood. Ada skips a gather: <b>6 turns</b>. Ada also ends up with spare wood to sell to others.';
+   setHeader('Ada, the Lumberjack','More wood per gather changes where Ada spends turns.')},
+ ()=>{st.shown=['A','B'];st.fresh='B';st.focus='B';
+   st.note='4 wood becomes 4 gold in one trade. A house in <b>4 turns</b>, almost twice as fast as the base game. <span class="r">Is that fair?</span>';
+   setHeader('Bo, the Merchant','Trading at 1 : 1 skips most of the trade turns.')},
+ ()=>{st.shown=['A','B','C'];st.fresh='C';st.focus='C';
+   st.note='Needing only 2 gold means only 4 wood and 2 trades: <b>5 turns</b>. Cy also wants to build often, since each house is cheaper.';
+   setHeader('Cy, the Architect','A cheaper build changes how much Cy needs to collect.')},
+ ()=>{st.shown=['A','B','C','D'];st.fresh='D';st.focus='D';
+   st.note='Dee follows the base plan but collects gold when Bo and Cy build (<b>+1</b> markers). <b>6 turns</b>, and the speed depends on the other players.';
+   setHeader('Dee, the Collector','A power that reacts to everyone else.')},
+ ()=>{st.focus=null;st.bad='B';
+   st.note='Base 7. Ada 6, Cy 5, Dee 6. <span class="r">Bo 4.</span> One power is far ahead of the others. Bo would win most games.';
+   setHeader('Balance check: turns to the first house','Compare every power to the base game and to each other.')},
+ ()=>{st.fixed=true;st.bad=null;st.good='B';st.fresh='B';
+   st.note='Now Bo trades 2 wood per action: <b>5 turns</b>. Every power sits between 5 and 6. <span class="g">Still special, no longer broken.</span>';
+   setHeader('The fix: one small limit','Bo keeps the 1 : 1 rate, but can only trade 2 wood per action.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Bend one rule per player, then test the bends.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

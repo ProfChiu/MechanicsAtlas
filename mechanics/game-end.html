@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Game End Triggers</title>
+<style>
+:root{--bg:#17121a;--panel:#271f2b;--panel2:#312836;--ink:#f8f2fa;--muted:#c7b8cd;--line:rgba(240,225,250,.14);
+  --pink:#e93d82;--gold:#ffcc4d;--ok:#6ee08a;--red:#ff6b6b;--ada:#5ba8ff;--bo:#ff9d4a;--cy:#5fd3a0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#35233d 0%,#17121a 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#chartC{left:40px;top:134px;width:700px;height:476px;padding:16px 20px}
+#chart{position:absolute;left:20px;top:46px}
+#legend{position:absolute;right:22px;top:14px;display:flex;gap:16px;font-size:19px;font-weight:800}
+#legend i{display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:6px;vertical-align:-2px}
+.ax{stroke:#6b5a72;stroke-width:2}.grid{stroke:rgba(255,255,255,.06)}
+.tick{font:800 17px "Nunito",sans-serif;fill:var(--muted);text-anchor:middle}
+.ln{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.ln.draw{stroke-dasharray:1400;animation:dl 2s ease both}
+@keyframes dl{from{stroke-dashoffset:1400}to{stroke-dashoffset:0}}
+.ln.ghost{stroke-dasharray:8 8;opacity:.6;stroke-width:4}
+.val{font:900 19px "Nunito",sans-serif;paint-order:stroke;stroke:#17121a;stroke-width:5px}
+.endl{stroke:var(--pink);stroke-width:4}
+.endt{font:900 19px "Nunito",sans-serif;fill:var(--pink);text-anchor:middle;paint-order:stroke;stroke:#17121a;stroke-width:5px}
+.tgt{stroke:var(--gold);stroke-width:3;stroke-dasharray:10 6}
+.tgtt{font:900 18px "Nunito",sans-serif;fill:var(--gold)}
+
+#info{left:760px;top:134px;width:480px;height:476px;padding:20px 24px;display:flex;flex-direction:column}
+#trig{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--pink)}
+.rule{padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:21px;line-height:1.35;margin-top:10px}
+.rule b{color:var(--gold)}
+#supply{margin-top:14px}
+#supply .bar{height:30px;border-radius:10px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;margin-top:6px}
+#supply .bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#b07cff,var(--pink));transition:width 1.2s ease}
+#supply .bar span{position:absolute;right:10px;top:3px;font-weight:900;font-size:18px}
+#supply .takes{display:flex;gap:10px;margin-top:10px;font-size:19px;font-weight:800}
+#supply .takes span{padding:4px 10px;border-radius:10px;background:rgba(255,255,255,.07)}
+#infoNote{margin-top:auto;font-size:21px;line-height:1.4;border-top:1px solid var(--line);padding-top:12px}
+#infoNote b{color:var(--gold)}#infoNote .g{color:var(--ok)}#infoNote .r{color:#ff9d9d}
+#note{left:40px;right:40px;top:626px;height:40px;font-size:21px;text-align:center;color:var(--muted)}
+
+#cmp{left:40px;right:40px;top:134px;height:492px;padding:24px 32px}
+#cmp h3{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--gold)}
+#cmp table{width:100%;border-collapse:collapse;font-size:21px}
+#cmp th{text-align:left;font-size:17px;color:var(--muted);padding:6px 10px;border-bottom:2px solid var(--line)}
+#cmp td{padding:14px 10px;border-bottom:1px solid var(--line);line-height:1.3}
+#cmp td.s{font-family:"Fredoka",sans-serif;font-size:23px;font-weight:600;color:var(--pink);white-space:nowrap}
+#cmp p{font-size:21px;line-height:1.4;margin:18px 0 0}
+#cmp p b{color:var(--gold)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:122px;font-weight:700;line-height:1;text-align:center;
+  background:linear-gradient(90deg,var(--gold),var(--pink),var(--ada));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:34px;font-weight:700}
+#title .flag{margin:30px 0 14px;width:120px;height:110px;position:relative}
+#title .flag i{position:absolute;left:20px;top:0;width:8px;height:110px;background:#ddd;border-radius:4px}
+#title .flag b{position:absolute;left:28px;top:4px;width:80px;height:54px;background:repeating-conic-gradient(#fff 0 25%,#222 0 50%) 0 0/27px 27px;animation:wave 1.4s ease-in-out infinite;transform-origin:left center}
+@keyframes wave{50%{transform:skewY(6deg) scaleX(.94)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(13,10,15,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(240,225,250,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Game End Triggers</div>
+    <h2>How a game ends changes how it is played.</h2>
+    <div class="flag"><i></i><b></b></div>
+    <div class="press">Press SPACE to start</div>
+  </div>
+
+  <div id="chartC" class="panel card"><div class="lbl" id="chartLbl">SCORE BY ROUND</div>
+    <div id="legend"><span><i style="background:var(--ada)"></i>Ada</span><span><i style="background:var(--bo)"></i>Bo</span><span><i style="background:var(--cy)"></i>Cy</span></div>
+    <svg id="chart" width="660" height="410"></svg></div>
+  <div id="info" class="panel card"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="cmp" class="panel card">
+    <h3>Three endings compared</h3>
+    <table>
+      <tr><th>TRIGGER</th><th>WHO CONTROLS THE END?</th><th>HOW IT FEELS</th><th>WATCH OUT</th></tr>
+      <tr><td class="s">Fixed rounds</td><td>Nobody: everyone knows it</td><td>Planning toward a big final turn</td><td>Last turns can feel scripted</td></tr>
+      <tr><td class="s">Target score</td><td>The leader</td><td>A sprint; others race to block</td><td>Slow plans never pay off</td></tr>
+      <tr><td class="s">Supply runs out</td><td>Everyone, a little</td><td>A tug of war over the clock</td><td>Stalling can drag the game out</td></tr>
+    </table>
+    <p>Many games add one more rule: <b>finish the round</b> once the end triggers, so every player gets the same number of turns.</p>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>A known end invites planning.</b> With fixed rounds, players saved up for a big last turn, and the final round decided the winner.</li>
+      <li><b>A player-triggered end invites racing.</b> First to 15 rewarded speed; a slower, stronger plan never got its turn.</li>
+      <li><b>A shared clock invites a tug of war.</b> When the supply ends the game, the leader rushes it and everyone else tries to slow it down.</li>
+    </ol>
+    <div class="see">You'll see this in: Agricola, Splendor, Ticket to Ride, Carcassonne.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const SC={
+ fixed:{A:[0,2,4,6,8,10,12,14,20],B:[0,1,3,5,7,9,11,13,21],C:[0,2,3,5,6,8,9,11,15]},
+ target:{A:[0,3,6,9,12,15],B:[0,1,3,5,7,9],C:[0,2,4,6,8,10]},
+ supply:{A:[0,3,6,9,12,15,18,21,24],B:[0,2,4,7,9,12,14,17,19],C:[0,2,4,6,8,10,12,14,16]}
+};
+const C={A:'var(--ada)',B:'var(--bo)',C:'var(--cy)'};
+const X=r=>56+r*66,Y=v=>360-v*13.2;
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',sc:null,upto:0,from:0,endAt:null,ghost:false,target:false,info:'',infoNote:'',note:'',supply:null}}
+function render(anim){
+  ['title','chartC','info','note','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='cmp'||st.view==='end'){$('cmp').classList.add('on');if(st.view==='end')$('end').classList.add('on');return}
+  ['chartC','info','note'].forEach(id=>$(id).classList.add('on'));
+  let h='';
+  for(let v=0;v<=24;v+=4)h+=`<line class="grid" x1="${X(0)}" x2="${X(8)}" y1="${Y(v)}" y2="${Y(v)}"/><text class="tick" x="26" y="${Y(v)+6}">${v}</text>`;
+  h+=`<line class="ax" x1="${X(0)}" x2="${X(8)}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  for(let r=1;r<=8;r++)h+=`<text class="tick" x="${X(r)}" y="${Y(0)+30}">R${r}</text>`;
+  if(st.target)h+=`<line class="tgt" x1="${X(0)}" x2="${X(8)}" y1="${Y(15)}" y2="${Y(15)}"/><text class="tgtt" x="${X(0)+6}" y="${Y(15)-8}">target 15</text>`;
+  if(st.endAt)h+=`<line class="endl" x1="${X(st.endAt)}" x2="${X(st.endAt)}" y1="${Y(25)}" y2="${Y(0)}"/><text class="endt" x="${X(st.endAt)}" y="${Y(25)-6}">GAME ENDS</text>`;
+  if(st.ghost)h+=`<path class="ln ghost" stroke="var(--bo)" d="M${X(5)},${Y(9)}L${X(6)},${Y(11)}L${X(7)},${Y(23)}"/><text class="val" x="${X(7)-150}" y="${Y(23)+6}" fill="var(--bo)">Bo's planned combo</text>`;
+  const D=st.sc&&SC[st.sc];
+  if(D&&st.upto>0){for(const k of ['A','B','C']){const a=D[k].slice(0,st.upto+1);
+    h+=`<path class="ln ${anim&&st.upto>st.from?'draw':''}" stroke="${C[k]}" d="${a.map((v,r)=>(r?'L':'M')+X(r)+','+Y(v)).join('')}"/>`;
+    const v=a[a.length-1];h+=`<text class="val" x="${X(st.upto)+10}" y="${Y(v)+(k==='A'?-8:k==='B'?18:6)}" fill="${C[k]}">${v}</text>`}}
+  $('chart').innerHTML=h;
+  let sup='';
+  if(st.supply){const s=st.supply;sup=`<div id="supply"><div class="lbl">TILE SUPPLY</div><div class="bar"><i style="width:${s.left/30*100}%"></i><span>${s.left} / 30</span></div>
+    <div class="takes">${s.takes.map(([k,n])=>`<span style="color:${C[k]}">${{A:'Ada',B:'Bo',C:'Cy'}[k]} takes ${n}</span>`).join('')}</div></div>`}
+  $('info').innerHTML=st.info+sup+`<div id="infoNote">${st.infoNote}</div>`;
+  $('note').innerHTML=st.note;
+}
+const TR=(n,r)=>`<div id="trig">${n}</div><div class="rule">${r}</div>`;
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='chart';st.info='<div id="trig">One game, three endings</div><div class="rule">Three players score a few points each round. Some save resources for a big play later.</div>';
+   st.infoNote='Same players, same scoring. Only the rule that <b>ends the game</b> will change.';st.note='Watch the last few rounds most closely.';
+   setHeader('Same game, three ways to end it','The end rule shapes the last turns, and often the winner.')},
+ ()=>{st.sc='fixed';st.upto=7;st.from=0;st.info=TR('Fixed rounds','The game ends after <b>round 8</b>. Everyone knows it from the start.');
+   st.infoNote='Scores climb slowly. Players hold back resources because they know exactly when the last turn comes.';
+   setHeader('Ending 1: a fixed number of rounds','Seven rounds of steady play.')},
+ ()=>{st.upto=8;st.from=7;st.endAt=8;
+   st.infoNote='Round 8: everyone spends everything. Bo planned best for the last turn and wins <b>21</b> to 20. <span class="g">A known end rewards planning.</span>';
+   setHeader('Fixed rounds: the final turn','Everyone cashes in at once.')},
+ ()=>{st.sc='target';st.upto=5;st.from=0;st.endAt=5;st.target=true;st.info=TR('Target score','The game ends the moment someone reaches <b>15 points</b>.');
+   st.infoNote='Ada scores steadily and hits 15 in round 5. <b>Game over.</b> Nobody saved anything, because nobody knew when the end would come.';
+   setHeader('Ending 2: first to 15','The leader decides when the game ends.')},
+ ()=>{st.ghost=true;
+   st.infoNote='Bo was building toward a big combo in round 7. <span class="r">It never happened.</span> With a target score, slow plans are risky and everyone must race or block the leader.';
+   setHeader('Target score: the plan that never paid off','The end came before Bo\'s engine was ready.')},
+ ()=>{st.sc='supply';st.upto=4;st.from=0;st.endAt=null;st.target=false;st.ghost=false;
+   st.info=TR('Supply runs out','The game ends when the <b>last tile</b> is taken from a supply of 30.');
+   st.supply={left:14,takes:[['A',2],['B',1],['C',1]]};
+   st.infoNote='Each round Ada, the leader, takes <b>2 tiles</b> to drain the supply faster. Bo and Cy take one.';
+   setHeader('Ending 3: the supply runs out','Players can speed up, or slow down, the clock.')},
+ ()=>{st.upto=8;st.from=4;st.endAt=8;st.supply={left:0,takes:[['A',2],['B',1],['C',1]]};
+   st.infoNote='Ada rushed the end and won <b>24</b> to 19. If Ada had taken one tile a round, the game would have run two rounds longer and Bo\'s engine might have caught up.';
+   setHeader('Supply: a tug of war over the clock','The leader speeds the end; the others want more time.')},
+ ()=>{st.view='cmp';setHeader('Who controls the end?','Each trigger hands the clock to someone different.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Choose the ending first. It shapes everything before it.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

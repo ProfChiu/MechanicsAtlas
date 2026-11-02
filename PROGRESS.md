@@ -1,5 +1,10 @@
 # Mechanics Atlas — progress log
 
+## 2026-11-02 (Phase 2: Game Structure complete)
+- Accomplished: Built Variable Player Powers, Game End Triggers and Scoring Systems. The Game Structure family is complete (6 of 6). Atlas now 38 built, 6 planned, ~152 min. All pass the checker.
+- Decisions: Powers measured in turns to a first house (base 7; Merchant 4 was the outlier, fixed to 5 with a 2-wood trade limit). Game end: fixed 8 rounds (Bo wins on a planned last turn), first to 15 (Ada wins in round 5), supply of 30 (leader rushes it). Scoring: running (Ada 21), end bonuses (Bo 25), hidden goals (Cy 25).
+- Next: Phase 3 (Event Decks, Hidden Movement, Modular Boards), Phase 4, then links, handouts and final check.
+
 ## 2026-11-02 (Phase 0 + 1: Game Structure family)
 - Accomplished: Added a sixth family, Game Structure, and 12 new "Coming soon" entries with briefs (6 structure, plus Event Decks, Hidden Movement, Modular Boards, Resource Conversion, Voting, Simultaneous Action Selection). Built Feedback Loops, Input vs Output Randomness and Turn Order & Initiative. Atlas now 35 built, 9 planned. All pass the checker.
 - Decisions: Feedback loop income = 1 + 1 per 3 points; catch-up rule = +2 for last place (gap 9 vs 0). Input/output uses the same rolls 2, 6, 3 (4 points vs 7). Turn order: fixed 15/9/3, rotating 9/9/9, last place first 11/9/7, bidding for first pick.

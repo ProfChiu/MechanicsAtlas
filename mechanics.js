@@ -754,21 +754,69 @@ window.MECHANICS = [
     ],
     brief: 'Three players pick rewards worth 5, 3 and 1 in turn order for 3 rounds. Fixed order: 15 / 9 / 3. Rotating: 9 / 9 / 9. Last place first: close scores. Bidding for first: the first pick costs coins.'
   },
-  { id: 'variable-powers', family: 'structure', title: 'Variable Player Powers', file: null,
+  {
+    id: 'variable-powers', family: 'structure', title: 'Variable Player Powers',
+    file: 'mechanics/variable-powers.html', w: 1280, h: 720, minutes: 4,
     hook: 'Same rules for everyone, plus one ability only you have.',
+    anatomy: {
+      Procedures: 'Everyone plays by the same base rules; each player also has one special ability.',
+      Rules: 'A power bends one rule for its owner only: more of a resource, a cheaper action, or a reward when others act.',
+      Resources: 'Your power, and the base actions it changes.',
+      Outcome: 'Each player follows a different best plan; testing powers against the base game reveals any that are too strong.'
+    },
+    feel: ['Identity', 'Discovery', 'Asymmetry'],
+    feelText: 'Your power makes your seat feel like a character, not just a colour. Learning how each ability changes the game gives replay value.',
     watchFor: 'Watch each power pull its owner toward a different plan. Asymmetry gives each seat its own story.',
-    examples: [{ name: 'Cosmic Encounter' }, { name: 'Pandemic' }, { name: 'Root' }, { name: 'Small World' }],
-    brief: 'Base rules: Gather, Trade, Build; a house takes 7 turns. Four powers (gather more, cheap trades, cheap builds, gain when others build) each change the best plan. A balance check finds one power too strong; one tweak fixes it.' },
-  { id: 'game-end', family: 'structure', title: 'Game End Triggers', file: null,
+    examples: [
+      { name: 'Cosmic Encounter', note: 'Every alien race breaks a different rule of the game.' },
+      { name: 'Pandemic', note: 'Each role (Medic, Scientist, ...) bends one rule to help the team.' },
+      { name: 'Root', note: 'Factions play by almost entirely different rules on the same map.' },
+      { name: 'Small World', note: 'Each race and power pairing is random, so combinations change every game.' }
+    ],
+    brief: 'Base rules: Gather, Trade, Build; a house takes 7 turns. Four powers (gather more, cheap trades, cheap builds, gain when others build) each change the best plan. A balance check finds one power too strong; one tweak fixes it.'
+  },
+  {
+    id: 'game-end', family: 'structure', title: 'Game End Triggers',
+    file: 'mechanics/game-end.html', w: 1280, h: 720, minutes: 4,
     hook: 'Fixed rounds, a target score, or an empty supply: how a game ends shapes how it is played.',
+    anatomy: {
+      Procedures: 'Players take turns until an end condition is met, then final scores are compared.',
+      Rules: 'The end can come after a fixed number of rounds, when someone hits a target score, or when a shared supply runs out.',
+      Resources: 'Time itself: rounds left, points to the target, or tiles left in the supply.',
+      Outcome: 'Fixed ends reward planning, target scores reward speed, and supply ends let players fight over the clock.'
+    },
+    feel: ['Pacing', 'Pressure', 'Climax'],
+    feelText: 'Knowing exactly when the game ends makes the last turn a planned finale. Not knowing turns every turn into a race.',
     watchFor: 'Watch the last few turns under each trigger: a known end invites planning, a player-triggered end invites racing.',
-    examples: [{ name: 'Agricola' }, { name: 'Splendor' }, { name: 'Ticket to Ride' }, { name: 'Carcassonne' }],
-    brief: 'One game, three endings. Fixed 8 rounds: everyone saves for a big final turn. First to 15: the leader sprints and a slower plan never pays off. Supply runs out: the leader speeds the clock, others slow it.' },
-  { id: 'scoring-systems', family: 'structure', title: 'Scoring Systems', file: null,
+    examples: [
+      { name: 'Agricola', note: 'A fixed 14 rounds, with harvests on known turns.' },
+      { name: 'Splendor', note: 'The round ends when someone reaches 15 points; everyone finishes the round.' },
+      { name: 'Ticket to Ride', note: 'The game ends when a player is down to 2 or fewer trains.' },
+      { name: 'Carcassonne', note: 'The game ends when the last tile is placed.' }
+    ],
+    brief: 'One game, three endings. Fixed 8 rounds: everyone saves for a big final turn. First to 15: the leader sprints and a slower plan never pays off. Supply runs out: the leader speeds the clock, others slow it.'
+  },
+  {
+    id: 'scoring-systems', family: 'structure', title: 'Scoring Systems',
+    file: 'mechanics/scoring-systems.html', w: 1280, h: 720, minutes: 4,
     hook: 'Points now, points at the end, or points nobody can see: scoring shapes tension.',
+    anatomy: {
+      Procedures: 'Players earn points during play, at the end of the game, or from secret goals revealed at the end.',
+      Rules: 'Running scores are public as they happen; end-game bonuses and hidden goals add points only at the end.',
+      Resources: 'Points on the track, progress toward bonuses, and secret goal cards.',
+      Outcome: 'The scoring system decides when the winner becomes clear, and how long trailing players stay hopeful.'
+    },
+    feel: ['Hope', 'Suspense', 'Clarity'],
+    feelText: 'A visible score is easy to follow but can feel decided early. Late and hidden points keep everyone hoping until the final count.',
     watchFor: 'Watch the leader change when end-game points are revealed. Hidden and late scoring keep a game open longer.',
-    examples: [{ name: 'Ticket to Ride' }, { name: 'Carcassonne' }, { name: '7 Wonders' }, { name: 'Splendor' }],
-    brief: 'Three players, the same 6 rounds scored three ways: running score (winner clear by round 3), end-game bonuses (leader flips at the end), hidden goals (nobody knows who leads until the reveal).' },
+    examples: [
+      { name: 'Ticket to Ride', note: 'Route points score as you play; secret destination tickets are revealed at the end.' },
+      { name: 'Carcassonne', note: 'Roads and cities score as they finish; fields score only at the end.' },
+      { name: '7 Wonders', note: 'Points are hidden in your city and counted only in the final tally.' },
+      { name: 'Splendor', note: 'Points are public on the cards you buy; the first to 15 triggers the end.' }
+    ],
+    brief: 'Three players, the same 6 rounds scored three ways: running score (winner clear by round 3), end-game bonuses (leader flips at the end), hidden goals (nobody knows who leads until the reveal).'
+  },
   /* Chance & Risk */
   { id: 'event-decks', family: 'chance', title: 'Event Decks', file: null,
     hook: 'Draw a card, and the world changes. The deck sets the story and the pace.',
