@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mechanics Atlas</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="atlas.css">
+</head>
+<body class="watch">
+<nav class="topbar">
+  <a class="home" href="index.html">← Atlas</a>
+  <div class="where"><span class="chip" id="famChip"></span><h1 id="title"></h1></div>
+  <div class="mechnav">
+    <a class="btn ghost" id="prevMech">‹ <span></span></a>
+    <a class="btn ghost" id="nextMech"><span></span> ›</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <section class="player">
+    <div class="frame" id="frame"><iframe id="anim" title="Mechanic animation"></iframe></div>
+    <div class="controls">
+      <button class="btn" id="back" title="Previous step (←)">◀</button>
+      <button class="btn primary" id="auto" title="Play the steps automatically">▶ Auto-play</button>
+      <button class="btn" id="fwd" title="Next step (→ or Space)">▶▏</button>
+      <div class="progress"><div class="bar"><i id="bar"></i></div><span id="stepTxt">Step –</span></div>
+      <button class="btn ghost" id="restart" title="Start over">⟲ Restart</button>
+      <button class="btn ghost" id="full" title="Full screen">⛶</button>
+    </div>
+  </section>
+
+  <aside class="notes" id="notes"></aside>
+</div>
+
+<script src="mechanics.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const built = MECHANICS.filter(m => m.file);
+const idx = Math.max(0, built.findIndex(m => m.id === params.get('id')));
+const m = built[idx], fam = FAMILIES.find(f => f.id === m.family);
+const tour = params.get('tour') === '1';
+const $ = id => document.getElementById(id);
+
+document.title = m.title + ' · Mechanics Atlas';
+document.body.style.setProperty('--fam', fam.color);
+$('famChip').textContent = fam.name;
+$('title').textContent = m.title;
+$('frame').style.setProperty('--ar', `${m.w} / ${m.h}`);
+document.body.style.setProperty('--arn', m.w / m.h);
+
+const link = (el, mm, tourOn) => {
+  if (!mm) { el.classList.add('off'); el.removeAttribute('href'); return; }
+  el.href = `watch.html?id=${mm.id}${tourOn ? '&tour=1' : ''}`;
+  el.querySelector('span').textContent = mm.title;
+};
+link($('prevMech'), built[idx - 1], tour);
+link($('nextMech'), built[idx + 1], tour);
+
+/* ---------- designer's notes ---------- */
+const nxt = built[idx + 1];
+$('notes').innerHTML = `
+  <p class="hook">${m.hook}</p>
+  <div class="callout"><h2>👁 Watch for</h2><p>${m.watchFor}</p></div>
+  <h2>Anatomy</h2>
+  <p class="sub">The formal elements this mechanic is built from.</p>
+  <dl class="anatomy">${Object.entries(m.anatomy).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+  <h2>What it feels like</h2>
+  <div class="chips">${m.feel.map(f => `<span>${f}</span>`).join('')}</div>
+  <p>${m.feelText}</p>
+  <h2>You'll see it in</h2>
+  <ul class="games">${m.examples.map(e => `<li><b>${e.name}</b><span>${e.note}</span></li>`).join('')}</ul>
+  ${nxt ? `<a class="upnext" href="watch.html?id=${nxt.id}${tour ? '&tour=1' : ''}"><small>Up next</small>${nxt.title} ›</a>`
+        : `<a class="upnext" href="index.html"><small>That's the set</small>Back to the Atlas ›</a>`}`;
+
+/* ---------- player ---------- */
+const frame = $('anim');
+const send = c => frame.contentWindow && frame.contentWindow.postMessage({ atlasCmd: c }, '*');
+let cur = 0, total = 0, timer = null, tourTimer = null;
+const STEP_MS = 7000;
+
+frame.src = m.file;
+addEventListener('message', e => {
+  if (!e.data || e.data.atlas !== 'progress') return;
+  cur = e.data.cur; total = e.data.total;
+  $('stepTxt').textContent = `Step ${cur + 1} / ${total}`;
+  $('bar').style.width = (total > 1 ? cur / (total - 1) * 100 : 0) + '%';
+  if (timer && cur >= total - 1) atEnd();
+});
+
+function atEnd() {
+  stopAuto();
+  if (tour && nxt) {
+    $('stepTxt').textContent = `Next: ${nxt.title} in 8 s`;
+    tourTimer = setTimeout(() => location.href = `watch.html?id=${nxt.id}&tour=1&auto=1`, 8000);
+  }
+}
+function startAuto() {
+  if (cur >= total - 1 && total) send('restart');
+  timer = setInterval(() => send('next'), STEP_MS);
+  $('auto').textContent = '❚❚ Pause'; $('auto').classList.add('on');
+}
+function stopAuto() {
+  clearInterval(timer); timer = null;
+  $('auto').textContent = '▶ Auto-play'; $('auto').classList.remove('on');
+}
+const manual = fn => e => { clearTimeout(tourTimer); e.currentTarget.blur(); fn(); };
+$('auto').onclick = manual(() => timer ? stopAuto() : startAuto());
+$('fwd').onclick = manual(() => send('next'));
+$('back').onclick = manual(() => send('back'));
+$('restart').onclick = manual(() => { stopAuto(); send('restart'); });
+$('full').onclick = () => document.fullscreenElement ? document.exitFullscreen() : $('frame').requestFullscreen();
+
+addEventListener('keydown', e => {
+  if ([' ', 'ArrowRight', 'PageDown'].includes(e.key)) { e.preventDefault(); clearTimeout(tourTimer); send('next'); }
+  else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); clearTimeout(tourTimer); send('back'); }
+});
+// tour mode chains pages: keep auto-play running on arrival
+if (params.get('auto') === '1') frame.addEventListener('load', () => setTimeout(startAuto, 400));
+</script>
+</body>
+</html>

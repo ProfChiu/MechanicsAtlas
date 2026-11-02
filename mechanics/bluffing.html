@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bluffing and Hidden Information</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap">
+<style>
+:root{--bg:#10161a;--felt:#1d5c47;--felt2:#123b2e;--panel:#1c252b;--line:#34444d;--ink:#f3f7f5;--muted:#a3b4b0;
+  --gold:#ffc53d;--red:#ef4f4f;--blue:#3e7bfa;--green:#36c27f;--amber:#ffa53d;--purple:#a978ff;--cup:#8a5a35;--cup2:#5e3a1f}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 20%,#1c2a30 0%,#0b1013 65%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:20px;z-index:10}
+#header h1{margin:0;font-size:36px;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;line-height:1.3;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* table */
+#felt{position:absolute;left:140px;top:205px;width:520px;height:385px;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 40%,var(--felt) 0%,var(--felt2) 80%);
+  box-shadow:inset 0 0 0 10px #4a2f1c,inset 0 0 0 14px #2b1a0e,inset 0 10px 40px rgba(0,0,0,.45),0 18px 40px rgba(0,0,0,.5)}
+
+.seat{position:absolute;display:flex;align-items:center;gap:14px;transition:opacity .5s}
+.seat.col{flex-direction:column;gap:6px}
+.who{display:flex;flex-direction:column;align-items:center;gap:2px}
+.av{width:64px;height:64px;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,.45),0 0 0 3px rgba(255,255,255,.12)}
+.nm{font-size:20px;font-weight:900;line-height:1}
+.seat.hurt .av{animation:shake .5s ease 2}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.tray{display:flex;gap:8px;padding:6px;border-radius:14px;background:rgba(0,0,0,.28);border:2px solid transparent;transition:border-color .5s,box-shadow .5s}
+.tray.peek{border:2px dashed var(--purple);box-shadow:0 0 18px rgba(169,120,255,.5)}
+.slot{position:relative;width:50px;height:50px}
+.slot .die{position:absolute;inset:0;transition:opacity .5s,transform .8s cubic-bezier(.5,-.3,.4,1.3),box-shadow .5s,filter .5s}
+.slot .die.hit{box-shadow:0 0 0 3px var(--gold),0 0 20px var(--gold);transform:scale(1.08)}
+.slot .die.dim{opacity:.35}
+.slot .die.lost{transform:translate(70px,-90px) rotate(55deg) scale(.7);opacity:.0}
+.slot .x{position:absolute;inset:-4px;display:flex;align-items:center;justify-content:center;font-size:52px;font-weight:900;color:var(--red);
+  opacity:0;transform:scale(.3);transition:opacity .4s .5s,transform .4s .5s;text-shadow:0 2px 6px #000}
+.slot .x.on{opacity:1;transform:none}
+.cup{position:absolute;left:-6px;top:-10px;width:62px;height:64px;z-index:2;transition:transform .7s cubic-bezier(.3,1.4,.5,1),opacity .6s;filter:drop-shadow(0 4px 4px rgba(0,0,0,.5))}
+.cup.up{transform:translateY(-46px);opacity:0}
+.cup.ghost{transform:translateY(-14px);opacity:.28}
+
+/* dice */
+.die{display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);aspect-ratio:1;border-radius:18%;padding:13%;
+  background:linear-gradient(160deg,#ffffff,#dfe6e4);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 3px 8px rgba(0,0,0,.35)}
+.pip{width:74%;height:74%;border-radius:50%;background:#1b2327;place-self:center}
+.die.four .pip{background:#c2392f}
+.mini{width:34px;height:34px;padding:4px;flex:none;display:inline-grid;vertical-align:middle}
+
+/* bubbles */
+.bub{position:absolute;max-width:230px;padding:10px 16px;border-radius:18px;background:#fbfaf3;color:#1b2327;
+  font-size:22px;font-weight:800;line-height:1.25;box-shadow:0 8px 20px rgba(0,0,0,.45);z-index:6;
+  opacity:0;transform:scale(.6);transform-origin:var(--o,left bottom);transition:opacity .35s,transform .45s cubic-bezier(.3,1.6,.5,1)}
+.bub.on{opacity:1;transform:none}
+.bub small{display:block;font-size:18px;font-weight:700;color:#5a6a66}
+.bub.liar{background:var(--red);color:#fff;font-size:40px;font-weight:900;letter-spacing:1px;padding:8px 22px}
+.bub.liar.on{animation:pop .6s ease}
+@keyframes pop{30%{transform:scale(1.25) rotate(-4deg)}60%{transform:scale(.95) rotate(2deg)}}
+#aside{position:absolute;left:215px;top:240px;width:370px;padding:10px 16px;border-radius:14px;z-index:6;
+  background:rgba(30,18,52,.92);border:2px dashed var(--purple);font-size:21px;line-height:1.3;color:#e8dcff;font-style:italic;
+  opacity:0;transition:opacity .5s}
+#aside.on{opacity:1}
+#aside b{color:#fff;font-style:normal}
+
+/* centre bid chip */
+#chip{position:absolute;left:290px;top:350px;width:220px;padding:10px 12px;border-radius:16px;text-align:center;z-index:4;
+  background:rgba(8,14,12,.78);border:2px solid #4f7f6c;box-shadow:0 6px 16px rgba(0,0,0,.4);
+  opacity:0;transition:opacity .5s,border-color .4s,box-shadow .4s}
+#chip.on{opacity:1}
+#chip .k{font-size:18px;color:var(--muted);font-weight:700}
+#chip .v{font-size:26px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px}
+#chip.chal{border-color:var(--red);box-shadow:0 0 24px rgba(239,79,79,.6)}
+#chip.fail{border-color:var(--gold);box-shadow:0 0 24px rgba(255,197,61,.5)}
+
+/* right panels */
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{left:805px;top:140px;width:450px;height:540px;border-radius:22px;background:linear-gradient(170deg,#212d33,#161e22);
+  border:2px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06)}
+.info{position:absolute;inset:0;padding:34px 30px;display:flex;flex-direction:column;justify-content:center;gap:16px;opacity:0;transition:opacity .5s}
+.info.on{opacity:1}
+.info .big{font-size:64px;font-weight:900;color:var(--gold);line-height:1}
+.info .t{font-size:24px;line-height:1.35}
+.info .s{font-size:20px;color:var(--muted);line-height:1.35}
+.info .row{display:flex;align-items:center;gap:12px;font-size:24px;font-weight:800}
+.info .ok{color:var(--green)}.info .no{color:var(--red)}
+.info .lb{font-size:44px;font-weight:900;color:var(--red);letter-spacing:1px}
+
+/* chart */
+#chart .ttl{position:absolute;left:24px;top:14px;font-size:24px;font-weight:900}
+.zone{position:absolute;top:80px;height:228px;opacity:0;transition:opacity .6s}
+.zone.on{opacity:1}
+.brow{position:absolute;left:0;width:450px;height:46px;opacity:0;transition:opacity .4s}
+.brow.on{opacity:1}
+.brow .lbl{position:absolute;left:20px;top:10px;font-size:20px;font-weight:900}
+.brow .bar{position:absolute;left:100px;top:17px;height:12px;width:0;border-radius:6px;transition:width .8s cubic-bezier(.3,1.2,.5,1)}
+.brow .dot{position:absolute;top:4px;width:38px;height:38px;margin-left:-19px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:21px;font-weight:900;color:#10161a;transform:scale(0);transition:transform .5s cubic-bezier(.3,1.7,.5,1) .5s,box-shadow .5s}
+.brow.on .dot{transform:none}
+.brow.ghost .bar{background:transparent!important;border:2px dashed var(--purple)}
+.brow.ghost .dot{background:#1c252b!important;z-index:2;border:3px dashed var(--purple);color:var(--purple)}
+.brow .dot.warn{box-shadow:0 0 0 4px var(--red),0 0 18px var(--red)}
+.axis{position:absolute;left:100px;width:330px;top:310px;height:3px;background:#6c7f79;border-radius:2px}
+.tick{position:absolute;top:318px;width:55px;text-align:center;font-size:20px;font-weight:900;color:var(--muted)}
+.odds{position:absolute;top:346px;width:55px;text-align:center;font-size:18px;font-weight:800;opacity:0;transition:opacity .5s}
+.odds.on{opacity:1}
+#oddsL{position:absolute;left:14px;top:346px;width:84px;font-size:18px;color:var(--muted);line-height:1;opacity:0;transition:opacity .5s}
+#oddsL.on{opacity:1}
+.vline{position:absolute;top:76px;height:236px;width:0;border-left:3px dashed #fff;opacity:0;transition:opacity .5s}
+.vline.on{opacity:1}
+.vline span{position:absolute;top:-30px;left:-60px;width:120px;text-align:center;font-size:18px;font-weight:900;white-space:nowrap}
+#formula{position:absolute;left:24px;right:24px;top:386px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.06);
+  font-size:27px;font-weight:900;text-align:center;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s}
+#formula.on{opacity:1;transform:none}
+#legend{position:absolute;left:24px;right:24px;top:450px;display:flex;gap:8px;justify-content:center;opacity:0;transition:opacity .5s .3s}
+#legend.on{opacity:1}
+#legend span{font-size:18px;font-weight:800;padding:4px 10px;border-radius:10px}
+#ghostNote{position:absolute;left:24px;right:24px;top:490px;font-size:19px;line-height:1.3;color:#e8dcff;text-align:center;opacity:0;transition:opacity .5s}
+#ghostNote.on{opacity:1}
+
+/* title */
+#title{inset:0;z-index:15;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding-top:70px;
+  background:radial-gradient(circle at 50% 55%,#173a2e 0%,#0b1013 70%)}
+#title .big{font-size:110px;font-weight:900;line-height:1;margin:0;
+  background:linear-gradient(90deg,var(--gold),#fff3c4,var(--red));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:32px;color:var(--muted);font-weight:700}
+#title .cups{display:flex;gap:34px;margin:22px 0 10px}
+#title .cups svg{width:96px;height:102px;filter:drop-shadow(0 8px 8px rgba(0,0,0,.5))}
+#title .cups svg:nth-child(odd){animation:wob 1.5s ease-in-out infinite}
+#title .cups svg:nth-child(even){animation:wob 1.5s ease-in-out infinite reverse}
+@keyframes wob{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(8deg) translateY(-14px)}}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* recap */
+#end{inset:0;background:rgba(6,10,12,.86);display:flex;align-items:center;justify-content:center;z-index:20;padding-top:60px}
+#end .box{background:#1b2529;border:2px solid #3f5560;border-radius:24px;padding:30px 46px;width:960px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 10px;font-size:36px}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .see{margin-top:18px;font-size:21px;color:var(--muted);border-top:1px solid #3f5560;padding-top:14px}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#33433f;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+  <div id="felt"></div>
+  <div id="table"></div>
+  <div id="chip"><div class="k"></div><div class="v"></div></div>
+  <div id="aside"></div>
+
+  <div id="cardWrap" class="panel card on">
+    <div class="info" id="info1">
+      <div class="big">4 × 3 = 12</div>
+      <div class="t">Twelve dice on the table. Every one of them is hidden under a cup.</div>
+      <div class="s">Players roll by shaking the cup, then slam it down.</div>
+    </div>
+    <div class="info" id="info2">
+      <div class="row" style="color:var(--blue)">You can see: 3 dice</div>
+      <div class="row" id="info2dice"></div>
+      <div class="row" style="color:var(--muted)">Hidden from you: 9 dice</div>
+      <div class="s">Every player is in the same spot. Nobody knows the full count.</div>
+    </div>
+    <div class="info" id="info3">
+      <div class="s">A bid sounds like this:</div>
+      <div class="big" style="font-size:46px;display:flex;align-items:center;gap:12px">"At least two <span id="info3die"></span>"</div>
+      <div class="t">It counts every die on the table: yours, theirs, all twelve.</div>
+      <div class="s">You may claim things you cannot see. That is the whole point.</div>
+    </div>
+    <div class="info" id="info4">
+      <div class="s">After "two 4s", the next bid could be:</div>
+      <div class="row"><span class="ok">✔</span> two 5s <span class="s">(higher face)</span></div>
+      <div class="row"><span class="ok">✔</span> three 2s <span class="s">(more dice)</span></div>
+      <div class="row"><span class="no">✘</span> two 3s <span class="s">(that is lower)</span></div>
+      <div class="s">Or, instead of bidding, say:</div>
+      <div class="lb">"LIAR!"</div>
+    </div>
+  </div>
+
+  <div id="chart" class="panel card">
+    <div class="ttl">Claimed number of 4s</div>
+    <div id="chartInner"></div>
+    <div id="formula">12 dice × 1/6 = <span style="color:var(--gold)">2</span> expected</div>
+    <div id="legend"><span style="background:rgba(54,194,127,.25)">believable</span><span style="background:rgba(255,165,61,.25)">a stretch</span><span style="background:rgba(239,79,79,.28)">suspicious</span></div>
+    <div id="ghostNote">Five sat past the truth and far past 2. Four was true, and only a stretch: easier to let pass.</div>
+  </div>
+
+  <div id="title" class="panel">
+    <div class="cups" id="titleCups"></div>
+    <div class="big">Cups &amp; Claims</div>
+    <h2>A table where everyone lies a little</h2>
+    <div class="press">Press SPACE to begin</div>
+  </div>
+
+  <div id="end" class="panel"><div class="box">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li><b>Hidden information creates the game.</b> Lift every cup and there is nothing left to claim or doubt.</li>
+      <li><b>A bluff must look like a truth.</b> Claims near the expected count are hard to call. Wild claims invite a challenge.</li>
+      <li><b>Symmetric penalties keep both sides risky.</b> The liar pays when caught and the caller pays when wrong, so nobody bids or calls for free.</li>
+    </ul>
+    <div class="see">You'll see this in: Liar's Dice, Coup, Skull, Cockroach Poker.</div>
+  </div></div>
+
+  <div id="dots"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), dotsEl=$('dots');
+let cur=0;
+const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const die=(f,cls='')=>`<div class="die ${f===4?'four':''} ${cls}">`+[...Array(9)].map((_,i)=>PIPS[f].includes(i)?'<div class="pip"></div>':'<div></div>').join('')+'</div>';
+const CUP=`<svg viewBox="0 0 60 64"><defs><linearGradient id="cg" x1="0" x2="1"><stop offset="0" stop-color="#5e3a1f"/><stop offset=".45" stop-color="#a8703f"/><stop offset="1" stop-color="#4a2c16"/></linearGradient></defs>
+  <path d="M1 60 L11 8 Q30 0 49 8 L59 60 Z" fill="url(#cg)" stroke="#2b1a0e" stroke-width="2"/>
+  <rect x="0" y="54" width="60" height="8" rx="3" fill="#3b2311"/><ellipse cx="30" cy="9" rx="16" ry="3.5" fill="#c08550" opacity=".8"/></svg>`;
+function avatar(bg,skin,hair,mouth){return `<svg class="av" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="${bg}"/>
+  <path d="M12 64 Q32 44 52 64 Z" fill="rgba(0,0,0,.25)"/><circle cx="32" cy="30" r="16" fill="${skin}"/>
+  <path d="${hair}" fill="#2a1d17"/><circle cx="26" cy="30" r="2.4" fill="#1b2327"/><circle cx="38" cy="30" r="2.4" fill="#1b2327"/>
+  <path d="${mouth}" stroke="#1b2327" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>`}
+const P={
+  you:{name:'You',color:'#3e7bfa',dice:[4,4,2],av:avatar('#3e7bfa','#f2c9a0','M16 28 Q18 12 32 12 Q46 12 48 28 Q40 18 32 20 Q22 18 16 28Z','M26 37 Q32 42 38 37'),pos:'left:290px;top:604px'},
+  bo:{name:'Bo',color:'#36c27f',dice:[4,1,6],av:avatar('#36c27f','#c68c5a','M17 24 Q20 13 32 13 Q44 13 47 24 Z','M26 38 Q32 41 38 38'),pos:'left:28px;top:296px',col:1},
+  kit:{name:'Kit',color:'#a978ff',dice:[3,5,5],av:avatar('#a978ff','#ffd7b5','M14 34 Q12 12 32 11 Q52 12 50 34 L46 24 Q32 16 18 24Z','M26 37 Q33 40 39 35'),pos:'left:290px;top:126px'},
+  juno:{name:'Juno',color:'#ffa53d',dice:[4,6,2],av:avatar('#ffa53d','#8d5a3b','M14 30 Q14 10 32 10 Q50 10 50 30 Q44 16 32 18 Q20 16 14 30Z','M27 38 Q32 40 37 38'),pos:'left:612px;top:296px',col:1}
+};
+const BUB={you:{p:'left:556px;top:604px',o:'left center'},bo:{p:'left:24px;top:200px',o:'left bottom'},
+  kit:{p:'left:556px;top:124px',o:'left center'},juno:{p:'left:556px;top:206px',o:'right bottom'}};
+// chart geometry (panel-relative)
+const cx=k=>100+(k-1)*55+27.5;
+const ODDS={1:'89%',2:'62%',3:'32%',4:'13%',5:'4%',6:'<1%'};
+const ROWS=[['You',2,'#3e7bfa'],['Bo',3,'#36c27f'],['Kit',5,'#a978ff'],['Kit?',4,'#a978ff']];
+
+function setHeader(t,c){const h=$('header');h.classList.remove('anim');void h.offsetWidth;
+  h.querySelector('h1').textContent=t;h.querySelector('p').innerHTML=c;h.classList.add('anim')}
+const cups=id=>[...document.querySelectorAll(`#seat-${id} .cup`)];
+const dice=id=>[...document.querySelectorAll(`#seat-${id} .slot .die`)];
+function say(id,html,cls=''){document.querySelectorAll('.bub').forEach(b=>b.classList.remove('on'));
+  if(!id)return;const b=$('bub-'+id);b.className='bub '+cls;b.innerHTML=html;void b.offsetWidth;b.classList.add('on')}
+function chip(k,v,cls=''){const c=$('chip');c.className='on '+cls;c.querySelector('.k').textContent=k;c.querySelector('.v').innerHTML=v}
+function info(n){document.querySelectorAll('.info').forEach((e,i)=>e.classList.toggle('on',i+1===n))}
+function showRow(i){const r=$('row'+i);r.classList.add('on');r.querySelector('.bar').style.width=(cx(ROWS[i][1])-100)+'px'}
+
+function reset(){
+  $('table').innerHTML=Object.entries(P).map(([id,p])=>`<div class="seat ${p.col?'col':''}" id="seat-${id}" style="${p.pos}">
+    <div class="who">${p.av}<div class="nm" style="color:${p.color}">${p.name}</div></div>
+    <div class="tray">${p.dice.map(f=>`<div class="slot">${die(f)}<div class="cup">${CUP}</div><div class="x">✕</div></div>`).join('')}</div></div>`).join('')
+   +Object.entries(BUB).map(([id,b])=>`<div class="bub" id="bub-${id}" style="${b.p};--o:${b.o}"></div>`).join('');
+  $('chip').className='';$('aside').className='';$('aside').innerHTML='';
+  $('cardWrap').classList.add('on');$('chart').classList.remove('on');info(0);
+  $('info2dice').innerHTML=P.you.dice.map(f=>die(f,'mini')).join('');$('info3die').innerHTML=die(4,'mini');
+  let h=`<div class="zone" style="left:100px;width:165px;background:rgba(54,194,127,.16)"></div>
+    <div class="zone" style="left:265px;width:55px;background:rgba(255,165,61,.18)"></div>
+    <div class="zone" style="left:320px;width:110px;background:rgba(239,79,79,.2)"></div>
+    <div class="vline" id="vExp" style="left:${cx(2)}px"><span>expected 2</span></div>
+    <div class="vline" id="vReal" style="left:${cx(4)}px;border-left:3px solid var(--gold)"><span style="color:var(--gold)">real count 4</span></div>`;
+  h+=ROWS.map((r,i)=>`<div class="brow ${i===3?'ghost':''}" id="row${i}" style="top:${84+i*56}px"><div class="lbl" style="color:${r[2]}">${r[0]}</div>
+    <div class="bar" style="background:${r[2]}"></div><div class="dot" style="left:${cx(r[1])}px;background:${r[2]}">${r[1]}</div></div>`).join('');
+  h+=`<div class="axis"></div><div id="oddsL">chance of at least</div>`;
+  for(let k=1;k<=6;k++)h+=`<div class="tick" style="left:${100+(k-1)*55}px">${k}</div><div class="odds" style="left:${100+(k-1)*55}px">${ODDS[k]}</div>`;
+  $('chartInner').innerHTML=h;
+  ['formula','legend','ghostNote'].forEach(i=>$(i).classList.remove('on'));
+  $('title').classList.remove('on');$('end').classList.remove('on');
+}
+$('titleCups').innerHTML=CUP.repeat(4);
+
+const steps=[
+ ()=>{$('title').classList.add('on');
+   setHeader('Bluffing & Hidden Information','You can say anything. The question is whether anyone calls it.')},
+ ()=>{$('title').classList.remove('on');info(1);
+   setHeader('The table: four players, three dice each','Everyone shakes three dice under a cup. Twelve dice sit on the table, and all of them are hidden.')},
+ ()=>{cups('you').forEach(c=>c.classList.add('up'));info(2);
+   setHeader('You only see your own dice','You rolled 4, 4 and 2. The other nine dice stay under cups. Every player knows exactly this little.')},
+ ()=>{info(3);
+   setHeader('A bid is a claim about every cup','On your turn, claim how many dice across all twelve show one face. "At least two 4s" counts every cup, not just yours.')},
+ ()=>{info(4);
+   setHeader('Raise the bid, or call "Liar!"','Each bid must go higher: more dice, or the same count of a higher face. Instead of raising, anyone can challenge the last bid.')},
+ ()=>{$('cardWrap').classList.remove('on');$('chart').classList.add('on');showRow(0);
+   say('you','"Two 4s."<small>Safe. I hold two.</small>');chip('Current bid',`two × ${die(4,'mini')}`);
+   setHeader('You open safe: "two 4s"','You hold two 4s yourself, so this bid is already true. A safe opening gives little away.')},
+ ()=>{showRow(1);say('bo','"Three 4s."<small>I have one. Probably one more out there.</small>');chip('Current bid',`three × ${die(4,'mini')}`);
+   setHeader('Bo raises: "three 4s"','Bo holds one 4. He needs just one more among the nine dice he cannot see. Bolder, but believable.')},
+ ()=>{showRow(2);say('kit','"Five 4s."<small>Said calmly. No hesitation.</small>');chip('Current bid',`five × ${die(4,'mini')}`);
+   setHeader('Kit jumps: "five 4s"','Kit says it like someone who knows. Five of one face out of twelve dice is a big claim.')},
+ ()=>{say(null);cups('kit').forEach(c=>c.classList.add('ghost'));document.querySelector('#seat-kit .tray').classList.add('peek');
+   const a=$('aside');a.innerHTML='Psst. Kit holds <b>3, 5, 5</b>. Not a single 4. This is a pure bluff.';a.classList.add('on');
+   setHeader('Psst: Kit has none','We get to peek. Kit has zero 4s and is betting that nobody dares to call. The table cannot see this.')},
+ ()=>{$('aside').classList.remove('on');cups('kit').forEach(c=>c.classList.remove('ghost'));document.querySelector('#seat-kit .tray').classList.remove('peek');
+   say('juno','LIAR!','liar');chip('Challenged',`five × ${die(4,'mini')} ?`,'chal');
+   setHeader('Juno calls "Liar!"','Juno holds one 4 and doubts there are five. Calling ends the bidding. Now someone is going to pay.')},
+ ()=>{say(null);Object.keys(P).forEach(id=>{cups(id).forEach(c=>c.classList.add('up'));
+     dice(id).forEach((d,i)=>d.classList.add(P[id].dice[i]===4?'hit':'dim'))});
+   $('vReal').classList.add('on');chip('Bid five · Found',`<span style="color:var(--gold)">4</span> × ${die(4,'mini')}`,'fail');
+   setHeader('All cups lift','Count every 4: two from you, one from Bo, one from Juno. Four 4s on the table. The bid said five.')},
+ ()=>{const k=document.querySelectorAll('#seat-kit .slot');k[2].querySelector('.die').classList.add('lost');k[2].querySelector('.x').classList.add('on');
+   $('seat-kit').classList.add('hurt');chip('Bid fails','Kit loses a die','chal');
+   setHeader('The bid fails, so Kit loses a die','Had there been five or more 4s, Juno would lose a die instead. Calling is exactly as risky as bidding.')},
+ ()=>{document.querySelectorAll('.zone').forEach(z=>z.classList.add('on'));$('vExp').classList.add('on');
+   document.querySelectorAll('.odds').forEach(o=>o.classList.add('on'));$('oddsL').classList.add('on');
+   $('formula').classList.add('on');$('legend').classList.add('on');$('row2').querySelector('.dot').classList.add('warn');
+   setHeader('How many 4s should anyone expect?','Each die shows a 4 one time in six. 12 dice × 1/6 = 2. Bids near 2 sound normal. Bids far above it start to smell.')},
+ ()=>{showRow(3);$('ghostNote').classList.add('on');
+   setHeader('A bluff must look like a truth','Kit\'s five landed in the suspicious zone, so Juno called. A bid of four was true and only a stretch, one Juno might have let pass. A bluff works when it could be true.')},
+ ()=>{$('end').classList.add('on');
+   setHeader('What designers take from this','Three ideas to carry into your own designs.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Push Your Luck</title>
+<style>
+:root{--bg:#061a26;--deep:#03101a;--panel:#0d2d3f;--line:#1f5570;--ink:#eefaff;--muted:#9cc3d3;
+  --teal:#2ed3c6;--gold:#ffc94a;--coral:#ff7a6b;--shark:#ff4d5e;--sand:#d9b98a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 10%,#0e3a50 0%,#061a26 55%,#03101a 100%) fixed}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+#header{position:absolute;left:40px;right:40px;top:20px;z-index:10}
+#header h1{margin:0;font-size:36px;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s,transform .6s}
+.panel.on{opacity:1}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:15;
+  background:radial-gradient(circle at 50% 40%,#0f4560 0%,#061a26 70%)}
+#title .big{font-size:96px;font-weight:900;letter-spacing:1px;text-shadow:0 6px 30px rgba(46,211,198,.35)}
+#title h2{margin:6px 0 30px;font-size:32px;color:var(--teal);font-weight:800}
+#title .row{display:flex;gap:26px;align-items:center;font-size:24px;color:var(--muted)}
+#title .press{margin-top:40px;font-size:20px;color:var(--muted);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.4}}
+
+/* reef */
+#reef{left:40px;top:140px;width:720px;height:520px;border-radius:22px;overflow:hidden;
+  background:linear-gradient(#1a6f8f 0%,#0f4b66 18%,#09344b 50%,#05202f 100%);
+  box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px var(--line)}
+#reef .surface{position:absolute;left:0;right:0;top:66px;height:4px;background:rgba(255,255,255,.35);
+  box-shadow:0 0 14px rgba(255,255,255,.4)}
+#boat{position:absolute;left:250px;top:20px;width:160px;height:48px}
+#boat .hull{position:absolute;bottom:0;left:0;right:0;height:30px;background:var(--sand);border-radius:0 0 60px 60px;
+  box-shadow:inset 0 -6px 0 rgba(0,0,0,.2)}
+#boat .tag{position:absolute;left:0;right:0;bottom:4px;text-align:center;font-size:18px;font-weight:900;color:#3a2a12}
+.drow{position:absolute;left:0;right:0;height:2px;border-top:2px dashed rgba(156,195,211,.25)}
+.drow span{position:absolute;left:16px;top:-26px;font-size:18px;color:var(--muted);font-weight:700}
+.loot{position:absolute;left:420px;font-size:24px;font-weight:900;color:var(--gold);opacity:0;transform:translateX(-12px);
+  transition:opacity .45s .35s,transform .45s .35s;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.loot.on{opacity:1;transform:none}
+.loot.lost{color:var(--shark);text-decoration:line-through;opacity:.8}
+#diver{position:absolute;left:300px;width:64px;height:64px;margin-top:-32px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff3c9,#ffb02e 55%,#d07a00);border:3px solid #fff;
+  box-shadow:0 0 0 6px rgba(255,201,74,.18),0 8px 22px rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;font-size:30px;
+  transition:top .9s cubic-bezier(.45,1.4,.5,1),background .4s,transform .4s,opacity .5s;z-index:3}
+#diver.bust{background:radial-gradient(circle at 35% 30%,#ffd0d4,#ff4d5e 60%,#a01020);animation:shake .5s 2}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+#shark{position:absolute;top:0;left:760px;width:200px;height:80px;margin-top:-40px;transition:left .8s cubic-bezier(.3,1.3,.5,1);z-index:4}
+#shark.on{left:380px}
+#shark svg{width:200px;height:80px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+.bubble{position:absolute;width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.35);animation:rise 6s linear infinite}
+@keyframes rise{from{transform:translateY(0);opacity:0}15%{opacity:1}to{transform:translateY(-440px);opacity:0}}
+
+/* side panel */
+#side{left:790px;top:140px;width:450px;height:520px;border-radius:22px;background:linear-gradient(160deg,#103a50,#0a2534);
+  box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px var(--line);padding:22px 28px}
+#side .lbl{font-size:18px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+#turnLbl{position:absolute;right:28px;top:22px;font-size:20px;font-weight:900;color:var(--teal)}
+.dierow{display:flex;align-items:center;gap:22px;margin:10px 0 18px}
+.die{width:96px;height:96px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);border-radius:18px;padding:13px;
+  background:#f6fbff;box-shadow:inset 0 -5px 0 rgba(0,0,0,.18),0 6px 16px rgba(0,0,0,.4)}
+.die .pip{width:72%;height:72%;margin:auto;border-radius:50%;background:#0b2a3a}
+.die.blank{background:#2a5368}
+.die.shark{background:var(--shark)}
+.die.shark .pip{background:#fff}
+.die.roll{animation:roll .6s ease}
+@keyframes roll{0%{transform:rotate(0) scale(.6)}60%{transform:rotate(380deg) scale(1.1)}100%{transform:rotate(360deg) scale(1)}}
+#rollTxt{font-size:24px;font-weight:800;line-height:1.25}
+#rollTxt.bad{color:var(--shark)}
+.box{display:flex;justify-content:space-between;align-items:center;border-radius:14px;padding:10px 16px;margin-bottom:12px;
+  background:rgba(0,0,0,.22);border:2px solid transparent;transition:border-color .4s,background .4s}
+.box .n{font-size:40px;font-weight:900}
+.box.hot{border-color:var(--gold);background:rgba(255,201,74,.1)}
+.box.dead{border-color:var(--shark);background:rgba(255,77,94,.12)}
+#pileN{color:var(--gold)}#bankN{color:var(--teal)}
+.box .sub{font-size:18px;color:var(--muted)}
+#safeWrap{margin-top:6px}
+#safeBar{height:22px;border-radius:11px;background:rgba(0,0,0,.35);overflow:hidden;margin-top:8px}
+#safeFill{height:100%;width:100%;background:linear-gradient(90deg,var(--shark),var(--gold) 45%,var(--teal));border-radius:11px;transition:width .8s}
+#safeTxt{font-size:22px;font-weight:900;margin-top:6px}
+
+/* chart */
+#chart{left:40px;top:140px;width:1200px;height:520px;border-radius:22px;background:linear-gradient(160deg,#0f3549,#08222f);
+  box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 0 0 2px var(--line)}
+#chart svg{position:absolute;inset:0}
+#chart text{font-family:inherit;font-weight:800}
+.ln{fill:none;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.6s ease}
+.ln.on{stroke-dashoffset:0}
+.grp{opacity:0;transition:opacity .6s}
+.grp.on{opacity:1}
+.grp.late{transition:opacity .6s 1.2s}
+#band{opacity:0;transition:opacity .7s}
+#band.on{opacity:1}
+
+/* end */
+#end{inset:0;background:rgba(3,14,22,.86);display:flex;align-items:center;justify-content:center;z-index:20}
+#end .card{background:#0e2d3e;border:2px solid var(--line);border-radius:24px;padding:36px 50px;width:960px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+#end h2{margin:0 0 14px;font-size:40px}
+#end li{font-size:24px;margin:14px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .see{margin-top:22px;font-size:21px;color:var(--muted);border-top:2px solid var(--line);padding-top:16px}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#1d4a5e;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;left:20px;font-size:13px;color:#5d8799;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="reef" class="panel">
+    <div class="surface"></div>
+    <div id="boat"><div class="hull"></div><div class="tag">BOAT: <span id="boatN">0</span></div></div>
+    <div id="rows"></div>
+    <div id="loots"></div>
+    <div id="diver">🤿</div>
+    <div id="shark"><svg viewBox="0 0 200 80"><path d="M10 44 Q60 14 130 30 L150 6 L152 32 Q180 38 192 46 Q170 58 120 60 Q60 66 10 44 Z" fill="#7d93a3"/>
+      <path d="M10 44 Q60 66 120 60 Q170 58 192 46 Q160 50 120 52 Q60 54 10 44 Z" fill="#dfe9ee"/>
+      <path d="M10 44 L-4 28 L4 44 L-4 60 Z" fill="#7d93a3"/><circle cx="168" cy="40" r="3.5" fill="#111"/>
+      <path d="M172 50 l4 4 l4 -4 l4 4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+  </div>
+
+  <div id="side" class="panel">
+    <div id="turnLbl">TURN 1</div>
+    <div class="lbl">Dive roll (d6)</div>
+    <div class="dierow"><div class="die blank" id="die"></div><div id="rollTxt">1 = shark<br>2–6 = that many gems</div></div>
+    <div class="box" id="pileBox"><div><div class="lbl">Net bag</div><div class="sub" id="pileSub">unbanked, at risk</div></div><div class="n" id="pileN">0</div></div>
+    <div class="box" id="bankBox"><div><div class="lbl">Boat</div><div class="sub">banked, safe forever</div></div><div class="n" id="bankN">0</div></div>
+    <div id="safeWrap"><div class="lbl">Chance you're still safe this turn</div>
+      <div id="safeBar"><div id="safeFill"></div></div><div id="safeTxt">100%</div></div>
+  </div>
+
+  <div id="chart" class="panel"><svg id="csvg" viewBox="0 0 1200 520"></svg></div>
+
+  <div id="title" class="panel">
+    <div class="big">Push Your Luck</div>
+    <h2>The Reef Dive</h2>
+    <div class="row"><span style="font-size:54px">🤿</span><span>One more dive for more treasure?</span><span style="font-size:54px">🦈</span></div>
+    <div class="press">Press SPACE to dive in</div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li><b>Risk grows with every push.</b> Each dive is another 5-in-6 bet, and the bets multiply.</li>
+      <li><b>Banking is the real decision.</b> Rolling is automatic. Choosing when to stop is the game.</li>
+      <li><b>Tune two dials to set the tension:</b> how likely a bust is, and how fast the reward grows.</li>
+    </ul>
+    <div class="see">You'll see this in: Can't Stop, Incan Gold, The Quacks of Quedlinburg, Zombie Dice.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">SPACE / click ▸ next &nbsp;·&nbsp; ← back &nbsp;·&nbsp; R restart</div>
+</div>
+
+<script>
+const S=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+const PIPS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+const pips=v=>PIPS[v].map(p=>`<span class="pip" style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></span>`).join('');
+const R=5/6, MAXD=5;
+const depthY=d=>d<0?44:110+d*80;   // -1 = in the boat
+const pct=n=>Math.round(Math.pow(R,n)*100);
+
+// reef scaffolding
+$('rows').innerHTML=[1,2,3,4,5].map(d=>`<div class="drow" style="top:${depthY(d)}px"><span>Push ${d}</span></div>`).join('')
+  +[[80,300,0],[600,380,2.5],[150,460,4],[520,250,1.2]].map(([x,y,dl])=>`<div class="bubble" style="left:${x}px;top:${y}px;animation-delay:${dl}s"></div>`).join('');
+$('loots').innerHTML=[1,2,3,4,5].map(d=>`<div class="loot" id="loot${d}" style="top:${depthY(d)-18}px"></div>`).join('');
+
+// chart
+const X=n=>130+(n-1)*(940/7), Y0=440, YS=p=>Y0-p*400, YE=e=>Y0-e/10*400;
+const surv=[1,2,3,4,5,6,7,8].map(n=>Math.pow(R,n));
+const ev=[1,2,3,4,5,6,7,8].map(n=>4*n*Math.pow(R,n));
+(function buildChart(){
+  let s='';
+  s+=`<rect id="band" x="${X(5)-34}" y="36" width="${X(6)-X(5)+68}" height="404" rx="14" fill="rgba(255,201,74,.13)" stroke="#ffc94a" stroke-dasharray="8 6" stroke-width="2"/>`;
+  for(let i=0;i<=4;i++){const y=Y0-i*100;s+=`<line x1="110" x2="1090" y1="${y}" y2="${y}" stroke="rgba(156,195,211,.15)" stroke-width="2"/>`;
+    s+=`<text x="98" y="${y+7}" text-anchor="end" fill="#2ed3c6" font-size="20">${i*25}%</text>`;
+    s+=`<text x="1102" y="${y+7}" fill="#ffc94a" font-size="20">${(i*2.5).toString()}</text>`;}
+  for(let n=1;n<=8;n++)s+=`<text x="${X(n)}" y="474" text-anchor="middle" fill="#eefaff" font-size="22">${n}</text>`;
+  s+=`<text x="610" y="506" text-anchor="middle" fill="#9cc3d3" font-size="20">Pushes this turn</text>`;
+  s+=`<text x="20" y="28" fill="#2ed3c6" font-size="20">Chance still safe</text>`;
+  s+=`<text x="1180" y="28" text-anchor="end" fill="#ffc94a" font-size="20">Expected gems in bag</text>`;
+  const path=(arr,yf)=>'M'+arr.map((v,i)=>`${X(i+1)} ${yf(v)}`).join(' L');
+  s+=`<path id="lnS" class="ln" pathLength="1" d="${path(surv,YS)}" stroke="#2ed3c6" style="filter:drop-shadow(0 0 6px rgba(46,211,198,.5))"/>`;
+  s+=`<path id="lnE" class="ln" pathLength="1" d="${path(ev,YE)}" stroke="#ffc94a" style="filter:drop-shadow(0 0 6px rgba(255,201,74,.5))"/>`;
+  let gs='<g id="ptS" class="grp late">',ge='<g id="ptE" class="grp late">';
+  surv.forEach((v,i)=>{const n=i+1,x=X(n),y=YS(v),ly=n<=2?y-16:y+34;
+    gs+=`<circle cx="${x}" cy="${y}" r="8" fill="#2ed3c6" stroke="#03101a" stroke-width="3"/><text x="${x}" y="${ly}" text-anchor="middle" fill="#2ed3c6" font-size="20">${pct(n)}%</text>`;});
+  ev.forEach((v,i)=>{const n=i+1,x=X(n),y=YE(v),ly=n<=2?y+34:y-16;
+    ge+=`<circle cx="${x}" cy="${y}" r="8" fill="#ffc94a" stroke="#03101a" stroke-width="3"/><text x="${x}" y="${ly}" text-anchor="middle" fill="#ffc94a" font-size="20">${v.toFixed(1)}</text>`;});
+  s+=gs+'</g>'+ge+'</g>';
+  s+=`<g id="bandTxt" class="grp"><text x="${(X(5)+X(6))/2}" y="66" text-anchor="middle" fill="#ffc94a" font-size="24">SWEET SPOT</text></g>`;
+  $('csvg').innerHTML=s;
+})();
+
+let cur=0, st;
+function reset(){
+  st={scene:'title',turn:1,depth:-1,face:0,rolled:0,pile:0,bank:0,bust:false,loot:{},lost:false,chart:0};
+  render(true);
+}
+function setHeader(t,c){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=c;
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+
+function render(instant){
+  $('title').classList.toggle('on',st.scene==='title');
+  const reef=st.scene==='reef';
+  $('reef').classList.toggle('on',reef);$('side').classList.toggle('on',reef);
+  $('chart').classList.toggle('on',st.scene==='chart'||st.scene==='end');
+  $('end').classList.toggle('on',st.scene==='end');
+  $('header').style.visibility=st.scene==='title'?'hidden':'visible';
+  // diver
+  const dv=$('diver');dv.style.top=depthY(st.depth)+'px';dv.classList.toggle('bust',st.bust);
+  dv.textContent=st.bust?'💥':'🤿';
+  const sh=$('shark');sh.style.top=depthY(Math.max(st.depth,1))+'px';sh.classList.toggle('on',st.bust);
+  for(let d=1;d<=MAXD;d++){const el=$('loot'+d),v=st.loot[d];el.classList.toggle('on',!!v);
+    el.classList.toggle('lost',st.lost&&!!v);if(v)el.textContent='+'+v+' 💎';}
+  // die
+  const die=$('die');
+  if(st.face){die.className='die'+(st.face===1?' shark':'');die.innerHTML=pips(st.face);
+    if(!instant&&st.rolled){die.classList.remove('roll');void die.offsetWidth;die.classList.add('roll')}}
+  else{die.className='die blank';die.innerHTML='';}
+  st.rolled=0;
+  const rt=$('rollTxt');rt.classList.toggle('bad',st.face===1);
+  rt.innerHTML=!st.face?'1 = shark<br>2–6 = that many gems':st.face===1?'Rolled 1:<br>SHARK! Bust.':`Rolled ${st.face}:<br>+${st.face} gems`;
+  $('turnLbl').textContent='TURN '+st.turn;
+  $('pileN').textContent=st.lost?0:st.pile;$('pileSub').textContent=st.lost?st.pile+' gems lost to the shark':'unbanked, at risk';$('bankN').textContent=st.bank;$('boatN').textContent=st.bank;
+  $('pileBox').className='box'+(st.lost?' dead':st.pile>0?' hot':'');
+  $('bankBox').className='box'+(st.justBanked?' hot':'');
+  const dd=Math.max(st.depth,0),p=st.bust?0:pct(dd);
+  $('safeFill').style.width=p+'%';$('safeTxt').textContent=st.bust?'0%: the shark got you':p+'%'+(dd?`  (5/6 multiplied ${dd} time${dd>1?'s':''})`:'');
+  // chart
+  $('lnS').classList.toggle('on',st.chart>=1);$('ptS').classList.toggle('on',st.chart>=1);
+  $('lnE').classList.toggle('on',st.chart>=2);$('ptE').classList.toggle('on',st.chart>=2);
+  $('band').classList.toggle('on',st.chart>=3);$('bandTxt').classList.toggle('on',st.chart>=3);
+}
+function push(face){st.depth++;st.face=face;st.rolled=1;st.justBanked=false;
+  if(face===1){st.bust=true;st.lost=true}else{st.pile+=face;st.loot[st.depth]=face}}
+
+const steps=[
+ ()=>{st.scene='title';setHeader('','')},
+ ()=>{st.scene='reef';st.depth=-1;
+   setHeader('The setup: one die, one bag, one boat','Each push, roll the d6. A 1 is a shark and you lose your bag. A 2–6 adds that many gems. Bank to make them safe.')},
+ ()=>{st.depth=0;push(4);setHeader('Turn 1, push 1: a 4','Four gems go in the net bag. They are not safe yet. The chance you are still safe is 5 in 6.')},
+ ()=>{push(3);setHeader('Push 2: a 3','The bag holds 7. Two 5-in-6 bets in a row: only 69% of divers get this far.')},
+ ()=>{push(5);setHeader('Push 3: a 5','The bag holds 12. Every yes made the pile bigger, and every yes made the next push scarier.')},
+ ()=>{st.depth=-1;st.bank+=st.pile;st.pile=0;st.face=0;st.justBanked=true;
+   setHeader('Bank it: surface with 12','The diver stops and swims up. Twelve gems move to the boat. No shark can touch them now.')},
+ ()=>{st.turn=2;st.depth=0;st.loot={};st.justBanked=false;push(6);
+   setHeader('Turn 2, push 1: a 6','A great start. Six gems in the bag, and the odds reset to 5 in 6 for a new turn.')},
+ ()=>{push(2);setHeader('Push 2: a 2','The bag holds 8. Feeling lucky? One more dive could reach 12 again.')},
+ ()=>{push(1);setHeader('Push 3: a 1. Shark!','Bust. All 8 unbanked gems are lost. The 12 in the boat are safe, because banking was the real decision.')},
+ ()=>{st.scene='chart';st.chart=1;
+   setHeader('Risk: each push is another 5-in-6 bet','Your chance to still be safe falls every push: 83%, 69%, 58%. After 8 pushes, fewer than 1 in 4 divers survive.')},
+ ()=>{st.chart=2;setHeader('Reward: the bag grows about 4 gems a push','Expected gems = bag size × chance you keep it. The gold line climbs, flattens, then the shark starts winning.')},
+ ()=>{st.chart=3;setHeader('The sweet spot: bank after 5 or 6 pushes','Expected treasure peaks at about 8 gems. Past push 6, each dive risks more than it adds. Change the odds or the gems and this spot moves.')},
+ ()=>{st.scene='end';setHeader('What designers take from this','Push your luck in three points.')}
+];
+
+const dotsEl=$('dots');
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++){steps[i](true);}
+  render(true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

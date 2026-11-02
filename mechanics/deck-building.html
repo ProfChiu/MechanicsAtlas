@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dominion Deck-Building</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{--parch:#f1e2bc;--ink:#3b2a1a;--gold:#e2b84f;--trim:#8a6a3a;--wine:#7a1f2b}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:radial-gradient(circle at 50% 35%,#3a2616,#120c08 75%);font-family:'IM Fell English',Georgia,serif;color:var(--parch);user-select:none;cursor:pointer}
+#stage{position:absolute;left:0;top:0;width:1280px;height:900px;transform-origin:0 0}
+
+/* ---------- market ---------- */
+.market{position:absolute;left:16px;top:10px;width:1248px;height:176px;border-radius:14px;border:3px solid #b8913f;
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 10px,transparent 10px 20px),linear-gradient(#24402f,#172b20);
+  box-shadow:inset 0 0 40px rgba(0,0,0,.5),0 8px 24px rgba(0,0,0,.5)}
+.banner{position:absolute;left:14px;top:12px;width:78px;height:146px;background:linear-gradient(#8f2533,#5e1620);clip-path:polygon(0 0,100% 0,100% 86%,50% 100%,0 86%);
+  display:flex;flex-direction:column;align-items:center;padding-top:16px;font-family:Cinzel;font-weight:700;font-size:13px;letter-spacing:1px;color:var(--gold);text-align:center;line-height:1.3}
+.banner b{font-size:28px;margin-bottom:6px}
+.pile{position:absolute}
+.pile .cnt{position:absolute;left:24px;top:40px;min-width:26px;height:22px;border-radius:11px;background:#1b120b;border:2px solid var(--gold);color:var(--gold);font-family:Cinzel;font-weight:700;font-size:12px;line-height:18px;text-align:center;padding:0 4px;z-index:3}
+.pile .c{box-shadow:2px 2px 0 #b6a27a,4px 4px 0 #8a7752,0 6px 12px rgba(0,0,0,.6)}
+.pile.flash .c{animation:flash .9s}
+@keyframes flash{30%{box-shadow:0 0 0 3px var(--gold),0 0 30px 10px rgba(226,184,79,.9)}}
+.glabel{position:absolute;top:150px;transform:translateX(-50%);font-family:Cinzel;font-size:11px;font-weight:700;letter-spacing:1.5px;white-space:nowrap;color:#e8d6a8;transition:color .4s,text-shadow .4s}
+.glabel i{font-family:'IM Fell English';font-weight:400;letter-spacing:0;font-size:13px;opacity:.85}
+.market.hl .glabel{color:var(--gold);text-shadow:0 0 12px rgba(226,184,79,.8)}
+.clock{position:absolute;left:950px;top:14px;width:282px;height:146px;border:2px solid var(--trim);border-radius:10px;background:rgba(0,0,0,.25);text-align:center;padding-top:10px}
+.clock .h{font-family:Cinzel;font-size:13px;font-weight:700;letter-spacing:2px;color:var(--gold)}
+.clock .n{font-family:Cinzel;font-weight:900;font-size:56px;line-height:1.1;color:var(--parch);transition:transform .3s}
+.clock .n.bump{animation:bump .6s}
+@keyframes bump{40%{transform:scale(1.35);color:#ff9a7a}}
+.clock .s{font-size:14px;font-style:italic;opacity:.85;padding:0 12px}
+
+/* ---------- boards ---------- */
+.board{position:absolute;left:16px;width:1248px;height:280px;border-radius:14px;border:3px solid var(--trim);
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.06) 0 3px,transparent 3px 9px),linear-gradient(#3e2819,#26180e);
+  box-shadow:inset 0 0 40px rgba(0,0,0,.55),0 8px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .6s,filter .5s,border-color .4s,box-shadow .4s}
+.board.show{opacity:1}
+.board.active{border-color:var(--gold);box-shadow:inset 0 0 40px rgba(0,0,0,.55),0 0 0 2px var(--gold),0 0 32px rgba(226,184,79,.35)}
+.board.idle{filter:brightness(.62) saturate(.75)}
+.shieldw{position:absolute;left:59px;top:16px;width:92px;height:104px;background:var(--gold);clip-path:polygon(0 0,100% 0,100% 55%,50% 100%,0 55%)}
+.shield{position:absolute;left:4px;top:4px;width:84px;height:94px;background:var(--h);clip-path:polygon(0 0,100% 0,100% 55%,50% 100%,0 55%);display:flex;justify-content:center;padding-top:12px;font-size:42px}
+.pname{position:absolute;left:5px;width:200px;top:124px;text-align:center;font-family:Cinzel;font-weight:700;font-size:17px;color:var(--gold)}
+.ptitle{position:absolute;left:5px;width:200px;top:146px;text-align:center;font-style:italic;font-size:15px;opacity:.9}
+.seal{position:absolute;left:70px;top:178px;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c0392b,#7a1218);box-shadow:0 0 0 4px rgba(122,18,24,.45),0 4px 10px rgba(0,0,0,.6);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Cinzel;color:#ffe6c4;transition:transform .3s}
+.seal b{font-size:26px;line-height:1}
+.seal span{font-size:10px;letter-spacing:2px}
+.seal.bump{animation:bump2 .7s}
+@keyframes bump2{40%{transform:scale(1.25)}}
+.lbl{position:absolute;transform:translateX(-50%);font-family:Cinzel;font-size:11px;font-weight:700;letter-spacing:1.5px;color:#d8c398;white-space:nowrap}
+.slot{position:absolute;width:78px;height:112px;margin:-56px 0 0 -39px;border:2px dashed rgba(216,195,152,.4);border-radius:8px}
+.bub{position:absolute;left:206px;top:12px;max-width:380px;background:var(--parch);color:var(--ink);border:2px solid var(--ink);border-radius:12px;padding:7px 13px;font-size:17px;line-height:1.25;
+  box-shadow:0 4px 12px rgba(0,0,0,.5);opacity:0;scale:.7;transform-origin:0 30%;transition:opacity .3s,scale .35s cubic-bezier(.3,1.6,.5,1);z-index:30}
+.bub.show{opacity:1;scale:1}
+.bub::before{content:'';position:absolute;left:-9px;top:16px;width:14px;height:14px;background:var(--parch);border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
+.phases{position:absolute;left:600px;top:22px;display:flex;gap:6px}
+.ph{padding:4px 10px;border-radius:12px;font-family:Cinzel;font-size:11px;font-weight:700;letter-spacing:1px;color:#9c8862;border:1px solid #6b5230;transition:all .3s}
+.ph.on{background:var(--gold);color:#2a1a10;border-color:var(--gold);box-shadow:0 0 12px rgba(226,184,79,.6)}
+.coins{position:absolute;left:890px;top:16px;width:92px;height:34px;border-radius:17px;background:radial-gradient(circle at 35% 30%,#ffe9a0,#c48a1c);color:#3b2a1a;font-family:Cinzel;font-weight:900;font-size:20px;line-height:30px;text-align:center;border:2px solid #6b4a14;opacity:0;scale:.6;transition:opacity .3s,scale .3s}
+.coins.show{opacity:1;scale:1}
+.deck{position:absolute;left:1074px;top:14px;width:160px;height:252px;border:1px solid var(--trim);border-radius:10px;background:rgba(241,226,188,.06);padding:8px 10px}
+.deck h4{font-family:Cinzel;font-size:11px;letter-spacing:1.5px;color:var(--gold);margin-bottom:6px}
+.drow{display:flex;align-items:center;gap:6px;font-size:15px;line-height:22px}
+.drow .n{margin-left:auto;font-family:Cinzel;font-weight:700}
+.drow.new{animation:newrow 1.4s}
+@keyframes newrow{0%,40%{background:rgba(226,184,79,.45)}100%{background:transparent}}
+.avg{position:absolute;left:8px;right:8px;bottom:8px;border-top:1px solid var(--trim);padding-top:5px;font-size:13px;text-align:center;line-height:1.2}
+.avg b{font-family:Cinzel;font-size:17px;color:var(--gold)}
+.shuf{position:absolute;transform:translateX(-50%);font-family:Cinzel;font-weight:700;font-size:13px;color:var(--gold);white-space:nowrap;animation:floatup 2.2s forwards;z-index:40;text-shadow:0 2px 4px #000}
+@keyframes floatup{0%{opacity:0;margin-top:10px}20%{opacity:1}80%{opacity:1}100%{opacity:0;margin-top:-30px}}
+
+/* ---------- cards ---------- */
+.c{position:absolute;width:78px;height:112px;margin:-56px 0 0 -39px;border-radius:7px;background:var(--parch);border:2px solid var(--ink);color:var(--ink);overflow:hidden;
+  box-shadow:0 3px 8px rgba(0,0,0,.55),inset 0 0 0 3px var(--parch),inset 0 0 0 4px #9c7a44;font-family:Cinzel;
+  transition:transform .65s cubic-bezier(.3,.7,.3,1),opacity .45s,margin .3s,filter .3s,box-shadow .3s}
+.c .t{position:absolute;top:6px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;letter-spacing:.4px}
+.c .a{position:absolute;top:21px;left:0;right:0;text-align:center;font-size:34px;line-height:46px}
+.c .x{position:absolute;top:68px;left:3px;right:3px;text-align:center;font-family:'IM Fell English';font-size:11px;line-height:1.05;font-weight:700}
+.c .b{position:absolute;bottom:0;left:0;right:0;height:17px;font-size:7.5px;letter-spacing:1.5px;text-align:center;line-height:17px;font-weight:700}
+.c.treasure .b{background:#d6a92e}
+.c.victory .b{background:#4f7a3a;color:var(--parch)}
+.c.action .b{background:#b9a888}
+.c.victory{background:linear-gradient(#f1e2bc 60%,#d9e3bf)}
+.c.treasure{background:linear-gradient(#f1e2bc 60%,#f0dc9c)}
+.c .k{position:absolute;bottom:1px;left:3px;width:15px;height:15px;border-radius:50%;background:radial-gradient(#ffe08a,#c48a1c);font-size:9px;line-height:13px;text-align:center;border:1px solid #6b4a14;z-index:2}
+.coin{display:inline-block;width:40px;height:40px;border-radius:50%;font-size:20px;line-height:36px;font-weight:900;border:2px solid rgba(0,0,0,.35);box-shadow:inset 0 0 0 3px rgba(255,255,255,.25);vertical-align:middle}
+.coin.copper,.mc.copper{background:radial-gradient(circle at 35% 30%,#f2a46a,#9c4e24);color:#fff3e0}
+.coin.silver,.mc.silver{background:radial-gradient(circle at 35% 30%,#ffffff,#8d9399);color:#3b3f44}
+.coin.gold,.mc.gold{background:radial-gradient(circle at 35% 30%,#fff3a8,#c79212);color:#5a3b00}
+.mc{display:inline-block;width:15px;height:15px;border-radius:50%;border:1px solid rgba(0,0,0,.4);vertical-align:-2px}
+.c.back{background:repeating-linear-gradient(45deg,#6b1a24 0 7px,#5a141d 7px 14px);border-color:#e2b84f;box-shadow:inset 0 0 0 3px #6b1a24,inset 0 0 0 4px var(--gold);display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--gold)}
+.c.stack{box-shadow:2px 2px 0 #4a1119,4px 4px 0 #36090f,6px 6px 0 #26060a,0 8px 14px rgba(0,0,0,.6)}
+.c.glow{margin-top:-68px;box-shadow:0 0 0 2px #ffd65a,0 0 20px 6px rgba(255,214,90,.75)}
+.c.dim{filter:brightness(.5) saturate(.6)}
+.c.fly{z-index:400}
+#fx{position:absolute;left:0;top:0;width:1280px;height:900px;pointer-events:none;z-index:400}
+
+/* ---------- caption ---------- */
+.caption{position:absolute;left:16px;top:792px;width:1248px;height:98px;background:linear-gradient(#f4e7c5,#e6d2a2);color:var(--ink);border:3px solid var(--trim);border-radius:12px;padding:10px 22px 14px;display:flex;align-items:center;gap:20px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.stepnum{flex:none;width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c0392b,#7a1218);color:#ffe6c4;font-family:Cinzel;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:20px;line-height:1;box-shadow:0 0 0 3px rgba(122,18,24,.35)}
+.stepnum small{font-size:9px;letter-spacing:1px;margin-top:2px}
+.ctitle{font-family:Cinzel;font-weight:700;font-size:21px;color:var(--wine)}
+.ctext{font-size:17.5px;line-height:1.28}
+.hint{margin-left:auto;font-family:Cinzel;font-size:11px;text-align:right;white-space:nowrap;line-height:2;opacity:.75}
+.kbd{display:inline-block;border:2px solid var(--ink);border-radius:5px;padding:0 7px;font-weight:700;line-height:1.4}
+.progress{position:absolute;left:100px;right:22px;bottom:6px;height:4px;background:rgba(59,42,26,.15);border-radius:2px;overflow:hidden}
+.bar{height:100%;background:var(--wine);transition:width .5s}
+
+/* ---------- overlays ---------- */
+.overlay{position:absolute;left:0;top:0;width:1280px;height:785px;display:flex;align-items:center;justify-content:center;background:rgba(15,10,6,.9);opacity:0;pointer-events:none;transition:opacity .5s;z-index:500}
+.overlay.show{opacity:1}
+.titlecard{text-align:center}
+.titlecard .crown{font-size:46px;color:var(--gold)}
+.titlecard h1{font-family:Cinzel;font-weight:900;font-size:96px;letter-spacing:8px;color:var(--gold);text-shadow:0 5px 0 #6b4a14,0 12px 30px rgba(0,0,0,.6);line-height:1.05}
+.titlecard p{font-size:30px;font-style:italic;margin-top:6px}
+.versus{display:flex;align-items:center;justify-content:center;gap:40px;margin-top:34px;font-family:Cinzel}
+.versus .who{display:flex;flex-direction:column;align-items:center;gap:8px}
+.versus .shieldw{position:relative;left:0;top:0}
+.versus .nm{font-weight:700;font-size:20px;color:var(--gold)}
+.versus .tt{font-family:'IM Fell English';font-style:italic;font-size:17px}
+.versus .vs{font-size:34px;font-weight:900;color:#c0392b}
+.press{margin-top:34px;font-family:Cinzel;font-size:18px;animation:pulse 1.6s ease-in-out infinite}
+.press .kbd{border-color:var(--parch)}
+@keyframes pulse{50%{opacity:.4}}
+.scroll{background:linear-gradient(#f4e7c5,#e3cf9e);color:var(--ink);border:3px solid var(--trim);border-radius:10px;padding:18px 30px 16px;box-shadow:0 10px 40px rgba(0,0,0,.7)}
+.scroll h2{font-family:Cinzel;font-size:28px;color:var(--wine);text-align:center}
+.scroll .sub{text-align:center;font-style:italic;font-size:16px;margin-bottom:8px}
+table{border-collapse:collapse;width:100%;font-size:16px}
+th{font-family:Cinzel;font-size:12px;letter-spacing:1px;text-align:left;border-bottom:2px solid var(--trim);padding:4px 8px}
+td{padding:4px 8px;border-bottom:1px solid rgba(138,106,58,.3);height:34px}
+tr.r{opacity:0;transition:opacity .4s,transform .4s;transform:translateX(-12px)}
+tr.r.on{opacity:1;transform:none}
+tr.r.old{opacity:.55}
+td.vp{font-family:Cinzel;font-weight:700;text-align:center}
+td.lead{color:var(--wine)}
+td.note{font-style:italic;color:var(--wine)}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:1px 8px;font-size:15px;border:1px solid rgba(59,42,26,.4)}
+.chip.treasure{background:#f0d98f}.chip.victory{background:#c9dca8}.chip.action{background:#e2d7bd}
+.final{display:grid;grid-template-columns:620px 1fr;gap:26px;width:1180px}
+.final h2{grid-column:1/3}
+.chart text{font-family:Cinzel;font-size:11px;fill:#6b5230}
+.ln{fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.overlay.show .ln{animation:draw 2.2s .3s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.endlbl{opacity:0}
+.overlay.show .endlbl{animation:fade .5s 2.4s forwards}
+@keyframes fade{to{opacity:1}}
+.pcard{display:flex;gap:14px;align-items:center;border:2px solid var(--trim);border-radius:10px;padding:10px 14px;margin-bottom:10px;background:rgba(255,255,255,.25)}
+.pcard.win{border-color:#c79212;background:rgba(255,226,140,.45)}
+.pcard .shieldw{position:relative;left:0;top:0;flex:none;transform:scale(.7);margin:-14px -10px}
+.pcard .info{flex:1}
+.pcard .nm{font-family:Cinzel;font-weight:700;font-size:18px}
+.pcard .big{font-family:Cinzel;font-weight:900;font-size:40px;color:var(--wine)}
+.cbar{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:5px 0 3px;border:1px solid rgba(59,42,26,.4)}
+.cbar i{display:block}
+.legend{font-size:13px}
+.lessons{grid-column:1/3;display:grid;grid-template-columns:1fr 1fr;gap:6px 26px;font-size:16.5px;line-height:1.25}
+.lessons div::before{content:'⚜ ';color:var(--wine)}
+.credit{grid-column:1/3;text-align:center;font-size:12.5px;font-style:italic;opacity:.75}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="market" id="market">
+    <div class="banner"><b>⚜</b>THE<br>SUPPLY</div>
+    <div class="glabel" style="left:230px">TREASURE <i>— pays for things</i></div>
+    <div class="glabel" style="left:560px">VICTORY <i>— points at game end</i></div>
+    <div class="glabel" style="left:845px">ACTION <i>— special powers</i></div>
+    <div class="clock"><div class="h">🏰 PROVINCES LEFT</div><div class="n" id="clockN">8</div><div class="s">When the last Province is bought, the game ends.</div></div>
+  </div>
+  <div class="board" id="boardR" style="top:195px"></div>
+  <div class="board" id="boardB" style="top:490px"></div>
+  <div id="fx"></div>
+  <div class="caption">
+    <div class="stepnum" id="stepnum"></div>
+    <div><div class="ctitle" id="ctitle"></div><div class="ctext" id="ctext"></div></div>
+    <div class="hint"><span class="kbd">SPACE</span> next<br><span class="kbd">←</span> back</div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+  </div>
+  <div class="overlay" id="ovTitle"></div>
+  <div class="overlay" id="ovChron"></div>
+  <div class="overlay" id="ovFinal"></div>
+</div>
+
+<script>
+/* ================= DATA ================= */
+const CARD={
+  copper:{name:'Copper',type:'treasure',cost:0,val:1,txt:'+1 Coin'},
+  silver:{name:'Silver',type:'treasure',cost:3,val:2,txt:'+2 Coins'},
+  gold:{name:'Gold',type:'treasure',cost:6,val:3,txt:'+3 Coins'},
+  estate:{name:'Estate',type:'victory',cost:2,vp:1,art:'🌾',txt:'1 VP'},
+  duchy:{name:'Duchy',type:'victory',cost:5,vp:3,art:'🏘️',txt:'3 VP'},
+  province:{name:'Province',type:'victory',cost:8,vp:6,art:'🏰',txt:'6 VP'},
+  smithy:{name:'Smithy',type:'action',cost:4,art:'⚒️',txt:'+3 Cards'},
+  market:{name:'Market',type:'action',cost:5,art:'🧺',txt:'+1 Card +1 Action +1 Buy +1 Coin'}
+};
+const ORDER=['copper','silver','gold','smithy','market','estate','duchy','province'];
+const SUP_X={copper:140,silver:230,gold:320,estate:470,duchy:560,province:650,smithy:800,market:890}, SUP_Y=88;
+const BASE_SUP={copper:46,silver:40,gold:30,estate:8,duchy:8,province:8,smithy:10,market:10};
+const PL={
+  R:{name:'Lady Rowena',title:'The Planner',crest:'🦢',h:'#2f5aa8',line:'#3c64b8',top:195},
+  B:{name:'Sir Bartholomew',title:'The Greedy',crest:'🐗',h:'#9a2026',line:'#b8322b',top:490}
+};
+const BUYS={
+  R:['smithy','silver','gold','silver','market','gold','province','province','gold','province','province','duchy','province','province'],
+  B:['estate','estate','estate','duchy','estate','silver','duchy','estate','gold','duchy','province','estate','province']
+};
+const NOTES={1:'Same 4 coins, different choices',3:"Rowena's first Gold",7:"Rowena's first Province",8:'Rowena takes the lead — for good',9:'Bart finally buys some money',11:'Bart scrapes together a Province',14:'Last Province bought — game over!'};
+const deckOf=(p,n)=>{const d={copper:7,estate:3};BUYS[p].slice(0,n).forEach(k=>d[k]=(d[k]||0)+1);return d;};
+const vpOf=d=>Object.entries(d).reduce((t,[k,n])=>t+(CARD[k].vp||0)*n,0);
+const sizeOf=d=>Object.values(d).reduce((a,b)=>a+b,0);
+const avgHand=d=>{let m=0;for(const[k,n] of Object.entries(d))m+=((CARD[k].val||0)+(k==='market'?1:0))*n;return m/sizeOf(d)*5;};
+
+const c='copper',s='silver',g='gold',e='estate',d='duchy',p='province',sm='smithy',mk='market';
+const STEPS=[
+ {overlay:'title',title:'Dominion — how deck-building works',text:'Two lords start with identical decks. Watch how their different choices lead to very different kingdoms.'},
+ {market:'hl',title:'The Supply',text:'All buyable cards sit in shared piles. TREASURE pays for things, VICTORY cards are points at the end, ACTION cards give special powers. The coin on each card is its price.'},
+ {title:'Two rivals, identical starts',text:"Both begin with the same 10-card deck: 7 Coppers and 3 Estates (3 VP). Your deck is YOURS: everything you buy joins it for the rest of the game.",
+  R:{bubble:'Invest now, score later.'},B:{bubble:'Points now! Points always!'}},
+ {title:'Shuffle and draw 5',text:'Each player shuffles their deck into a face-down DRAW pile and draws a hand of 5. On the right: what is in each deck, and the average coins a 5-card hand will make.',
+  R:{hand:[c,c,c,c,e],draw:5},B:{hand:[c,c,c,c,e],draw:5}},
+ {active:'R',title:'Turn 1 · Rowena — Action, then Buy',text:'A turn has 3 phases: ACTION (play an Action card), BUY (play Treasures, buy ONE card), CLEANUP. Rowena has no Actions yet, so she plays her Coppers: 4 coins.',
+  R:{phase:'buy',coins:4,hl:true,bubble:'Four coins. What will grow my kingdom?'}},
+ {active:'R',buy:{p:'R',card:sm},title:'Rowena buys a Smithy',text:"Bought cards go to your DISCARD pile, not your hand. Smithy (cost 4) does nothing today, but every time it comes back it draws 3 extra cards.",
+  R:{phase:'buy',coins:4,hl:true,done:1,disc:1,top:sm,bubble:'A Smithy: an investment for every future turn.'}},
+ {active:'R',clean:['R'],title:'Cleanup',text:'At the end of the turn, everything in hand and in play goes to the discard pile. Then draw 5 fresh cards for next turn.',
+  R:{phase:'cleanup',hand:[c,c,c,e,e],draw:0,disc:6,top:c}},
+ {active:'B',buy:{p:'B',card:e},title:'Turn 1 · Bartholomew',text:'Same deck, same 4 coins, a DIFFERENT choice. Bart buys an Estate: +1 Victory Point right now.',
+  B:{phase:'buy',coins:4,hl:true,done:1,disc:1,top:e,bubble:'An Estate! A point in the bag, ha!'}},
+ {active:'B',clean:['B'],title:'Cleanup',text:"Bart discards and draws 5. Look at the seals: 4 VP vs Rowena's 3. He's \"winning\"... for now.",
+  B:{phase:'cleanup',hand:[c,c,c,e,e],draw:0,disc:6,top:c,bubble:"I'm ahead already!"}},
+ {active:'R',buy:{p:'R',card:s},title:'Turn 2 · Rowena',text:'3 coins buys a Silver: a Treasure worth 2 coins every time she draws it. She is upgrading her money for the long run.',
+  R:{phase:'buy',coins:3,hl:true,done:2,disc:7,top:s,bubble:'Silver: worth double a Copper.'}},
+ {active:'R',clean:['R'],shuffle:['R'],title:'Reshuffle!',text:"Rowena's draw pile is empty, so she shuffles her discard pile into a NEW draw pile. Her purchases can finally reach her hand!",
+  R:{phase:'cleanup',hand:[sm,s,c,c,e],draw:7,disc:0,top:null,bubble:'There you are, Smithy!'}},
+ {active:'B',buy:{p:'B',card:e},title:'Turn 2 · Bartholomew',text:'3 coins: Bart buys another Estate. 5 VP. His deck now holds 5 Estates out of 12 cards.',
+  B:{phase:'buy',coins:3,hl:true,done:2,disc:7,top:e,bubble:'Another Estate! My lands grow!'}},
+ {active:'B',clean:['B'],shuffle:['B'],title:'Bart reshuffles too',text:"Victory cards do NOTHING in your hand. They just take up space where money could be. Bart's new hand shows the problem.",
+  B:{phase:'cleanup',hand:[c,c,e,e,e],draw:7,disc:0,top:null,bubble:'Three Estates... and two Coppers. Hm.'}},
+ {active:'R',drew:{R:3},title:'Turn 3 · Rowena plays Smithy',text:'ACTION phase: Rowena plays her Smithy and draws 3 more cards. Her hand grows from 5 to 7.',
+  R:{phase:'action',played:[sm],hand:[s,c,c,e,c,c,e],draw:4,bubble:'Smithy: three more cards!'}},
+ {active:'R',buy:{p:'R',card:g},title:'Rowena buys Gold',text:'BUY phase: Silver + 4 Coppers = 6 coins. Gold costs 6 and makes 3 coins every time it appears. Her deck is snowballing.',
+  R:{phase:'buy',played:[sm],hand:[s,c,c,e,c,c,e],coins:6,hl:true,done:3,disc:1,top:g,bubble:'Gold! My deck grows richer every turn.'}},
+ {active:'B',clean:['R'],buy:{p:'B',card:e},title:'Turn 3 · Bartholomew',text:'Only 2 coins. Bart buys yet another Estate, which makes every future hand weaker. Buying points too early "clogs" your deck.',
+  R:{hand:[c,c,e,c,g],played:[],draw:8,disc:0,top:null},
+  B:{phase:'buy',coins:2,hl:true,done:3,disc:1,top:e,bubble:'Two coins... another Estate, I suppose.'}},
+ {overlay:'chron',chron:9,title:'Fast-forward: turns 4–9',text:'Rowena keeps building (Silver, Market, Gold), then switches to Provinces on turn 7. Bart keeps grabbing Estates and Duchies. On turn 8 Rowena takes the lead.',
+  R:{done:9,hand:[],played:[],draw:19,disc:0,top:null},B:{done:9,hand:[],played:[],draw:19,disc:0,top:null}},
+ {active:'R',title:'Turn 10 · Rowena plays Smithy',text:"Check her deck panel: 3 Golds, 2 Silvers, a Smithy, a Market. Her average hand now makes about 5.5 coins. She plays Smithy and draws into a huge hand.",
+  R:{phase:'action',played:[sm],hand:[g,g,s,p,g,c,e],draw:6,disc:5,top:c,bubble:'Smithy again! And look at all that gold.'}},
+ {active:'R',buy:{p:'R',card:p},title:'Rowena buys a Province',text:'10 coins. A Province (cost 8) is worth 6 VP. Her early "do nothing" investments now earn a Province almost every turn.',
+  R:{phase:'buy',played:[sm],hand:[g,g,s,p,g,c,e],coins:10,hl:true,done:10,disc:6,top:p,bubble:'A Province, for the crown!'}},
+ {active:'B',clean:['R'],buy:{p:'B',card:d},title:'Turn 10 · Bartholomew',text:"Bart's deck is clogged with Victory cards; his average hand is only ~3 coins. Even a lucky Gold gives him 5: no Province, so he settles for a Duchy.",
+  R:{hand:[c,s,mk,e,c],played:[],draw:1,disc:14,top:g},
+  B:{phase:'buy',hand:[g,c,c,e,d],coins:5,hl:true,done:10,draw:9,disc:6,top:d,bubble:'Five coins... only a Duchy. Again.'}},
+ {overlay:'chron',chron:14,title:'Turns 11–14: the endgame',text:'Rowena buys Provinces almost every turn. On turn 14 she takes the LAST Province, and the game ends immediately.',
+  R:{done:14,hand:[],played:[],draw:0,disc:24,top:p},B:{done:13,hand:[],played:[],draw:0,disc:23,top:p}},
+ {overlay:'final',title:'The final tally',text:'Bart led for the first 7 turns. Rowena built an engine first and scored later, and she won by a mile.',
+  R:{done:14,hand:[],played:[],draw:0,disc:24,top:p},B:{done:13,hand:[],played:[],draw:0,disc:23,top:p}}
+];
+let acc={R:{hand:[],played:[],draw:10,disc:0,top:null,done:0},B:{hand:[],played:[],draw:10,disc:0,top:null,done:0}};
+const STATES=STEPS.map(st=>{const o={};for(const q of['R','B']){acc[q]={...acc[q],coins:null,phase:null,bubble:null,hl:false,...(st[q]||{})};o[q]=acc[q];}return o;});
+
+/* ================= BUILDERS ================= */
+const stage=document.getElementById('stage'), fx=document.getElementById('fx'), market=document.getElementById('market');
+const art=k=>CARD[k].type==='treasure'?`<span class="coin ${k}">${CARD[k].val}</span>`:CARD[k].art;
+const mini=k=>CARD[k].type==='treasure'?`<i class="mc ${k}"></i>`:CARD[k].art;
+const chip=k=>`<span class="chip ${CARD[k].type}">${mini(k)} ${CARD[k].name}</span>`;
+function cardEl(k,cls=''){const C=CARD[k],el=document.createElement('div');el.className=`c ${C.type} ${cls}`;
+  el.innerHTML=`<div class="t">${C.name}</div><div class="a">${art(k)}</div><div class="x">${C.txt}</div><div class="b">${C.type.toUpperCase()}</div><div class="k">${C.cost}</div>`;return el;}
+function backEl(cls=''){const el=document.createElement('div');el.className='c back '+cls;el.textContent='⚜';return el;}
+const at=(el,x,y)=>{el.style.left=x+'px';el.style.top=y+'px';return el;};
+
+// supply piles
+const PILES={};
+for(const k of Object.keys(SUP_X)){const w=document.createElement('div');w.className='pile';at(w,SUP_X[k],SUP_Y);
+  w.appendChild(at(cardEl(k),0,0));const n=document.createElement('div');n.className='cnt';w.appendChild(n);market.appendChild(w);PILES[k]={w,n};}
+
+// boards
+const B={};
+function shieldHTML(q){return `<div class="shieldw"><div class="shield" style="--h:${PL[q].h}">${PL[q].crest}</div></div>`;}
+for(const q of['R','B']){
+  const el=document.getElementById('board'+q);
+  el.innerHTML=`${shieldHTML(q)}<div class="pname">${PL[q].name}</div><div class="ptitle">${PL[q].title}</div>
+   <div class="seal"><b>3</b><span>VP</span></div>
+   <div class="slot" style="left:255px;top:160px"></div><div class="lbl dl" style="left:255px;top:226px"></div>
+   <div class="slot" style="left:935px;top:160px"></div><div class="lbl" style="left:935px;top:226px">IN PLAY</div>
+   <div class="slot" style="left:1030px;top:160px"></div><div class="lbl xl" style="left:1030px;top:226px"></div>
+   <div class="phases"><div class="ph" data-p="action">⚔ Action</div><div class="ph" data-p="buy">⚖ Buy</div><div class="ph" data-p="cleanup">↺ Cleanup</div></div>
+   <div class="coins"></div><div class="bub"></div><div class="deck"></div>`;
+  B[q]={el,seal:el.querySelector('.seal'),dl:el.querySelector('.dl'),xl:el.querySelector('.xl'),phs:[...el.querySelectorAll('.ph')],
+        coins:el.querySelector('.coins'),bub:el.querySelector('.bub'),deck:el.querySelector('.deck'),dyn:[],timers:[]};
+}
+
+// title overlay
+document.getElementById('ovTitle').innerHTML=`<div class="titlecard"><div class="crown">♛</div><h1>DOMINION</h1><p>How deck-building works</p>
+ <div class="versus"><div class="who">${shieldHTML('R')}<div class="nm">${PL.R.name}</div><div class="tt">${PL.R.title}</div></div>
+ <div class="vs">VS</div><div class="who">${shieldHTML('B')}<div class="nm">${PL.B.name}</div><div class="tt">${PL.B.title}</div></div></div>
+ <div class="press">Press <span class="kbd">SPACE</span> to begin</div></div>`;
+
+// chronicle overlay
+(function(){
+  let rows='';
+  for(let t=1;t<=14;t++){
+    const rv=vpOf(deckOf('R',t)), bv=t<=13?vpOf(deckOf('B',t)):null;
+    rows+=`<tr class="r" data-t="${t}"><td class="vp">${t}</td><td>${chip(BUYS.R[t-1])}</td><td class="vp ${rv>(bv??-1)?'lead':''}">${rv}</td>
+      <td>${t<=13?chip(BUYS.B[t-1]):'<i>— game over —</i>'}</td><td class="vp ${bv!==null&&bv>rv?'lead':''}">${bv??''}</td><td class="note">${NOTES[t]||''}</td></tr>`;
+  }
+  document.getElementById('ovChron').innerHTML=`<div class="scroll" style="width:960px"><h2>📜 The Royal Chronicle</h2><div class="sub">Every card each lord bought, and their Victory Points after it (red = in the lead)</div>
+   <table><tr><th>Turn</th><th>🦢 Rowena bought</th><th>VP</th><th>🐗 Bartholomew bought</th><th>VP</th><th>Note</th></tr>${rows}</table></div>`;
+})();
+
+// final overlay
+(function(){
+  const x0=48,x1=590,y0=290,y1=24,max=45,X=t=>x0+(x1-x0)*t/14,Y=v=>y0-(y0-y1)*v/max;
+  const ptsR=[],ptsB=[];for(let t=0;t<=14;t++){ptsR.push([X(t),Y(vpOf(deckOf('R',t)))]);ptsB.push([X(t),Y(vpOf(deckOf('B',Math.min(t,13))))]);}
+  let grid='';for(let v=0;v<=40;v+=10)grid+=`<line x1="${x0}" x2="${x1}" y1="${Y(v)}" y2="${Y(v)}" stroke="#b49a6a" stroke-opacity=".5" stroke-dasharray="3 4"/><text x="${x0-8}" y="${Y(v)+4}" text-anchor="end">${v}</text>`;
+  for(let t=0;t<=14;t+=2)grid+=`<text x="${X(t)}" y="${y0+18}" text-anchor="middle">${t}</text>`;
+  const path=a=>'M'+a.map(q=>q.join(',')).join(' L');
+  const svg=`<svg class="chart" width="620" height="330" viewBox="0 0 620 330">
+    <rect x="${X(0)}" y="${y1}" width="${X(7.5)-X(0)}" height="${y0-y1}" fill="#b8322b" fill-opacity=".08"/>
+    <text x="${X(3.7)}" y="${y1+16}" text-anchor="middle" style="fill:#b8322b">BART AHEAD</text>
+    ${grid}<text x="${(x0+x1)/2}" y="${y0+34}" text-anchor="middle">TURN</text>
+    <text x="14" y="${(y0+y1)/2}" text-anchor="middle" transform="rotate(-90 14 ${(y0+y1)/2})">VICTORY POINTS</text>
+    <path class="ln" pathLength="1" stroke="${PL.B.line}" d="${path(ptsB)}"/>
+    <path class="ln" pathLength="1" stroke="${PL.R.line}" d="${path(ptsR)}"/>
+    <g class="endlbl"><circle cx="${X(8)}" cy="${Y(15)}" r="7" fill="none" stroke="#7a1f2b" stroke-width="2.5"/>
+    <text x="${X(8)-10}" y="${Y(15)-14}" text-anchor="end" style="fill:#7a1f2b;font-weight:700">Rowena takes the lead</text>
+    <text x="${X(14)+6}" y="${Y(42)+4}" style="fill:${PL.R.line};font-weight:900;font-size:15px">42</text>
+    <text x="${X(14)+6}" y="${Y(30)+4}" style="fill:${PL.B.line};font-weight:900;font-size:15px">30</text></g></svg>`;
+  const pc=q=>{const dk=deckOf(q,BUYS[q].length),n=sizeOf(dk),vp=vpOf(dk);let tr=0,ac=0,vi=0;for(const[k,m] of Object.entries(dk)){const ty=CARD[k].type;if(ty==='treasure')tr+=m;else if(ty==='action')ac+=m;else vi+=m;}
+    return `<div class="pcard ${q==='R'?'win':''}">${shieldHTML(q)}<div class="info"><div class="nm">${PL[q].name} ${q==='R'?'👑':''}</div>
+     <div class="cbar"><i style="width:${tr/n*100}%;background:#d6a92e"></i><i style="width:${ac/n*100}%;background:#9c8a66"></i><i style="width:${vi/n*100}%;background:#4f7a3a"></i></div>
+     <div class="legend">${n} cards · ${tr} treasure · ${ac} action · ${vi} victory · ≈${avgHand(dk).toFixed(1)} coins/hand</div></div><div class="big">${vp}</div></div>`;};
+  document.getElementById('ovFinal').innerHTML=`<div class="scroll final"><h2>♛ The Final Tally</h2>
+   <div>${svg}</div><div style="padding-top:20px">${pc('R')}${pc('B')}
+   <div style="font-size:15px;line-height:1.3;margin-top:4px"><b>Same start. Different choices.</b> Bart bought his first 5 Victory cards before he had any real money, so his deck could never afford Provinces.</div></div>
+   <div class="lessons">
+     <div>Your deck is an engine: everything you buy comes back to your hand again and again.</div>
+     <div>Victory cards win the game, but they are dead weight in your hand. Buy them too early and your deck chokes.</div>
+     <div>Build first (Silver, Gold, Actions like Smithy), then score (Provinces). That is long-term planning.</div>
+     <div>Watch the Province pile: it is the game's clock. Know when to switch from building to scoring.</div>
+   </div><div class="credit">Dominion was designed by Donald X. Vaccarino (Rio Grande Games). The characters and illustrations here are original.</div></div>`;
+})();
+
+/* ================= RENDER ================= */
+let cur=0,prev=-1,token=0;
+const handX=(i,n)=>590+(i-(n-1)/2)*(n>6?70:84);
+function fly(el,from,to,delay){el.classList.add('fly');at(el,from[0],from[1]);fx.appendChild(el);el.style.transitionDelay=delay+'ms';
+  el.getBoundingClientRect();el.style.transform=`translate(${to[0]-from[0]}px,${to[1]-from[1]}px)`;setTimeout(()=>el.remove(),900+delay);}
+
+function renderBoard(q,st,pv,fwd,S,tk){
+  const b=B[q],top=PL[q].top,dk=deckOf(q,st.done);
+  b.dyn.forEach(el=>el.remove());b.dyn=[];
+  const add=el=>{b.el.appendChild(el);b.dyn.push(el);return el;};
+  // seal
+  const vp=vpOf(dk),old=b.seal.querySelector('b').textContent;
+  b.seal.querySelector('b').textContent=vp;
+  if(fwd&&String(vp)!==old){b.seal.classList.remove('bump');void b.seal.offsetWidth;b.seal.classList.add('bump');}
+  // draw pile
+  if(st.draw>0)add(at(backEl('stack'),255,160));
+  b.dl.textContent=`DRAW · ${st.draw}`;
+  b.xl.textContent=`DISCARD · ${st.disc}`;
+  // discard top (delayed if something is flying there)
+  const delayDisc=fwd&&((S.buy&&S.buy.p===q)||(S.clean||[]).includes(q));
+  const showTop=()=>{if(tk!==token)return;if(st.top)add(at(cardEl(st.top),1030,160));};
+  if(delayDisc)setTimeout(showTop,850);else showTop();
+  // cleanup flight: old hand + played to discard
+  if(fwd&&pv&&(S.clean||[]).includes(q)){
+    pv.hand.forEach((k,i)=>fly(cardEl(k),[handX(i,pv.hand.length)+16,top+160],[1030+16,top+160],i*60));
+    pv.played.forEach(k=>fly(cardEl(k),[935+16,top+160],[1030+16,top+160],0));
+  }
+  // shuffle tag
+  if(fwd&&(S.shuffle||[]).includes(q)){const t=document.createElement('div');t.className='shuf';t.textContent='🔀 Discard reshuffled!';at(t,255,88);add(t);}
+  // played
+  st.played.forEach(k=>{const el=add(at(cardEl(k),935,160));
+    if(fwd&&pv&&!pv.played.includes(k)){el.style.transition='none';el.style.transform='translate(-300px,0)';el.style.opacity='0';el.getBoundingClientRect();el.style.transition='';el.style.transform='';el.style.opacity='';}});
+  // hand
+  const n=st.hand.length, clean=(S.clean||[]).includes(q);
+  let fromDraw=0;
+  if(fwd){if(clean||(pv&&pv.hand.length===0))fromDraw=n;else if(S.drew&&S.drew[q])fromDraw=S.drew[q];}
+  st.hand.forEach((k,i)=>{
+    const tr=CARD[k].type==='treasure';
+    const el=add(at(cardEl(k,st.hl?(tr?'glow':'dim'):''),handX(i,n),160));
+    if(i>=n-fromDraw){
+      el.style.transition='none';el.style.transform=`translate(${255-handX(i,n)}px,0) scale(.8)`;el.style.opacity='0';el.getBoundingClientRect();
+      el.style.transition='';el.style.transitionDelay=((clean?500:150)+(i-(n-fromDraw))*90)+'ms';el.style.transform='';el.style.opacity='';
+    }
+  });
+  // phases, coins, bubble
+  b.phs.forEach(ph=>ph.classList.toggle('on',ph.dataset.p===st.phase));
+  b.coins.classList.toggle('show',st.coins!==null);if(st.coins!==null)b.coins.textContent=`🪙 ${st.coins}`;
+  if(st.bubble)b.bub.textContent=st.bubble;b.bub.classList.toggle('show',!!st.bubble&&!S.overlay);
+  // deck list
+  const pd=pv?deckOf(q,pv.done):dk;
+  b.deck.innerHTML=`<h4>DECK · ${sizeOf(dk)} CARDS</h4>`+ORDER.filter(k=>dk[k]).map(k=>`<div class="drow ${fwd&&dk[k]!==(pd[k]||0)?'new':''}">${mini(k)} ${CARD[k].name}<span class="n">×${dk[k]}</span></div>`).join('')+
+    `<div class="avg">average hand ≈ <b>${avgHand(dk).toFixed(1)}</b> coins</div>`;
+}
+
+function render(){
+  token++;const tk=token;
+  const S=STEPS[cur],st=STATES[cur],pv=prev>=0?STATES[prev]:null,fwd=prev>=0&&cur===prev+1&&!S.overlay;
+  for(const q of['R','B']){
+    B[q].el.classList.toggle('show',cur>=2);
+    B[q].el.classList.toggle('active',S.active===q);
+    B[q].el.classList.toggle('idle',!!S.active&&S.active!==q);
+    renderBoard(q,st[q],pv?pv[q]:null,fwd,S,tk);
+  }
+  // supply counts
+  const used={};for(const q of['R','B'])BUYS[q].slice(0,st[q].done).forEach(k=>used[k]=(used[k]||0)+1);
+  for(const k in PILES)PILES[k].n.textContent=BASE_SUP[k]-(used[k]||0);
+  const cl=document.getElementById('clockN'),nv=String(8-(used.province||0));
+  if(cl.textContent!==nv){cl.textContent=nv;cl.classList.remove('bump');void cl.offsetWidth;cl.classList.add('bump');}
+  market.classList.toggle('hl',S.market==='hl');
+  if(fwd&&S.buy){const k=S.buy.card,q=S.buy.p;PILES[k].w.classList.remove('flash');void PILES[k].w.offsetWidth;PILES[k].w.classList.add('flash');
+    fly(cardEl(k),[SUP_X[k]+16,SUP_Y+10],[1030+16,PL[q].top+160],250);}
+  // overlays
+  document.getElementById('ovTitle').classList.toggle('show',S.overlay==='title');
+  const ch=document.getElementById('ovChron');ch.classList.toggle('show',S.overlay==='chron');
+  if(S.overlay==='chron'){const prevMax=(prev>=0&&STEPS[prev].chron)?STEPS[prev].chron:(S.chron===9?3:9);
+    ch.querySelectorAll('tr.r').forEach(r=>{const t=+r.dataset.t,on=t<=S.chron;r.classList.toggle('on',on);r.classList.toggle('old',on&&t<=prevMax&&cur>prev);
+      r.style.transitionDelay=(on&&t>prevMax&&cur>prev)?((t-prevMax)*260+300)+'ms':'0ms';});}
+  const fo=document.getElementById('ovFinal');
+  if(S.overlay==='final'){fo.classList.remove('show');void fo.offsetWidth;fo.classList.add('show');}else fo.classList.remove('show');
+  // caption
+  document.getElementById('stepnum').innerHTML=`${cur+1}<small>OF ${STEPS.length}</small>`;
+  document.getElementById('ctitle').textContent=S.title;
+  document.getElementById('ctext').textContent=S.text;
+  document.getElementById('bar').style.width=(cur/(STEPS.length-1)*100)+'%';
+}
+function go(n){prev=cur;cur=n;render();}
+const next=()=>go(cur+1>=STEPS.length?0:cur+1);
+addEventListener('keydown',ev=>{
+  if([' ','ArrowRight','Enter','PageDown'].includes(ev.key)){ev.preventDefault();next();}
+  else if(['ArrowLeft','Backspace','PageUp'].includes(ev.key)){ev.preventDefault();if(cur>0)go(cur-1);}
+});
+addEventListener('click',next);
+function fit(){const k=Math.min(innerWidth/1280,innerHeight/900);stage.style.transform=`translate(${(innerWidth-1280*k)/2}px,${(innerHeight-900*k)/2}px) scale(${k})`;}
+addEventListener('resize',fit);fit();render();
+window.ATLAS={cur:()=>cur,total:()=>STEPS.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

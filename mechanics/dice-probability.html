@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2d6 Probability</title>
+<style>
+:root{--bg:#15121f;--panel:#262039;--ink:#f6f2ff;--muted:#a9a2c6;--red:#e5484d;--blue:#3e7bfa;--gold:#ffc53d}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#2c2248 0%,#15121f 60%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-size:38px;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1100px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* dice */
+.die{display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);aspect-ratio:1;border-radius:18%;padding:13%;
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 3px 8px rgba(0,0,0,.3)}
+.die.red{background:var(--red)}.die.blue{background:var(--blue)}
+.pip{width:74%;height:74%;border-radius:50%;background:#fff;place-self:center}
+
+/* panels */
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#title .big{font-size:170px;font-weight:900;line-height:1;margin:0;
+  background:linear-gradient(90deg,var(--red),var(--gold),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:40px}
+#title .pair{display:flex;gap:40px;margin:22px 0}
+#title .pair .die{width:120px}
+#title .pair .die:nth-child(1){animation:wob 1.6s ease-in-out infinite}
+#title .pair .die:nth-child(2){animation:wob 1.6s ease-in-out infinite reverse}
+@keyframes wob{0%,100%{transform:rotate(-12deg) translateY(0)}50%{transform:rotate(12deg) translateY(-18px)}}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+#one{left:0;right:0;top:170px;display:flex;flex-direction:column;align-items:center}
+#one .row{display:flex;gap:34px;align-items:flex-end}
+#one .col{display:flex;flex-direction:column;align-items:center;gap:10px}
+#one .bar{width:64px;height:0;border-radius:10px 10px 0 0;background:linear-gradient(var(--red),#8f2a2e);transition:height .8s cubic-bezier(.3,1.5,.5,1)}
+#one.on .bar{height:170px}
+#one .lbl{font-size:24px;font-weight:800}
+#one .die{width:78px}
+#one .cap{margin-top:26px;font-size:26px;color:var(--muted)}
+
+/* grid + histogram pieces */
+.hdr{position:absolute;width:52px;opacity:0;transform:scale(.3);transition:opacity .4s,transform .5s cubic-bezier(.3,1.6,.5,1)}
+.hdr.on{opacity:1;transform:none}
+.cell{position:absolute;display:flex;align-items:center;justify-content:space-evenly;border-radius:12px;
+  background:var(--panel);border:2px solid #3a3352;opacity:0;transform:scale(.2) rotate(-25deg);z-index:2;
+  transition:left .85s cubic-bezier(.6,-.25,.3,1.25),top .85s cubic-bezier(.6,-.25,.3,1.25),width .85s,height .85s,
+    opacity .45s,transform .5s cubic-bezier(.3,1.6,.5,1),background .5s,border-color .5s,box-shadow .6s}
+.cell .die{width:40%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+.cell.shown{opacity:1;transform:none}
+.cell .badge{position:absolute;top:-9px;right:-9px;font-size:12px;font-weight:900;background:#0b0914;border-radius:10px;padding:1px 6px;opacity:0;transition:opacity .4s}
+.cell.colored .badge{opacity:1}
+.cell.landed .badge{opacity:0}
+.cell.dim{opacity:.28}
+.cell.king{box-shadow:0 0 22px var(--gold);border-color:var(--gold)!important}
+
+.axis{position:absolute;left:628px;width:618px;top:650px;height:3px;background:#5d5680;border-radius:2px;opacity:0;transition:opacity .5s}
+.xl{position:absolute;top:660px;width:50px;text-align:center;font-size:24px;font-weight:900;opacity:0;transition:opacity .5s}
+.guess{position:absolute;width:50px;border:2px dashed #8a83ad;border-bottom:none;border-radius:8px 8px 0 0;opacity:0;z-index:1;transition:opacity .6s}
+.guess span{position:absolute;top:-24px;left:-10px;right:-10px;text-align:center;font-size:14px;color:var(--muted);font-weight:700}
+.on{opacity:1}
+.frac{position:absolute;width:70px;text-align:center;font-size:17px;font-weight:900;opacity:0;z-index:4;transform:translateY(8px);transition:opacity .5s .5s,transform .5s .5s,top .5s}
+.frac.on{opacity:1;transform:none}
+.simbar{position:absolute;width:50px;height:0;top:650px;background:rgba(255,255,255,.2);border:2px solid #fff;border-bottom:none;border-radius:6px 6px 0 0;z-index:3;opacity:0;transition:opacity .4s}
+#tri{position:absolute;left:0;top:0;pointer-events:none;z-index:5}
+#tri path{fill:none;stroke:var(--gold);stroke-width:4;stroke-linejoin:round;transition:stroke-dashoffset 1.8s ease;filter:drop-shadow(0 0 6px rgba(255,197,61,.6))}
+
+#sim{left:40px;top:200px;width:540px;display:flex;flex-direction:column;align-items:center;gap:18px}
+#sim .pair{display:flex;gap:30px}
+#sim .die{width:130px}
+#sim .eq{font-size:46px;font-weight:900}
+#sim .count{font-size:22px;color:var(--muted)}
+
+#end{inset:0;background:rgba(10,8,18,.82);display:flex;align-items:center;justify-content:center;z-index:20}
+#end .card{background:#221c35;border:2px solid #4b4170;border-radius:24px;padding:36px 48px;width:900px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 16px;font-size:40px}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#3d3658;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;left:20px;font-size:13px;color:#6f6893;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">2d6</div>
+    <h2>The secret shape of two dice</h2>
+    <div class="pair" id="titleDice"></div>
+    <div class="press">Press SPACE to roll on</div>
+  </div>
+
+  <div id="one" class="panel"><div class="row" id="oneRow"></div><div class="cap">Each face: 1 in 6 ≈ 16.7%</div></div>
+
+  <div id="dyn"></div>
+
+  <div id="sim" class="panel">
+    <div class="pair"><div class="die red" id="simR"></div><div class="die blue" id="simB"></div></div>
+    <div class="eq" id="simEq">–</div>
+    <div class="count" id="simCount">Roll 0 / 5,000</div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What the dice taught us 🎲</h2>
+    <ul>
+      <li><b>36</b> equally likely combos, but only <b>11</b> totals, so the totals are <i>not</i> equally likely.</li>
+      <li>More combos = more likely. <b>7</b> has 6 ways (16.7%); <b>2</b> and <b>12</b> have just 1 (2.8%).</li>
+      <li>Rolling <b>7 or more</b> is 21/36 ≈ 58%, a slight favorite.</li>
+      <li>Designer's note: Catan paints <b>6</b> and <b>8</b> red because they're the hottest numbers on the board (5/36 each).</li>
+      <li>Add a third die and the pyramid softens into a <b>bell curve</b>.</li>
+    </ul>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">SPACE / click ▸ next &nbsp;·&nbsp; ← back &nbsp;·&nbsp; R restart</div>
+</div>
+
+<script>
+const S=document.getElementById('stage'),DYN=document.getElementById('dyn');
+const $=id=>document.getElementById(id);
+const PIPS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+const pips=v=>PIPS[v].map(p=>`<span class="pip" style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></span>`).join('');
+const dieHTML=(v,c,st='')=>`<div class="die ${c}" style="${st}">${pips(v)}</div>`;
+const hue=s=>260-(s-2)*26;
+const WAYS=s=>6-Math.abs(7-s);
+
+// geometry
+const GX=96,GY=186,GS=76,GZ=68;          // grid
+const HX=640,HB=650,HS=54,HW=50;         // histogram
+const colX=s=>HX+(s-2)*HS;
+
+// static bits
+$('titleDice').innerHTML=dieHTML(3,'red')+dieHTML(4,'blue');
+$('oneRow').innerHTML=[1,2,3,4,5,6].map(v=>`<div class="col"><div class="lbl">1/6</div><div class="bar" style="transition-delay:${v*90}ms"></div>${dieHTML(v,'red')}</div>`).join('');
+const dotsEl=$('dots');
+
+const QUIPS={
+ 2:"Snake eyes 🐍 Only ⚀+⚀ works. 1 out of 36.",
+ 3:"⚀+⚁ and ⚁+⚀. Order matters, so that's 2 ways.",
+ 4:"⚀+⚂, ⚁+⚁, ⚂+⚀. The pile grows.",
+ 5:"Four ways, and we just broke through the dashed 'fair share' line.",
+ 6:"Five ways. Still climbing!",
+ 7:"SIX ways. Every red face has exactly one blue partner. 👑 The king of 2d6.",
+ 8:"Five ways. We're over the hill now.",
+ 9:"Four ways, the mirror image of 5.",
+ 10:"Three ways, the mirror image of 4.",
+ 11:"Two ways: ⚄+⚅ or ⚅+⚄.",
+ 12:"Boxcars 🚃 Only ⚅+⚅. Just as rare as snake eyes."
+};
+
+let cells,hdrs,xls,guesses,fracs,simbars,axis,triPath,cur=0,token=0;
+
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+function el(cls,html,st){const d=document.createElement('div');d.className=cls;if(html)d.innerHTML=html;if(st)Object.assign(d.style,st);DYN.appendChild(d);return d}
+const px=n=>n+'px';
+
+function reset(){
+  DYN.innerHTML='';
+  ['title','one','sim','end'].forEach(id=>$(id).classList.remove('on'));
+  setHeader('','');
+  cells=[];hdrs=[];xls={};guesses={};fracs={};simbars={};
+  // row/col headers
+  for(let v=1;v<=6;v++){
+    hdrs.push(el('hdr',dieHTML(v,'red'),{left:px(24),top:px(GY+(v-1)*GS+8)}));
+    hdrs.push(el('hdr',dieHTML(v,'blue'),{left:px(GX+(v-1)*GS+8),top:px(114)}));
+  }
+  axis=el('axis');
+  for(let s=2;s<=12;s++){
+    const x=colX(s),gh=36/11*HS;
+    xls[s]=el('xl',String(s),{left:px(x)});
+    guesses[s]=el('guess','<span>1/11?</span>',{left:px(x),top:px(HB-gh),height:px(gh)});
+    fracs[s]=el('frac',`${WAYS(s)}/36`,{left:px(x-10),top:px(HB-WAYS(s)*HS-28)});
+    simbars[s]=el('simbar','',{left:px(x)});
+  }
+  const cnt={};let i=0;
+  for(let r=1;r<=6;r++)for(let b=1;b<=6;b++){
+    const s=r+b,k=cnt[s]=(cnt[s]||0);cnt[s]++;
+    const c=el('cell',dieHTML(r,'red')+dieHTML(b,'blue')+`<span class="badge">${s}</span>`,
+      {left:px(GX+(b-1)*GS),top:px(GY+(r-1)*GS),width:px(GZ),height:px(GZ)});
+    cells.push({el:c,r,b,s,k,i:i++});
+  }
+  // triangle
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.id='tri';svg.setAttribute('width',1280);svg.setAttribute('height',720);
+  let d=`M${colX(2)-4},${HB}`;
+  for(let s=2;s<=12;s++)d+=` L${colX(s)+HW/2},${HB-WAYS(s)*HS-2}`;
+  d+=` L${colX(12)+HW+4},${HB}`;
+  triPath=document.createElementNS('http://www.w3.org/2000/svg','path');triPath.setAttribute('d',d);
+  svg.appendChild(triPath);DYN.appendChild(svg);
+  const L=triPath.getTotalLength();triPath.style.strokeDasharray=L;triPath.style.strokeDashoffset=L;
+}
+
+function collect(s){
+  const list=cells.filter(c=>c.s===s),n=list.length;
+  list.forEach((c,j)=>{
+    const st=c.el.style;st.transitionDelay=(j*150)+'ms';st.zIndex=6;
+    st.left=px(colX(s));st.top=px(HB-(c.k+1)*HS+(HS-HW));st.width=px(HW);st.height=px(HW);
+    c.el.classList.add('landed');
+  });
+  fracs[s].style.transitionDelay=(n*150+400)+'ms';
+  fracs[s].classList.add('on');
+  setHeader(`Total of ${s}: ${n} way${n>1?'s':''}`,QUIPS[s]);
+}
+
+function runSim(instant){
+  const my=token,T=5000,counts=Array(13).fill(0);let total=0;
+  const roll=()=>{const r=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6);counts[r+b]++;total++;return[r,b]};
+  const render=l=>{
+    $('simR').innerHTML=pips(l[0]);$('simB').innerHTML=pips(l[1]);
+    $('simEq').textContent=`${l[0]} + ${l[1]} = ${l[0]+l[1]}`;
+    $('simCount').textContent=`Roll ${total.toLocaleString()} / ${T.toLocaleString()}`;
+    for(let s=2;s<=12;s++){const h=counts[s]/total*36*HS;simbars[s].style.height=px(h);simbars[s].style.top=px(HB-h)}
+  };
+  const finish=()=>{
+    const p=s=>(counts[s]/total*100).toFixed(1);
+    setHeader(`${T.toLocaleString()} rolls later: 7 showed up ${p(7)}% of the time`,
+      `The math said 16.7%. Snake eyes hit ${p(2)}% (math: 2.8%). With enough rolls, the pyramid always shows up.`);
+  };
+  if(instant){let l;while(total<T)l=roll();render(l);finish();return}
+  const t0=performance.now();
+  (function frame(now){
+    if(my!==token)return;
+    const t=now-t0;
+    let target=t<2000?Math.floor(t/160)+1:13+Math.floor(Math.pow((t-2000)/6000,2)*(T-13));
+    target=Math.min(T,t>=8000?T:target);
+    let l=null;while(total<target)l=roll();
+    if(l)render(l);
+    if(total<T)requestAnimationFrame(frame);else finish();
+  })(t0);
+}
+
+const steps=[
+ ()=>{$('title').classList.add('on');setHeader('','')},
+ ()=>{$('title').classList.remove('on');$('one').classList.add('on');
+   setHeader('One die is boringly fair','Every face has the same chance: 1 in 6. A perfectly flat distribution.')},
+ ()=>{$('one').classList.remove('on');axis.classList.add('on');
+   for(let s=2;s<=12;s++){xls[s].style.transitionDelay=guesses[s].style.transitionDelay=((s-2)*60)+'ms';xls[s].classList.add('on');guesses[s].classList.add('on')}
+   setHeader('Two dice… so the total is flat too? 🤔',"Totals run from 2 to 12. That's 11 results. Surely each one is a 1-in-11 shot?")},
+ ()=>{hdrs.forEach((h,i)=>{h.style.transitionDelay=(i*40)+'ms';h.classList.add('on')});
+   cells.forEach(c=>{c.el.style.transitionDelay=(300+c.i*30)+'ms';c.el.classList.add('shown')});
+   setHeader("Let's count every way they can land",'6 red faces × 6 blue faces = 36 outcomes, each exactly as likely as any other.')},
+ ()=>{cells.forEach(c=>{const h=hue(c.s);Object.assign(c.el.style,{transitionDelay:((c.s-2)*120)+'ms',background:`hsla(${h},70%,42%,.6)`,borderColor:`hsl(${h},85%,65%)`});c.el.classList.add('colored')});
+   setHeader('Paint each outcome by its total',"See the diagonal stripes? Each stripe is one total, and the stripes aren't the same length.")},
+ ...[2,3,4,5,6,7,8,9,10,11,12].map(s=>()=>collect(s)),
+ ()=>{for(let s=2;s<=12;s++){guesses[s].style.transitionDelay='0ms';guesses[s].classList.remove('on');
+     fracs[s].style.transitionDelay='0ms';fracs[s].textContent=(WAYS(s)/36*100).toFixed(1)+'%'+(s===7?' 👑':'');}
+   fracs[7].style.left=px(colX(7)-25);fracs[7].style.width='100px';
+   hdrs.forEach(h=>{h.style.transitionDelay='0ms';h.classList.remove('on')});
+   cells.forEach(c=>{c.el.style.transitionDelay='0ms';if(c.s===7)c.el.classList.add('king')});
+   triPath.style.strokeDashoffset=0;
+   setHeader('Behold: the 2d6 pyramid 🔺','7 is six times more likely than 2 or 12. The middle wins because it has the most combinations.')},
+ (instant)=>{cells.forEach(c=>{c.el.style.transitionDelay='0ms';c.el.classList.add('dim')});
+   for(let s=2;s<=12;s++)simbars[s].classList.add('on');
+   $('sim').classList.add('on');
+   setHeader('Does reality agree? Rolling 5,000 times…','White bars = actual rolls. Dimmed blocks = the math. Watch them converge.');
+   runSim(instant)},
+ ()=>{$('end').classList.add('on')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

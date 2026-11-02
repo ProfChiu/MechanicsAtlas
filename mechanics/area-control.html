@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Area Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--sea:#0b2433;--sea2:#123b52;--panel:#13283a;--line:#2b4a63;--ink:#f3f7fb;--muted:#9fb6c8;
+  --gold:#ffcf4a;--red:#e5484d;--white:#f2ede2;--violet:#8b5cf6;--sand:#e9dcae}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 20%,#174a66 0%,#0b2433 55%,#06141d 100%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:18px;z-index:10}
+#header h1{margin:0;font-size:36px;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:21px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:15;
+  background:radial-gradient(circle at 50% 40%,#174a66 0%,#0b2433 60%,#06141d 100%)}
+#title .big{font-size:132px;font-weight:900;line-height:1;margin:0;
+  background:linear-gradient(90deg,var(--red),var(--gold),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:32px;font-weight:700;max-width:900px;text-align:center}
+#title .stacks{display:flex;gap:46px;align-items:flex-end;margin:20px 0 6px;height:130px}
+#title .stk{display:flex;flex-direction:column-reverse;align-items:center}
+#title .stk .cube{position:relative;margin-top:-14px}
+#title .stk:nth-child(2){animation:bob 1.8s ease-in-out infinite}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes bob{50%{transform:translateY(-14px)}}
+@keyframes blink{50%{opacity:.35}}
+
+/* map */
+#map{left:24px;top:124px;width:790px;height:570px}
+#map svg{position:absolute;inset:0}
+.wave{fill:none;stroke:#2c6a8a;stroke-width:2;stroke-linecap:round;opacity:.55}
+.beach{fill:var(--sand);stroke:var(--sand);stroke-width:26;stroke-linejoin:round}
+.reg{stroke:#0e2a1c;stroke-width:3;stroke-linejoin:round;transition:stroke .5s,stroke-width .5s,filter .5s,opacity .5s}
+.reg.own{stroke-width:7}
+.reg.tie{stroke:#fff!important;stroke-width:6;stroke-dasharray:14 9}
+.reg.hot{filter:drop-shadow(0 0 14px rgba(255,207,74,.95)) brightness(1.12)}
+.reg.flash{animation:flash 1s ease 2}
+@keyframes flash{50%{filter:drop-shadow(0 0 26px #fff) brightness(1.35)}}
+.rlabel{position:absolute;transform:translateX(-50%);white-space:nowrap;display:flex;gap:8px;align-items:center;z-index:3}
+.rlabel b{font-size:21px;font-weight:900;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.7);letter-spacing:.5px}
+.rlabel span{font-size:18px;font-weight:800;background:rgba(8,22,32,.82);border-radius:12px;padding:1px 9px;color:var(--gold)}
+.rlabel span i{font-style:normal;color:#c9d6e0}
+
+.cube{position:absolute;width:30px;height:30px;border-radius:6px;border:2px solid rgba(0,0,0,.45);
+  box-shadow:inset 0 -6px 0 rgba(0,0,0,.22),inset 0 3px 0 rgba(255,255,255,.35),0 4px 7px rgba(0,0,0,.5)}
+.cube.r{background:var(--red)}.cube.w{background:var(--white)}.cube.v{background:var(--violet)}
+.cube.drop{animation:drop .55s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes drop{from{opacity:0;transform:translateY(-90px) rotate(-30deg)}to{opacity:1;transform:none}}
+.crown{position:absolute;width:34px;height:26px;opacity:0;transform:scale(.3);z-index:6;
+  transition:opacity .35s,transform .45s cubic-bezier(.3,1.6,.5,1),top .4s}
+.crown.on{opacity:1;transform:none}
+.tieb{position:absolute;width:40px;height:22px;border-radius:11px;background:#e9eef3;color:#13283a;font-size:14px;font-weight:900;
+  text-align:center;line-height:22px;opacity:0;transform:scale(.3);z-index:6;transition:opacity .35s,transform .45s cubic-bezier(.3,1.6,.5,1),top .4s;
+  box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.tieb.on{opacity:1;transform:none}
+.callout{position:absolute;z-index:7;background:var(--gold);color:#1b1300;font-weight:900;font-size:19px;padding:5px 12px;border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,.5);animation:pop .5s cubic-bezier(.3,1.6,.5,1) .5s both}
+.callout:after{content:"";position:absolute;left:-10px;top:50%;margin-top:-8px;border:8px solid transparent;border-right-color:var(--gold);border-left:0}
+@keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+
+/* right side */
+#side{left:836px;top:124px;width:420px;height:570px}
+.card{background:linear-gradient(180deg,#183248,#11263a);border:2px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06)}
+#board{position:absolute;left:0;top:0;width:420px;padding:12px 18px}
+#board h3{margin:0 0 6px;font-size:18px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+.prow{display:flex;align-items:center;gap:12px;height:58px;border-top:1px solid rgba(255,255,255,.07)}
+.prow .cube{position:relative}
+.prow .nm{font-size:22px;font-weight:800;width:78px}
+.prow .sup{display:flex;gap:4px;flex:1}
+.prow .sup i{width:15px;height:15px;border-radius:3px;border:1.5px solid rgba(0,0,0,.4);transition:opacity .4s,transform .4s}
+.prow .sup i.gone{opacity:.12;transform:scale(.6)}
+.prow .sc{font-size:36px;font-weight:900;width:64px;text-align:right;transition:transform .3s}
+.prow .sc.bump{animation:bump .4s}
+@keyframes bump{50%{transform:scale(1.4);color:var(--gold)}}
+#note{position:absolute;left:0;top:252px;width:420px;height:318px;padding:16px 20px;opacity:0;transition:opacity .5s}
+#note.on{opacity:1}
+#note h4{margin:0 0 8px;font-size:23px;color:var(--gold)}
+#note .body{font-size:20px;line-height:1.38}
+#note .body p{margin:0 0 9px}
+#note .r{color:#ff7d80;font-weight:800}#note .w{color:var(--white);font-weight:800}#note .v{color:#b49bff;font-weight:800}
+table.pay{border-collapse:collapse;width:100%;font-size:20px}
+table.pay td{padding:5px 4px;border-bottom:1px solid rgba(255,255,255,.08)}
+table.pay td:first-child{font-weight:800}
+table.pay td.n{color:var(--gold);font-weight:800;width:62px}
+table.pay tr{opacity:0;transition:opacity .4s}
+table.pay tr.on{opacity:1}
+
+.chip{position:absolute;z-index:40;font-size:22px;font-weight:900;padding:2px 10px;border-radius:12px;color:#111;
+  box-shadow:0 4px 10px rgba(0,0,0,.5);transition:left .8s cubic-bezier(.5,0,.3,1),top .8s cubic-bezier(.5,0,.3,1),opacity .3s .75s}
+
+/* compare */
+#cmp{left:24px;top:124px;width:790px;height:570px;z-index:12;background:rgba(6,18,27,.94);border:2px solid var(--line);border-radius:22px;
+  display:flex;gap:22px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.side{flex:1;display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:18px;background:#13283a;border:2px solid var(--line)}
+.side.win{border-color:var(--gold);box-shadow:0 0 24px rgba(255,207,74,.35)}
+.side h3{margin:0;font-size:26px;display:flex;align-items:center;gap:10px}
+.side h3 .cube{position:relative}
+.side .sub{font-size:19px;color:var(--muted);margin-top:-4px}
+.tiles{display:flex;gap:6px}
+.tile{flex:1;height:118px;border-radius:10px;background:#1f3b52;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:6px}
+.tile.off{opacity:.35}
+.tile .t{position:absolute;top:4px;font-size:17px;font-weight:800;color:var(--muted)}
+.tile .cs{display:flex;flex-direction:column-reverse;align-items:center;margin-bottom:4px}
+.tile .cs .cube{position:relative;width:24px;height:24px;margin-top:-9px}
+.tile .pl{font-size:17px;font-weight:900;border-radius:8px;padding:0 6px}
+.pl.first{background:var(--gold);color:#1b1300}.pl.second{background:#c9d6e0;color:#13283a}
+.stat{font-size:21px;display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);padding:3px 0}
+.stat b{font-size:22px}
+.tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px}
+.tot span{font-size:21px;color:var(--muted)}
+.tot b{font-size:52px;font-weight:900;transition:color .5s}
+.wta{display:flex;justify-content:space-between;align-items:baseline;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s;
+  background:rgba(255,255,255,.06);border-radius:12px;padding:4px 12px}
+.wta.on{opacity:1;transform:none}
+.wta span{font-size:20px;color:var(--muted)}
+.wta b{font-size:40px;font-weight:900}
+.strike{text-decoration:line-through;text-decoration-thickness:4px;color:#7f93a3!important}
+
+/* end */
+#end{inset:0;background:rgba(5,15,22,.86);display:flex;align-items:center;justify-content:center;z-index:20}
+#end .card{padding:34px 48px;width:960px}
+#end h2{margin:0 0 14px;font-size:40px}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:22px;color:var(--muted)}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#2b4a63;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+#hint{position:absolute;bottom:6px;left:20px;font-size:13px;color:#5f7d93;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="stacks" id="tstacks"></div>
+    <div class="big">Area Control</div>
+    <h2>Have the most pieces in a region and it is yours. Ties and timing decide the rest.</h2>
+    <div class="press">press SPACE or click</div>
+  </div>
+
+  <div id="map" class="panel">
+    <svg viewBox="0 0 790 570" width="790" height="570">
+      <g id="waves"></g>
+      <g id="beach"></g>
+      <g id="regs"></g>
+    </svg>
+    <div id="layer"></div>
+  </div>
+
+  <div id="side" class="panel">
+    <div id="board" class="card"><h3>Supply &amp; score</h3><div id="rows"></div></div>
+    <div id="note" class="card"><h4></h4><div class="body"></div></div>
+  </div>
+
+  <div id="cmp" class="panel">
+    <div class="side" id="cmpR">
+      <h3><span class="cube r"></span>Red spread thin</h3>
+      <div class="sub">1 cube in every region</div>
+      <div class="tiles" id="tilesR"></div>
+      <div class="stat"><span>Majorities won</span><b>0</b></div>
+      <div class="stat"><span>Second places</span><b>5</b></div>
+      <div class="tot"><span>Points</span><b id="totR">10</b></div>
+      <div class="wta" id="wtaR"><span>Winner takes all</span><b>0</b></div>
+    </div>
+    <div class="side win" id="cmpV">
+      <h3><span class="cube v"></span>Violet committed</h3>
+      <div class="sub">Stacked 2 regions, ignored 3</div>
+      <div class="tiles" id="tilesV"></div>
+      <div class="stat"><span>Majorities won</span><b>2</b></div>
+      <div class="stat"><span>Second places</span><b>0</b></div>
+      <div class="tot"><span>Points</span><b id="totV">11</b></div>
+      <div class="wta" id="wtaV"><span>Winner takes all</span><b>11</b></div>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li><b>Majorities score, not totals.</b> A region pays whoever leads it. Cubes past the lead earn nothing extra, so every cube is a bet on a contest.</li>
+      <li><b>The timing of the last piece is the skill.</b> One cube turns a tie into a win. Placing when nobody can answer beats placing early.</li>
+      <li><b>Second-place payouts soften winner-takes-all.</b> They keep a spread-out player in the game, so commitment wins but doesn't crush.</li>
+    </ul>
+    <div class="see">You'll see this in: El Grande, Risk, Small World, Inis.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">SPACE / click ▸ next &nbsp;·&nbsp; ← back &nbsp;·&nbsp; R restart</div>
+</div>
+
+<script>
+const S=document.getElementById('stage'),$=id=>document.getElementById(id);
+const px=n=>n+'px';
+const NS='http://www.w3.org/2000/svg';
+
+// regions: first/second payouts, polygon, label/stack centre
+const R=[
+ {id:'peak',  name:'PEAK',  p:[6,4],c:[425,150],fill:'#8e96a3',pts:'250,70 420,34 575,78 540,238 335,248'},
+ {id:'harbor',name:'HARBOR',p:[5,3],c:[190,262],fill:'#79a96d',pts:'80,180 250,70 335,248 290,380 120,350 50,262'},
+ {id:'forest',name:'FOREST',p:[4,2],c:[648,240],fill:'#3d7a4b',pts:'575,78 710,138 742,272 660,362 540,238'},
+ {id:'marsh', name:'MARSH', p:[3,1],c:[475,362],fill:'#5f8a73',pts:'335,248 540,238 660,362 580,470 395,478 290,380'},
+ {id:'dunes', name:'DUNES', p:[2,0],c:[240,450],fill:'#cdb57a',pts:'120,350 290,380 395,478 345,545 185,530 86,446'}
+];
+const P=[{k:'r',name:'Red',col:'#e5484d'},{k:'w',name:'White',col:'#f2ede2'},{k:'v',name:'Violet',col:'#8b5cf6'}];
+const SLOT=[-40,0,40], BASE=70, STEP=20, CUBE=30;
+const MAPX=24,MAPY=124;
+const CROWN='<svg viewBox="0 0 34 26" width="34" height="26"><path d="M3 22 L1 6 L10 13 L17 2 L24 13 L33 6 L31 22 Z" fill="#ffcf4a" stroke="#6b4a00" stroke-width="2" stroke-linejoin="round"/><circle cx="17" cy="16" r="3" fill="#e5484d"/></svg>';
+
+let cur=0,timers=[],cnt,supply,score,polys=[],crowns=[],ties=[],layer=$('layer');
+
+// build static map
+(function(){
+  const w=$('waves');
+  for(let y=30;y<570;y+=46)for(let x=(y/46%2)*40;x<790;x+=120){
+    const p=document.createElementNS(NS,'path');p.setAttribute('class','wave');
+    p.setAttribute('d',`M${x} ${y} q10 -7 20 0 t20 0`);w.appendChild(p)}
+  R.forEach((r,i)=>{
+    const b=document.createElementNS(NS,'polygon');b.setAttribute('class','beach');b.setAttribute('points',r.pts);$('beach').appendChild(b);
+    const g=document.createElementNS(NS,'polygon');g.setAttribute('class','reg');g.setAttribute('points',r.pts);g.setAttribute('fill',r.fill);
+    $('regs').appendChild(g);polys.push(g);
+  });
+  // reg strokes drawn after beach so internal borders are visible
+  R.forEach(r=>{
+    const l=document.createElement('div');l.className='rlabel';
+    l.style.left=px(r.c[0]);l.style.top=px(r.c[1]-72);
+    l.innerHTML=`<b>${r.name}</b><span>${r.p[0]} <i>/</i> ${r.p[1]}</span>`;
+    $('map').appendChild(l);
+  });
+  // scoreboard rows
+  $('rows').innerHTML=P.map((p,i)=>`<div class="prow"><span class="cube ${p.k}"></span><span class="nm">${p.name}</span>
+    <span class="sup" id="sup${i}">${'<i></i>'.repeat(5)}</span><span class="sc" id="sc${i}">0</span></div>`).join('');
+  P.forEach((p,i)=>[...$('sup'+i).children].forEach(e=>e.style.background=p.col));
+  // title stacks
+  $('tstacks').innerHTML=[['r',1],['v',3],['w',2]].map(([k,n])=>`<div class="stk">${`<span class="cube ${k}"></span>`.repeat(n)}</div>`).join('');
+  // compare tiles
+  const tile=(t,k,n,pl)=>`<div class="tile${n?'':' off'}"><span class="t">${t}</span><div class="cs">${`<span class="cube ${k}"></span>`.repeat(n)}</div>${pl?`<span class="pl ${pl==='1st'?'first':'second'}">${pl}</span>`:''}</div>`;
+  $('tilesR').innerHTML=R.map(r=>tile(r.p.join('/'),'r',1,r.id==='dunes'?'':'2nd')).join('');
+  $('tilesV').innerHTML=R.map(r=>tile(r.p.join('/'),'v',r.id==='peak'?3:r.id==='harbor'?2:0,r.id==='peak'||r.id==='harbor'?'1st':'')).join('');
+})();
+
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+function setNote(t,html){const n=$('note');n.classList.add('on');n.querySelector('h4').textContent=t;n.querySelector('.body').innerHTML=html}
+function later(fn,ms){timers.push(setTimeout(fn,ms))}
+const ri=id=>R.findIndex(r=>r.id===id);
+const pi=k=>P.findIndex(p=>p.k===k);
+function focus(ids){polys.forEach((g,i)=>g.classList.toggle('hot',ids.includes(R[i].id)))}
+
+function reset(){
+  timers.forEach(clearTimeout);timers=[];
+  cnt=R.map(()=>[0,0,0]);supply=[5,5,5];score=[0,0,0];
+  layer.innerHTML='';crowns=[];ties=[];
+  R.forEach((r,i)=>{crowns.push(P.map((p,j)=>mk('crown',CROWN,r,j)));ties.push(P.map((p,j)=>mk('tieb','TIE',r,j)))});
+  ['title','map','side','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  $('note').classList.remove('on');
+  polys.forEach(g=>{g.classList.remove('own','tie','hot','flash');g.style.stroke=''});
+  P.forEach((p,i)=>{$('sc'+i).textContent='0';[...$('sup'+i).children].forEach(e=>e.classList.remove('gone'))});
+  ['wtaR','wtaV'].forEach(id=>$(id).classList.remove('on'));$('totR').classList.remove('strike');
+  document.querySelectorAll('.chip').forEach(c=>c.remove());
+  setHeader('','');
+}
+function mk(cls,html,r,j){const d=document.createElement('div');d.className=cls;d.innerHTML=html;
+  d.style.left=px(r.c[0]+SLOT[j]-(cls==='crown'?17:20));layer.appendChild(d);return d}
+
+function status(i){
+  const c=cnt[i],m=Math.max(...c),lead=[0,1,2].filter(j=>c[j]===m&&m>0);
+  const g=polys[i];g.classList.remove('own','tie');g.style.stroke='';
+  [0,1,2].forEach(j=>{
+    const top=R[i].c[1]+BASE-CUBE-(Math.max(c[j],1)-1)*STEP;
+    crowns[i][j].style.top=px(top-30);ties[i][j].style.top=px(top-27);
+    crowns[i][j].classList.toggle('on',lead.length===1&&lead[0]===j);
+    ties[i][j].classList.toggle('on',lead.length>1&&lead.includes(j));
+  });
+  if(lead.length===1){g.classList.add('own');g.style.stroke=P[lead[0]].col}
+  else if(lead.length>1)g.classList.add('tie');
+}
+function doPlace(i,j,anim){
+  const k=cnt[i][j]++;supply[j]--;
+  const d=document.createElement('div');d.className='cube '+P[j].k+(anim?' drop':'');
+  d.style.left=px(R[i].c[0]+SLOT[j]-CUBE/2);d.style.top=px(R[i].c[1]+BASE-CUBE-k*STEP);d.style.zIndex=k+1;
+  layer.appendChild(d);
+  $('sup'+j).children[4-supply[j]].classList.add('gone');
+  if(anim)later(()=>status(i),420);else status(i);
+}
+// moves: [region, player key] played in order, ~650 ms apart
+function play(moves,instant){
+  moves.forEach(([r,k],n)=>instant?doPlace(ri(r),pi(k),false):later(()=>doPlace(ri(r),pi(k),true),n*650));
+}
+
+// payout with tie rule: tied leaders all score 2nd; otherwise leader 1st, runner(s)-up 2nd
+function payout(i){
+  const c=cnt[i],m=Math.max(...c),lead=[0,1,2].filter(j=>c[j]===m&&m>0),out=[];
+  if(lead.length>1){lead.forEach(j=>out.push([j,R[i].p[1]]));return out}
+  if(lead.length===1){out.push([lead[0],R[i].p[0]]);
+    const rest=[0,1,2].filter(j=>j!==lead[0]&&c[j]>0),m2=Math.max(0,...rest.map(j=>c[j]));
+    rest.filter(j=>c[j]===m2).forEach(j=>out.push([j,R[i].p[1]]));}
+  return out;
+}
+function offs(e){let x=0,y=0;while(e&&e!==S){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent}return[x,y]}
+function addScore(j,v,anim){score[j]+=v;const s=$('sc'+j);s.textContent=score[j];if(anim){s.classList.remove('bump');void s.offsetWidth;s.classList.add('bump')}}
+function scoreAll(instant){
+  const rows=[];
+  R.forEach((r,i)=>{
+    const pay=payout(i);
+    const txt=pay.map(([j,v])=>`<span class="${P[j].k}">${P[j].name} +${v}</span>`).join(' &nbsp;')+(cnt[i].filter(x=>x).length&&pay.length===2&&cnt[i][pay[0][0]]===cnt[i][pay[1][0]]?' <i style="color:#9fb6c8">(tie)</i>':'');
+    rows.push(`<tr id="pr${i}"><td>${r.name[0]+r.name.slice(1).toLowerCase()}</td><td class="n">${r.p[0]}/${r.p[1]}</td><td>${txt}</td></tr>`);
+  });
+  setNote('Payouts',`<table class="pay">${rows.join('')}</table><p style="margin-top:10px">A tie for first pays both players the second-place number.</p>`);
+  R.forEach((r,i)=>{
+    const go=()=>{
+      $('pr'+i).classList.add('on');focus([r.id]);
+      payout(i).forEach(([j,v])=>{
+        if(instant){addScore(j,v,false);return}
+        const c=document.createElement('div');c.className='chip';c.textContent='+'+v;c.style.background=P[j].col;
+        if(j===2)c.style.color='#fff';
+        const sx=MAPX+r.c[0]+SLOT[j]-20,sy=MAPY+r.c[1]+BASE-CUBE-cnt[i][j]*STEP-30;
+        c.style.left=px(sx);c.style.top=px(sy);S.appendChild(c);
+        const [tx,ty]=offs($('sc'+j));
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{c.style.left=px(tx+8);c.style.top=px(ty+4);c.style.opacity='0'}));
+        later(()=>{addScore(j,v,true);c.remove()},820);
+      });
+    };
+    instant?go():later(go,i*380);
+  });
+  if(instant)focus([]);else later(()=>focus([]),5*380+600);
+}
+
+const steps=[
+ ()=>{$('title').classList.add('on');setHeader('','')},
+ ()=>{$('title').classList.remove('on');$('map').classList.add('on');focus(['peak']);
+   setHeader('Five regions, five prizes','Each region pays its leader the big number and the runner-up the small one. The Peak pays the most.')},
+ ()=>{focus([]);$('side').classList.add('on');
+   setNote('How a turn works','<p>Place <b>one cube</b> from your supply into any region. Cubes never move.</p><p>Turn order: <span class="r">Red</span>, <span class="w">White</span>, <span class="v">Violet</span>.</p><p>After 5 rounds every region scores. Most cubes takes first.</p>');
+   setHeader('Three players, five cubes each','Fifteen cubes in all. Each one is a vote in a small local contest.')},
+ (i)=>{play([['harbor','r'],['forest','w'],['peak','v']],i);focus([]);
+   setNote('Round 1','<p>One cube in an empty region is a majority. The crown shows the current leader.</p><p>Nothing is safe yet. Every lead can be matched.</p>');
+   setHeader('Round 1: everyone stakes a claim','Each player opens in a different region, so each holds one crown. For now.')},
+ (i)=>{play([['peak','r'],['dunes','w'],['peak','v']],i);focus(['peak']);
+   setNote('Round 2','<p><span class="r">Red</span> challenges the Peak. <span class="v">Violet</span> answers at once: 2 to 1.</p><p>Red is now second there. That still pays 4.</p>');
+   setHeader('Round 2: Violet doubles down','Violet commits a second cube to the most valuable region.')},
+ (i)=>{play([['forest','r'],['marsh','w'],['harbor','v']],i);focus(['forest','harbor']);
+   setNote('Our tie rule','<p>Tied for first? <b>Nobody</b> takes first. Each tied player scores the <b>second-place</b> number.</p><p>Harbor right now: <span class="r">Red 3</span>, <span class="v">Violet 3</span>. The 5 is on the table.</p>');
+   setHeader('Round 3: two ties','Red ties the Forest and Violet ties the Harbor, 1 to 1. A tie is a region nobody owns.')},
+ (i)=>{play([['marsh','r'],['forest','w'],['peak','v']],i);focus(['marsh','forest','peak']);
+   setNote('Round 4','<p><span class="w">White</span> breaks the Forest tie, 2 to 1.</p><p><span class="r">Red</span> ties the Marsh.</p><p><span class="v">Violet</span> makes the Peak a fortress at 3.</p>');
+   setHeader('Round 4: ties break, ties form','Every cube pushes someone else down a place.')},
+ (i)=>{play([['dunes','r'],['dunes','w']],i);focus(['dunes','harbor']);
+   setNote('One cube left','<p><span class="r">Red</span> ties the Dunes. <span class="w">White</span> answers and takes them back, 2 to 1.</p><p>Red and White are out of cubes. Only <span class="v">Violet</span> has one left, and the Harbor is still tied.</p>');
+   setHeader('Round 5: the board tightens','Red and White place their last cubes. Violet will place the final cube of the game.')},
+ (i)=>{play([['harbor','v']],i);focus(['harbor']);if(!i)polys[ri('harbor')].classList.add('flash');
+   const h=R[ri('harbor')],c=document.createElement('div');c.className='callout';c.textContent='last cube';
+   c.style.left=px(h.c[0]+SLOT[2]+26);c.style.top=px(h.c[1]+BASE-CUBE-STEP-2);layer.appendChild(c);
+   setNote('One cube flips the Harbor','<p>Before: tie, <span class="r">Red 3</span>, <span class="v">Violet 3</span>.</p><p>After: <span class="v">Violet 5</span>, <span class="r">Red 3</span>.</p><p>Placing last means nobody can answer. Holding a cube back for the end is the skill.</p>');
+   setHeader('The last cube flips the Harbor','One cube breaks the tie and takes the crown. Red has no cubes left to reply.')},
+ (i)=>{layer.querySelectorAll(".callout").forEach(c=>c.remove());scoreAll(i);
+   setHeader('Scoring: count the majorities','Each region pays first and second place. The number of cubes on the map does not score. Majorities do.')},
+ ()=>{$('cmp').classList.add('on');
+   setNote('Final scores','<p><span class="v">Violet 11</span>, <span class="r">Red 10</span>, <span class="w">White 7</span>.</p><p>Red and Violet each used all 5 cubes. They only differ in where they put them.</p>');
+   setHeader('Spread thin vs. commit','Same five cubes. Red led nowhere. Violet won two regions outright, and the game.')},
+ ()=>{['wtaR','wtaV'].forEach(id=>$(id).classList.add('on'));$('totR').classList.add('strike');
+   setNote('Why second place pays','<p>Winner-takes-all: <span class="v">Violet 11</span>, <span class="w">White 6</span>, <span class="r">Red 0</span>.</p><p>Second-place points keep a spread-out player close, so commitment wins without crushing.</p>');
+   setHeader('Take away second place and it is a rout','Score only first place and Red drops from 10 points to 0. The runner-up payouts soften the swing.')},
+ ()=>{$('end').classList.add('on')}
+];
+
+const dotsEl=$('dots');
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

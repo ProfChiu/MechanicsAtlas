@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Card Drafting Explained</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1d2033}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#22305a,#0b0f1d 75%);font-family:'Fredoka',system-ui,sans-serif;color:#fff;user-select:none;cursor:pointer}
+#stage{position:absolute;left:0;top:0;width:1280px;height:900px;transform-origin:0 0}
+
+/* table */
+.table{position:absolute;left:16px;top:12px;width:1248px;height:766px;border-radius:60px;
+  background:radial-gradient(ellipse at center,#2f8a6a,#1d5f4c 60%,#164a3c);
+  box-shadow:inset 0 0 0 10px #7a4a2a,inset 0 0 0 14px #5a321b,inset 0 0 80px rgba(0,0,0,.45),0 20px 60px rgba(0,0,0,.5)}
+
+/* center hub */
+.hub{position:absolute;left:545px;top:295px;width:190px;height:190px;border-radius:50%;background:rgba(0,0,0,.18);opacity:0;transition:opacity .6s}
+.hub.show{opacity:1}
+.hub svg{position:absolute;inset:0;transition:transform 1.1s cubic-bezier(.5,0,.3,1)}
+.hub .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:22px;letter-spacing:3px;color:rgba(255,255,255,.9)}
+.hub .lbl small{font-size:12px;letter-spacing:1px;font-weight:400;opacity:.75}
+
+/* zones */
+.zone{position:absolute;border:2px dashed rgba(255,255,255,.28);border-radius:12px;background:rgba(0,0,0,.12);opacity:0;transition:opacity .6s}
+.zone.show{opacity:1}
+.zone span{position:absolute;left:50%;transform:translateX(-50%);font-size:12px;letter-spacing:1px;color:rgba(255,255,255,.65);white-space:nowrap;font-weight:600}
+
+/* avatars */
+.avatar{position:absolute;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:48px;border:5px solid var(--sc);box-shadow:0 6px 18px rgba(0,0,0,.4);transform:scale(0);transition:transform .5s cubic-bezier(.3,1.6,.5,1);z-index:150}
+.avatar.show{transform:scale(1)}
+.avatar .name{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);background:var(--sc);color:#fff;font-size:14px;font-weight:700;padding:2px 10px;border-radius:10px;white-space:nowrap}
+
+/* speech bubbles */
+.bubble{position:absolute;background:#fff;color:var(--ink);padding:9px 14px;border-radius:14px;font-size:16px;line-height:1.25;max-width:230px;width:max-content;box-shadow:0 6px 20px rgba(0,0,0,.35);border:3px solid var(--sc);opacity:0;scale:.6;transition:opacity .3s,scale .35s cubic-bezier(.3,1.6,.5,1);z-index:300;font-weight:600}
+.bubble.show{opacity:1;scale:1}
+.bubble::after{content:'';position:absolute;width:14px;height:14px;background:#fff;border:3px solid var(--sc);transform:rotate(45deg)}
+.bubble.down{transform:translate(-50%,calc(-100% - 10px));transform-origin:50% 100%}
+.bubble.down::after{bottom:-9px;left:50%;margin-left:-7px;border-top:none;border-left:none}
+.bubble.up{transform:translate(-50%,10px);transform-origin:50% 0}
+.bubble.up::after{top:-9px;left:50%;margin-left:-7px;border-bottom:none;border-right:none}
+.bubble.left{transform:translate(10px,-50%);transform-origin:0 50%}
+.bubble.left::after{left:-9px;top:50%;margin-top:-7px;border-top:none;border-right:none}
+.bubble.right{transform:translate(calc(-100% - 10px),-50%);transform-origin:100% 50%}
+.bubble.right::after{right:-9px;top:50%;margin-top:-7px;border-bottom:none;border-left:none}
+
+/* cards */
+.card{position:absolute;left:0;top:0;width:80px;height:112px;perspective:700px;transition:transform .85s cubic-bezier(.45,.05,.25,1),filter .4s}
+.inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .7s}
+.card.down .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:9px;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 4px 10px rgba(0,0,0,.4)}
+.front{background:linear-gradient(160deg,var(--c1),var(--c2));border:3px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:box-shadow .4s}
+.back{transform:rotateY(180deg);background:repeating-linear-gradient(45deg,#4b2c8a 0 8px,#5b37a6 8px 16px);border:3px solid #f2e3ff;display:flex;align-items:center;justify-content:center;font-size:30px;color:#ffd96a}
+.art{font-size:38px;line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+.nm{font-size:11px;font-weight:700;margin-top:6px;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.5);padding:0 3px;line-height:1.05}
+.pts{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:#fff;color:#222;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.el{position:absolute;top:3px;right:4px;font-size:14px}
+.card.chosen .front{box-shadow:0 0 0 4px #fff,0 0 28px 10px #fff6a0}
+.card::after{content:'✓';position:absolute;top:-12px;right:-12px;width:28px;height:28px;border-radius:50%;background:#2ecc71;color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;border:3px solid #fff;opacity:0;scale:.3;transition:opacity .3s,scale .3s}
+.card.chosen::after{opacity:1;scale:1}
+.card.dim{filter:brightness(.55) saturate(.6)}
+.card.set .front{animation:glow 1.4s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 3px #fff,0 0 26px 8px var(--c1)}}
+
+/* caption */
+.caption{position:absolute;left:16px;top:792px;width:1248px;height:96px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:10px 24px 16px;display:flex;align-items:center;gap:22px}
+.stepnum{font-size:13px;font-weight:700;background:#ffd96a;color:#3a2a00;border-radius:12px;padding:4px 10px;white-space:nowrap}
+.ctitle{font-size:23px;font-weight:700;color:#ffd96a}
+.ctext{font-size:17px;line-height:1.3;color:#e6e9f5}
+.hint{margin-left:auto;font-size:13px;opacity:.75;text-align:right;white-space:nowrap;line-height:1.9}
+.kbd{display:inline-block;border:2px solid rgba(255,255,255,.6);border-radius:6px;padding:0 8px;font-weight:700;line-height:1.4}
+.progress{position:absolute;left:24px;right:24px;bottom:7px;height:4px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden}
+.bar{height:100%;background:#ffd96a;transition:width .5s}
+
+/* overlays */
+.overlay{position:absolute;left:0;top:0;width:1280px;height:788px;display:flex;align-items:center;justify-content:center;background:rgba(10,14,30,.86);opacity:0;pointer-events:none;transition:opacity .5s;z-index:500;border-radius:60px}
+.overlay.show{opacity:1}
+.titlecard{text-align:center}
+.fan{position:relative;height:170px;width:420px;margin:0 auto 10px}
+.fan .mini{position:absolute;left:170px;top:20px;width:80px;height:112px}
+.fan .mini .face{position:absolute;inset:0}
+.titlecard h1{font-size:84px;letter-spacing:4px;color:#ffd96a;text-shadow:0 6px 0 #a3561f,0 12px 30px rgba(0,0,0,.5);line-height:1}
+.titlecard p{font-size:28px;margin-top:14px;color:#e6e9f5}
+.press{margin-top:40px;font-size:20px;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+
+.score{width:1060px}
+.score h2{font-size:40px;color:#ffd96a;text-align:center}
+.score .sub{text-align:center;font-size:17px;opacity:.8;margin:4px 0 18px}
+.row{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.07);border-radius:16px;padding:10px 18px;margin-bottom:10px;border-left:6px solid var(--sc)}
+.row.win{background:rgba(255,217,106,.16);box-shadow:0 0 0 2px #ffd96a}
+.row .who{width:150px;font-size:22px;font-weight:700;display:flex;align-items:center;gap:8px}
+.row .who b{font-size:34px}
+.chips{display:flex;gap:6px;flex:1}
+.chip{border-radius:8px;padding:4px 8px;font-size:15px;font-weight:700;background:linear-gradient(160deg,var(--c1),var(--c2));border:2px solid #fff;white-space:nowrap}
+.math{font-size:18px;width:270px;text-align:right}
+.math .tot{font-size:30px;font-weight:700;color:#ffd96a;margin-left:6px}
+.lessons{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;margin-top:16px;font-size:16px;color:#e6e9f5}
+.lessons div::before{content:'★ ';color:#ffd96a}
+.again{text-align:center;margin-top:16px;font-size:16px;opacity:.7}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="table"></div>
+  <div class="hub" id="hub"><div class="lbl">PASS<small>to the left ↻</small></div></div>
+  <div id="layer"></div>
+  <div class="caption">
+    <div class="stepnum" id="stepnum"></div>
+    <div><div class="ctitle" id="ctitle"></div><div class="ctext" id="ctext"></div></div>
+    <div class="hint"><span class="kbd">SPACE</span> next<br><span class="kbd">←</span> back</div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+  </div>
+  <div class="overlay" id="ovTitle"></div>
+  <div class="overlay" id="ovScore"></div>
+</div>
+
+<script>
+const ELEM = {
+  fire:{c1:'#ff8a4c',c2:'#d9363e',icon:'🔥'},
+  water:{c1:'#4cb8ff',c2:'#2a5fd6',icon:'💧'},
+  leaf:{c1:'#6fd36b',c2:'#22844a',icon:'🌿'},
+  star:{c1:'#ffd84a',c2:'#e08a00',icon:'⭐'},
+  junk:{c1:'#bdb6aa',c2:'#7c766d',icon:'🗑️'}
+};
+// pack = starting seat, r = which pick round it gets taken in, slot = display position
+const CARDS = [
+  {pack:0,r:1,slot:1,name:'Phoenix',art:'🦅',el:'fire',pts:6},
+  {pack:0,r:2,slot:3,name:'Water Sprite',art:'🧚',el:'water',pts:3},
+  {pack:0,r:3,slot:2,name:'Moon Shard',art:'🌙',el:'star',pts:4},
+  {pack:0,r:4,slot:0,name:'Soggy Sock',art:'🧦',el:'junk',pts:1},
+  {pack:1,r:1,slot:2,name:'Kraken',art:'🐙',el:'water',pts:6},
+  {pack:1,r:2,slot:0,name:'Comet',art:'☄️',el:'star',pts:5},
+  {pack:1,r:3,slot:3,name:'Mushroom King',art:'🍄',el:'leaf',pts:4},
+  {pack:1,r:4,slot:1,name:'Rubber Duck',art:'🦆',el:'water',pts:1},
+  {pack:2,r:1,slot:1,name:'Shooting Star',art:'🌠',el:'star',pts:6},
+  {pack:2,r:2,slot:3,name:'Lava Hound',art:'🐕',el:'fire',pts:5},
+  {pack:2,r:3,slot:0,name:'Ember',art:'🕯️',el:'fire',pts:2},
+  {pack:2,r:4,slot:2,name:'Cactus',art:'🌵',el:'leaf',pts:2},
+  {pack:3,r:1,slot:2,name:'Giant Treant',art:'🌳',el:'leaf',pts:6},
+  {pack:3,r:2,slot:0,name:'Fire Imp',art:'👹',el:'fire',pts:3},
+  {pack:3,r:3,slot:3,name:'Tide Turtle',art:'🐢',el:'water',pts:4},
+  {pack:3,r:4,slot:1,name:'Firefly',art:'✨',el:'star',pts:2}
+];
+// seats clockwise: bottom → left → top → right (passing "left")
+const SEATS = [
+  {name:'Pip',emoji:'🦊',color:'#ff7a45',avatar:[330,712],pack:[640,565],kept:[640,710,'row'],bub:[330,660,'down']},
+  {name:'Moss',emoji:'🐸',color:'#2fb27a',avatar:[80,150],pack:[330,390],kept:[80,420,'col'],bub:[132,150,'left']},
+  {name:'Juniper',emoji:'🦉',color:'#e0a800',avatar:[950,70],pack:[640,215],kept:[640,70,'row'],bub:[950,134,'up']},
+  {name:'Rex',emoji:'🦖',color:'#8e6cf0',avatar:[1200,640],pack:[950,390],kept:[1200,400,'col'],bub:[1148,640,'right']}
+];
+
+const STEPS = [
+  {overlay:'title',title:'Card Drafting',text:'A quick show-and-tell of how a card draft works.'},
+  {title:'Meet the drafters',text:"Four players sit around a table. Instead of being dealt a random hand, they'll BUILD their hands by picking cards one at a time.",
+   B:['I LOVE fire cards. Gimme flames! 🔥','Water is life. Ribbit. 💧','Stars are rare — and a set earns a bonus. ⭐','I just like BIG NUMBERS. RAWR.']},
+  {title:'Deal the packs',text:"Each player gets a sealed pack of 4 cards, face down. But nobody gets to keep a whole pack — that's the trick.",
+   B:[null,null,null,'Ooh, presents!']},
+  {title:'Peek at your pack',text:'Everyone secretly looks at their OWN pack. (We can see all four — each player only sees the one in front of them.)',
+   B:['A Phoenix!!','Ooh, a Kraken.','A Shooting Star. Hoot!','Treant has a 6. Mine.']},
+  {title:'Pick #1 — choose one',text:'Each player picks ONE card from their pack to keep. Just one!',hl:1,
+   B:['Phoenix. Obviously.','Kraken for my water deck.','The Shooting Star!','Biggest number = Treant.']},
+  {title:'Keep it',text:"The chosen card goes into the player's collection. The rest of the pack stays together...",kept:1},
+  {title:'Pass to the left',text:"...and the leftovers get PASSED to the player on the left. Everyone now holds a smaller pack: their neighbor's leftovers.",kept:1,passes:1,
+   B:["Rex's leftovers? Let's see...",null,null,null]},
+  {title:'Pick #2 — read the signals',text:"Moss sees the Phoenix is gone — a SIGNAL that Pip wants fire. Rex grabs a card only so Pip can't have it. That's a HATE DRAFT.",kept:1,passes:1,hl:2,
+   B:['A Fire Imp! Rex skipped fire — good sign.',"Phoenix is gone... Pip's on fire. I'll stay in water.",'Comet — another star!',"Pip's next. I'll steal the Lava Hound. HEH."]},
+  {title:'Keep it',text:'Picked cards join each collection. The packs keep shrinking.',kept:2,passes:1},
+  {title:'Pass again',text:'Pass left again! Each pack keeps travelling around the table, one seat at a time.',kept:2,passes:2},
+  {title:'Pick #3 — tighter choices',text:'Only 2 cards left per pack. The good stuff is getting scarce — that is why early picks matter most.',kept:2,passes:2,hl:3,
+   B:['The Lava Hound is gone?! REX!! ...fine, Ember.','Tide Turtle — perfect.',"Moon Shard! That's 3 stars!",'Mushroom King has a 4. Sure.']},
+  {title:'Keep it',text:'Three cards in every collection. One lonely card left in each pack.',kept:3,passes:2},
+  {title:'Final pass',text:'The last leftovers get passed one more time.',kept:3,passes:3},
+  {title:'Pick #4 — no choice!',text:"The last card is forced: you take whatever your neighbor left behind. Good drafters plan so leftovers don't hurt them.",kept:3,passes:3,hl:4,
+   B:['A... rubber duck. Squeak.','A cactus. Not water. Sigh.','A Firefly — my 4th star! Lucky!','...a sock?']},
+  {title:'Every pack is empty',text:'All 16 cards have been distributed. Each player built a unique hand from the same shared pool.',kept:4,passes:3},
+  {title:'What everyone drafted',text:'Players who stayed focused on one element made SETS (glowing). Rex chased numbers and hate-drafted — no set for him.',kept:4,passes:3,sets:1,
+   B:['Three fire cards! 🔥','Three water! 💧','FOUR stars! ⭐⭐⭐⭐','Hate-drafting cost me my own picks...']},
+  {overlay:'score',title:'Scoring',text:'Card points + a 5-point bonus for every element you have 3 or more of.',kept:4,passes:3,sets:1}
+];
+STEPS.forEach((s,i)=>{s.avatars=i>=1;s.dealt=i>=2;s.faceUp=i>=3;s.kept=s.kept||0;s.passes=s.passes||0;s.hl=s.hl||0;s.B=s.B||[null,null,null,null];});
+
+const stage=document.getElementById('stage'), layer=document.getElementById('layer');
+const pickedBy=c=>(c.pack+c.r-1)%4;
+
+// hub arrows
+(function(){
+  const P=a=>[95+80*Math.cos(a*Math.PI/180),95+80*Math.sin(a*Math.PI/180)];
+  let s='<svg viewBox="0 0 190 190"><defs><marker id="ah" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="8" refY="8" orient="auto"><path d="M0,0 L16,8 L0,16 z" fill="rgba(255,255,255,.85)"/></marker></defs>';
+  for(let k=0;k<4;k++){const[a,b]=P(k*90+12),[c,d]=P(k*90+70);s+=`<path d="M${a},${b} A80 80 0 0 1 ${c},${d}" stroke="rgba(255,255,255,.85)" stroke-width="6" fill="none" stroke-linecap="round" marker-end="url(#ah)"/>`;}
+  document.getElementById('hub').insertAdjacentHTML('afterbegin',s+'</svg>');
+})();
+
+// zones, avatars, bubbles
+SEATS.forEach((s,i)=>{
+  const [x,y,dir]=s.kept, z=document.createElement('div');
+  z.className='zone';
+  if(dir==='row'){Object.assign(z.style,{left:x-136+'px',top:y-46+'px',width:'272px',height:'92px'});}
+  else{Object.assign(z.style,{left:x-38+'px',top:y-170+'px',width:'76px',height:'340px'});}
+  const lab=document.createElement('span');lab.textContent=s.name.toUpperCase()+"'S PICKS";
+  if(i===2) lab.style.bottom='-20px'; else lab.style.top='-20px';
+  z.appendChild(lab); layer.appendChild(z); s.zone=z;
+
+  const a=document.createElement('div');a.className='avatar';a.style.setProperty('--sc',s.color);
+  a.style.left=s.avatar[0]+'px';a.style.top=s.avatar[1]+'px';
+  a.innerHTML=`${s.emoji}<div class="name">${s.name}</div>`;layer.appendChild(a);s.av=a;
+
+  const b=document.createElement('div');b.className='bubble '+s.bub[2];b.style.setProperty('--sc',s.color);
+  b.style.left=s.bub[0]+'px';b.style.top=s.bub[1]+'px';layer.appendChild(b);s.bubble=b;
+});
+
+const faceHTML=c=>{const e=ELEM[c.el];return `<div class="face front" style="--c1:${e.c1};--c2:${e.c2}"><div class="pts">${c.pts}</div><div class="el">${e.icon}</div><div class="art">${c.art}</div><div class="nm">${c.name}</div></div>`;};
+CARDS.forEach((c,i)=>{
+  const d=document.createElement('div');d.className='card down';
+  d.style.setProperty('--c1',ELEM[c.el].c1);
+  d.innerHTML=`<div class="inner">${faceHTML(c)}<div class="face back">✦</div></div>`;
+  layer.appendChild(d);c.el_=d;c.i=i;
+});
+
+// title overlay
+(function(){
+  const pick=[0,4,8,12,9];
+  const fan=pick.map((k,j)=>`<div class="mini" style="transform:rotate(${(j-2)*14}deg) translateX(${(j-2)*58}px) translateY(${Math.abs(j-2)*12}px)">${faceHTML(CARDS[k])}</div>`).join('');
+  document.getElementById('ovTitle').innerHTML=`<div class="titlecard"><div class="fan">${fan}</div><h1>CARD DRAFTING</h1><p>Pick one. Pass the rest. Repeat.</p><div class="press">Press <span class="kbd">SPACE</span> to begin</div></div>`;
+})();
+
+// score overlay
+(function(){
+  const rows=SEATS.map((s,i)=>{
+    const mine=CARDS.filter(c=>pickedBy(c)===i).sort((a,b)=>a.r-b.r);
+    const pts=mine.reduce((t,c)=>t+c.pts,0), cnt={};
+    mine.forEach(c=>cnt[c.el]=(cnt[c.el]||0)+1);
+    const bonus=Object.entries(cnt).filter(([e,n])=>e!=='junk'&&n>=3).length*5;
+    return {s,mine,pts,bonus,total:pts+bonus};
+  }).sort((a,b)=>b.total-a.total);
+  const html=rows.map((r,k)=>`<div class="row ${k===0?'win':''}" style="--sc:${r.s.color}">
+     <div class="who"><b>${r.s.emoji}</b>${r.s.name}${k===0?' 👑':''}</div>
+     <div class="chips">${r.mine.map(c=>`<div class="chip" style="--c1:${ELEM[c.el].c1};--c2:${ELEM[c.el].c2}">${c.art} ${c.pts}</div>`).join('')}</div>
+     <div class="math">${r.pts} pts + ${r.bonus} bonus =<span class="tot">${r.total}</span></div></div>`).join('');
+  document.getElementById('ovScore').innerHTML=`<div class="score"><h2>Final Scores</h2><div class="sub">Card points + 5 bonus for each element with 3 or more cards</div>${html}
+   <div class="lessons">
+     <div>Pick one, pass the rest — everyone drafts from one shared pool.</div>
+     <div>Watch what's missing: it tells you what your neighbors want.</div>
+     <div>Hate-drafting blocks others, but weakens your own hand.</div>
+     <div>Real games repeat this over several packs, often switching pass direction each round.</div>
+   </div><div class="again">Press <span class="kbd">SPACE</span> to watch again</div></div>`;
+})();
+
+let cur=0, prev=-1;
+function render(){
+  const S=STEPS[cur];
+  SEATS.forEach((s,i)=>{
+    s.av.classList.toggle('show',S.avatars);
+    s.zone.classList.toggle('show',S.dealt);
+    const t=S.B[i];
+    if(t){s.bubble.textContent=t;}
+    s.bubble.classList.toggle('show',!!t && !S.overlay);
+  });
+  document.getElementById('hub').classList.toggle('show',S.dealt);
+  document.querySelector('#hub svg').style.transform=`rotate(${S.passes*90}deg)`;
+
+  const dealing=cur===2&&prev<2, flipping=cur===3&&prev<3, keeping=S.kept>(STEPS[prev]||{kept:0}).kept&&cur>prev;
+  CARDS.forEach(c=>{
+    const d=c.el_; let x,y,sc=1,z,cls='';
+    if(!S.dealt){x=640;y=390-c.i*1.5;z=c.i;}
+    else if(c.r<=S.kept){
+      const seat=SEATS[pickedBy(c)], [kx,ky,dir]=seat.kept, idx=c.r-1;
+      if(dir==='row'){x=kx+(idx-1.5)*64;y=ky;}else{x=kx;y=ky+(idx-1.5)*84;}
+      sc=.7;z=20+idx;
+      if(S.sets){const n=CARDS.filter(o=>pickedBy(o)===pickedBy(c)&&o.el===c.el).length;if(n>=3&&c.el!=='junk')cls='set';}
+    } else {
+      const seat=SEATS[(c.pack+S.passes)%4];
+      const rem=CARDS.filter(o=>o.pack===c.pack&&o.r>S.kept).sort((a,b)=>a.slot-b.slot);
+      const idx=rem.indexOf(c), n=rem.length;
+      x=seat.pack[0]+(idx-(n-1)/2)*88;y=seat.pack[1];z=50+idx;
+      if(S.hl){ if(c.r===S.hl){y-=24;cls='chosen';z=90;} else cls='dim'; }
+    }
+    let delay=0;
+    if(dealing) delay=(c.slot*4+c.pack)*80;
+    else if(keeping) delay=pickedBy(c)*90;
+    d.style.transitionDelay=delay+'ms';
+    d.querySelector('.inner').style.transitionDelay=(flipping?c.pack*140+c.slot*70:0)+'ms';
+    d.style.transform=`translate(${x-40}px,${y-56}px) scale(${sc})`;
+    d.style.zIndex=z;
+    d.className='card'+(S.faceUp?'':' down')+(cls?' '+cls:'');
+  });
+
+  document.getElementById('ovTitle').classList.toggle('show',S.overlay==='title');
+  document.getElementById('ovScore').classList.toggle('show',S.overlay==='score');
+  document.getElementById('stepnum').textContent=`STEP ${cur+1} / ${STEPS.length}`;
+  document.getElementById('ctitle').textContent=S.title;
+  document.getElementById('ctext').textContent=S.text;
+  document.getElementById('bar').style.width=(cur/(STEPS.length-1)*100)+'%';
+}
+function go(n){prev=cur;cur=(n+STEPS.length)%STEPS.length;if(n>=STEPS.length)cur=0;render();}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','Enter','PageDown'].includes(e.key)){e.preventDefault();go(cur+1>=STEPS.length?0:cur+1);}
+  else if(['ArrowLeft','Backspace','PageUp'].includes(e.key)){e.preventDefault();if(cur>0)go(cur-1);}
+});
+addEventListener('click',()=>go(cur+1>=STEPS.length?0:cur+1));
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/900);stage.style.transform=`translate(${(innerWidth-1280*s)/2}px,${(innerHeight-900*s)/2}px) scale(${s})`;}
+addEventListener('resize',fit);fit();render();
+window.ATLAS={cur:()=>cur,total:()=>STEPS.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

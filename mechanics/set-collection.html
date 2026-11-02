@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Set Collection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f2a33;--panel:#163a46;--panel2:#1d4a58;--ink:#fdf8ee;--muted:#a9c6c9;--sand:#f3dfb5;--sea:#3fb6c4;
+  --coral:#ff8a65;--gold:#ffc94d;--a:#ff8a65;--b:#5ec8f0;
+  --shell:#f7b49a;--stamp:#8fd0f2;--key:#f2d27a;--marble:#c6a6f5}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 20% 10%,#1d5563 0%,#0f2a33 55%,#0a1d24 100%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#stage::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 40px,transparent 40px 80px)}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-size:38px;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:21px;color:var(--muted);max-width:1180px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* cards */
+.card{position:relative;width:110px;height:150px;border-radius:14px;background:linear-gradient(160deg,#fffaf0,#f1e3c4);
+  color:#2a2a2a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 4px 0 rgba(0,0,0,.18),0 10px 22px rgba(0,0,0,.35);
+  border:4px solid var(--kc)}
+.card::before{content:"";position:absolute;inset:6px;border-radius:9px;border:2px dashed color-mix(in srgb,var(--kc) 70%,#000 0%);opacity:.6}
+.card .ic{font-size:50px;line-height:1;height:56px;display:flex;align-items:center;justify-content:center}
+.card .nm{font-size:16px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:#5a4a33}
+.k-shell{--kc:var(--shell)}.k-stamp{--kc:var(--stamp)}.k-key{--kc:var(--key)}.k-marble{--kc:var(--marble)}
+.stampi{display:inline-flex;width:46px;height:52px;align-items:center;justify-content:center;font-size:30px;background:#e9f6ff;
+  border:3px dotted #4b8db3;border-radius:3px}
+.marb{display:inline-block;width:46px;height:46px;border-radius:50%;
+  background:radial-gradient(circle at 32% 30%,#fff 0 9%,#d9c3ff 14%,#8a5cd6 55%,#4b2a8a 100%);box-shadow:0 3px 6px rgba(0,0,0,.35)}
+.card.sm{width:84px;height:114px;border-width:3px;gap:4px}
+.card.sm .ic{font-size:38px;height:44px}.card.sm .nm{font-size:12px}
+.card.sm .stampi{width:36px;height:40px;font-size:22px}.card.sm .marb{width:36px;height:36px}
+.card.back{background:repeating-linear-gradient(45deg,#2a7f8c 0 10px,#22707c 10px 20px);border-color:#f3dfb5}
+.card.back::before{border-color:#f3dfb5}
+.deal{animation:deal .7s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes deal{from{opacity:0;transform:translate(160px,-10px) rotate(25deg) scale(.7)}to{opacity:1;transform:none}}
+.drop{animation:drop .7s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes drop{from{opacity:0;transform:translateY(-120px) rotate(-14deg) scale(1.2)}to{opacity:1}}
+
+/* panels */
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+#title .big{font-size:110px;font-weight:900;line-height:1;margin:0;
+  background:linear-gradient(90deg,var(--shell),var(--gold),var(--stamp),var(--marble));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:34px;color:var(--sand)}
+#title .fan{position:relative;width:420px;height:200px;margin:20px 0 10px}
+#title .fan .card{position:absolute;left:155px;top:20px;transform-origin:50% 140%}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+#kinds{left:0;right:0;top:200px;display:flex;justify-content:center;gap:50px}
+#kinds .card{width:170px;height:230px}
+#kinds .card .ic{font-size:84px;height:90px}
+#kinds .card .nm{font-size:22px}
+#kinds .card .stampi{width:72px;height:82px;font-size:46px}
+#kinds .card .marb{width:74px;height:74px}
+#kinds .card{opacity:0;transform:translateY(30px) rotate(-6deg);transition:opacity .5s,transform .6s cubic-bezier(.3,1.5,.5,1)}
+#kinds.on .card{opacity:1;transform:none}
+#kinds .note{position:absolute;top:270px;left:0;right:0;text-align:center;font-size:24px;color:var(--sand)}
+
+#curve{left:0;right:0;top:150px;display:flex;flex-direction:column;align-items:center;gap:14px}
+#curve .row{display:flex;align-items:center;gap:24px;width:860px;opacity:0;transform:translateX(-30px);transition:opacity .5s,transform .5s}
+#curve.on .row{opacity:1;transform:none}
+#curve .cards{display:flex;width:360px;height:94px}
+#curve .cards .card{width:64px;height:88px;border-width:3px;margin-right:-14px}
+#curve .cards .card .ic{font-size:34px;height:38px}
+#curve .cards .card .nm{display:none}
+#curve .eq{font-size:30px;font-weight:900;width:150px;color:var(--muted)}
+#curve .pts{font-size:40px;font-weight:900;color:var(--gold);width:150px}
+#curve .gain{white-space:nowrap;font-size:22px;font-weight:800;color:var(--sea)}
+
+/* game */
+#table{left:40px;top:150px;width:240px;background:var(--panel);border:2px solid #2a5d6b;border-radius:16px;padding:12px 16px;
+  box-shadow:0 10px 24px rgba(0,0,0,.3)}
+#table h3{margin:0 0 6px;font-size:20px;color:var(--sand)}
+#table .tr{display:flex;justify-content:space-between;font-size:22px;font-weight:800;padding:4px 8px;border-radius:8px}
+#table .tr b{color:var(--gold)}
+#table .tr.flat{color:var(--muted);font-weight:700;font-size:19px;border-top:1px solid #2a5d6b;margin-top:6px;padding-top:8px;display:none}
+#market{left:330px;top:146px;width:900px;height:220px}
+#market .lbl{position:absolute;left:0;top:0;font-size:18px;font-weight:800;color:var(--sand);letter-spacing:1px;text-transform:uppercase}
+#market .slot{position:absolute;top:28px}
+#market .slot.hot .card{box-shadow:0 0 0 4px var(--gold),0 0 30px rgba(255,201,77,.8)}
+#market .tag{position:absolute;top:186px;width:220px;margin-left:-55px;text-align:center;font-size:19px;font-weight:900;line-height:1.2;
+  background:#0b1f26;border:2px solid var(--gold);border-radius:10px;padding:4px 6px;color:var(--gold)}
+#market .deck{position:absolute;left:700px;top:28px}
+#market .deck .card{position:absolute;left:0;top:0}
+#market .dcount{position:absolute;left:700px;top:186px;width:110px;text-align:center;font-size:18px;color:var(--muted);font-weight:700}
+.pl{top:388px;width:580px;height:290px;background:var(--panel);border:3px solid #2a5d6b;border-radius:18px;
+  box-shadow:0 10px 24px rgba(0,0,0,.3);transition:opacity .6s,border-color .4s,box-shadow .4s}
+#plA{left:40px}#plB{left:660px}
+#plA.turn{border-color:var(--a);box-shadow:0 0 26px rgba(255,138,101,.45)}
+#plB.turn{border-color:var(--b);box-shadow:0 0 26px rgba(94,200,240,.45)}
+.pl .nm{position:absolute;left:20px;top:12px;font-size:26px;font-weight:900}
+#plA .nm{color:var(--a)}#plB .nm{color:var(--b)}
+.pl .score{position:absolute;right:20px;top:6px;font-size:44px;font-weight:900;color:var(--gold)}
+.pl .score small{font-size:18px;color:var(--muted);font-weight:700;margin-right:6px}
+.pl .pop{position:absolute;right:20px;top:58px;font-size:30px;font-weight:900;color:var(--gold);animation:pop 1.2s ease both}
+@keyframes pop{0%{opacity:0;transform:translateY(20px) scale(.6)}30%{opacity:1;transform:scale(1.35)}60%{transform:scale(1)}100%{opacity:1}}
+.pl .groups{position:absolute;left:20px;top:64px;right:20px;height:200px;display:flex;gap:26px}
+.grp{position:relative;height:200px}
+.grp .card{position:absolute;top:0}
+.grp .gl{position:absolute;left:0;top:126px;white-space:nowrap;font-size:20px;font-weight:800;color:var(--sand)}
+.grp .gl b{color:var(--gold)}
+.pl .empty{position:absolute;left:20px;top:110px;font-size:20px;color:var(--muted);font-style:italic}
+
+/* insight */
+#insight{left:40px;right:40px;top:140px;height:540px;background:rgba(11,31,38,.92);border:2px solid #2a5d6b;border-radius:20px;z-index:12}
+.chart{position:absolute;top:24px;width:560px;height:490px;transition:opacity .6s}
+#chE{left:30px}#chF{left:610px;opacity:0}
+#insight.flat #chF{opacity:1}
+.chart h3{margin:0;font-size:26px;text-align:center}
+.chart .sub{font-size:19px;color:var(--muted);text-align:center;margin-top:4px}
+.bars{position:absolute;left:40px;right:40px;bottom:110px;height:250px;display:flex;align-items:flex-end;justify-content:space-around;border-bottom:3px solid #4d7f8c}
+.bar{width:80px;height:0;border-radius:10px 10px 0 0;position:relative;transition:height .8s cubic-bezier(.3,1.4,.5,1)}
+.bar span{position:absolute;top:-36px;left:0;right:0;text-align:center;font-size:28px;font-weight:900;color:var(--ink)}
+#chE .bar{background:linear-gradient(var(--coral),#a64a2f)}
+#chE .bar.last{background:linear-gradient(var(--gold),#b5801a);box-shadow:0 0 24px rgba(255,201,77,.6)}
+#chF .bar{background:linear-gradient(#7fa3aa,#456870)}
+.xl{position:absolute;left:40px;right:40px;bottom:72px;display:flex;justify-content:space-around}
+.xl div{width:100px;text-align:center;font-size:19px;font-weight:800;color:var(--sand)}
+.chart .verdict{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:22px;font-weight:800}
+#chE .verdict{color:var(--gold)}#chF .verdict{color:var(--muted)}
+
+#end{inset:0;background:rgba(6,18,23,.86);display:flex;align-items:center;justify-content:center;z-index:20}
+#end .card2{background:var(--panel);border:2px solid #3b7381;border-radius:24px;padding:34px 48px;width:940px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 14px;font-size:40px;color:var(--sand)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .seen{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid #3b7381;padding-top:14px}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#2c5763;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;left:20px;font-size:13px;color:#5f8a93;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="fan" id="tfan"></div>
+    <div class="big">Set Collection</div>
+    <h2>A day at the seaside flea market</h2>
+    <div class="press">Press → to begin</div>
+  </div>
+
+  <div id="kinds" class="panel"></div>
+  <div id="curve" class="panel"></div>
+
+  <div id="table" class="panel">
+    <h3>Set of one kind</h3>
+    <div class="tr" data-n="1"><span>1 card</span><b>1</b></div>
+    <div class="tr" data-n="2"><span>2 cards</span><b>3</b></div>
+    <div class="tr" data-n="3"><span>3 cards</span><b>6</b></div>
+    <div class="tr" data-n="4"><span>4 cards</span><b>10</b></div>
+  </div>
+  <div id="market" class="panel"></div>
+  <div id="plA" class="panel pl"></div>
+  <div id="plB" class="panel pl"></div>
+
+  <div id="insight" class="panel">
+    <div class="chart" id="chE">
+      <h3>Escalating: 1 · 3 · 6 · 10</h3>
+      <div class="sub">How many points does the next card add?</div>
+      <div class="bars"></div>
+      <div class="xl"><div>1st card</div><div>2nd card</div><div>3rd card</div><div>4th card</div></div>
+      <div class="verdict">The last piece is worth the most</div>
+    </div>
+    <div class="chart" id="chF">
+      <h3>Flat: every card = 2</h3>
+      <div class="sub">Same question, flat scoring</div>
+      <div class="bars"></div>
+      <div class="xl"><div>1st card</div><div>2nd card</div><div>3rd card</div><div>4th card</div></div>
+      <div class="verdict">Every card is the same. Nobody cares.</div>
+    </div>
+  </div>
+
+  <div id="end" class="panel">
+    <div class="card2">
+      <h2>What designers take from this</h2>
+      <ol>
+        <li><b>Escalating rewards create goals.</b> When the next piece is worth more than the last, players commit to a set and plan ahead.</li>
+        <li><b>An open market makes collections public.</b> Everyone can see who needs what, so players compete for the same pieces and take cards just to deny them.</li>
+        <li><b>Designers tune the curve.</b> Steep curves make big sets the goal and the race fierce. Flat curves make every card the same and the tension disappears.</li>
+      </ol>
+      <div class="seen">You'll see this in: Ticket to Ride, Sushi Go!, Splendor, Rummy.</div>
+    </div>
+  </div>
+
+  <div id="dots"></div>
+  <div id="hint">→ next · ← back · R restart</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const S=$('stage'),dotsEl=$('dots');
+const KINDS={
+  shell:{n:'Shells',ic:'🐚'},
+  stamp:{n:'Stamps',ic:'<span class="stampi">⛵</span>'},
+  key:{n:'Keys',ic:'🔑'},
+  marble:{n:'Marbles',ic:'<span class="marb"></span>'}
+};
+const ORDER=['shell','stamp','key','marble'];
+const TRI=[0,1,3,6,10];
+const card=(k,cls='')=>`<div class="card k-${k} ${cls}"><div class="ic">${KINDS[k].ic}</div><div class="nm">${KINDS[k].n}</div></div>`;
+const SLOTX=i=>i*134;
+
+let st,cur=0;
+function fresh(){return{
+  market:['shell','key','stamp','shell','marble'],
+  deck:['key','shell','stamp','marble','shell','key'],
+  dealt:-1,hot:-1,tag:'',turn:'',
+  P:{A:{shell:0,stamp:0,key:0,marble:0},B:{shell:0,stamp:0,key:0,marble:0}},
+  newCard:null,pop:{},rowHi:0
+};}
+const score=c=>ORDER.reduce((s,k)=>s+TRI[c[k]],0);
+
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+function show(...ids){['title','kinds','curve','table','market','plA','plB','insight','end'].forEach(id=>$(id).classList.toggle('on',ids.includes(id)))}
+
+function renderMarket(){
+  let h='<div class="lbl">Open market · anyone can take any card</div>';
+  st.market.forEach((k,i)=>{
+    h+=`<div class="slot${st.hot===i?' hot':''}" style="left:${SLOTX(i)}px">${card(k,st.dealt===i?'deal':'')}</div>`;
+  });
+  if(st.tag)h+=`<div class="tag" style="left:${SLOTX(st.hot)}px">${st.tag}</div>`;
+  h+='<div class="deck">';
+  for(let i=0;i<3;i++)h+=`<div class="card back" style="left:${-i*4}px;top:${-i*4}px"></div>`;
+  h+=`</div><div class="dcount">Deck</div>`;
+  $('market').innerHTML=h;
+}
+function renderPlayer(p){
+  const c=st.P[p],el=$('pl'+p);
+  let h=`<div class="nm">Player ${p}</div><div class="score"><small>score</small>${score(c)}</div>`;
+  if(st.pop[p])h+=`<div class="pop">${st.pop[p]}</div>`;
+  const kinds=ORDER.filter(k=>c[k]>0);
+  if(!kinds.length)h+='<div class="empty">No collectibles yet</div>';
+  h+='<div class="groups">';
+  kinds.forEach(k=>{
+    const n=c[k],w=84+(n-1)*30;
+    h+=`<div class="grp" style="width:${Math.max(w,150)}px">`;
+    for(let i=0;i<n;i++){
+      const isNew=st.newCard&&st.newCard.p===p&&st.newCard.k===k&&i===n-1;
+      h+=`<div style="position:absolute;left:${i*30}px;top:0;transform:rotate(${(i-(n-1)/2)*5}deg)">${card(k,'sm'+(isNew?' drop':''))}</div>`;
+    }
+    const nm=KINDS[k].n.toLowerCase();h+=`<div class="gl">${n} ${n>1?nm:nm.slice(0,-1)} = <b>${TRI[n]} pt${TRI[n]>1?'s':''}</b></div></div>`;
+  });
+  h+='</div>';
+  el.innerHTML=h;
+  el.classList.toggle('turn',st.turn===p);
+}
+function renderTable(){
+  document.querySelectorAll('#table .tr').forEach(r=>{
+    const on=+r.dataset.n===st.rowHi;
+    r.style.background=on?'rgba(255,201,77,.22)':'transparent';
+    r.style.boxShadow=on?'inset 0 0 0 2px var(--gold)':'none';
+  });
+}
+function renderGame(){renderMarket();renderPlayer('A');renderPlayer('B');renderTable();}
+
+// one turn: player p takes market slot i, slot refills from deck
+function take(p,i){
+  st.pop={};st.tag='';st.hot=-1;
+  const k=st.market[i],c=st.P[p],before=score(c);
+  c[k]++;
+  st.newCard={p,k};
+  st.pop[p]=`+${score(c)-before}`;
+  st.market[i]=st.deck.shift();st.dealt=i;st.turn=p;st.rowHi=c[k];
+  renderGame();
+}
+
+function reset(){
+  st=fresh();show();setHeader('','');
+  $('tfan').innerHTML=ORDER.map((k,i)=>card(k).replace('class="card','style="transform:rotate('+((i-1.5)*14)+'deg) translateX('+((i-1.5)*40)+'px)" class="card')).join('');
+  $('kinds').innerHTML=ORDER.map((k,i)=>card(k).replace('class="card','style="transition-delay:'+(i*120)+'ms" class="card')).join('')
+    +'<div class="note">Four kinds of collectibles. Each card belongs to exactly one kind.</div>';
+  $('curve').innerHTML=[1,2,3,4].map(n=>`<div class="row" style="transition-delay:${n*150}ms"><div class="cards">${Array(n).fill(card('shell')).join('')}</div>
+    <div class="eq">${n} card${n>1?'s':''} =</div><div class="pts">${TRI[n]} pt${n>1?'s':''}</div>
+    <div class="gain">${n>1?'+'+(TRI[n]-TRI[n-1])+' for this card':'a start'}</div></div>`).join('');
+  document.querySelectorAll('#insight .bars').forEach(b=>b.innerHTML=[1,2,3,4].map(()=>'<div class="bar"><span></span></div>').join(''));
+  $('insight').classList.remove('flat');
+}
+function setBars(id,vals){
+  [...document.querySelectorAll(`#${id} .bar`)].forEach((b,i)=>{
+    b.style.transitionDelay=(i*180)+'ms';b.style.height=(vals[i]*55)+'px';
+    b.querySelector('span').textContent='+'+vals[i];b.classList.toggle('last',id==='chE'&&i===3);
+  });
+}
+
+const steps=[
+ ()=>{show('title');setHeader('','')},
+ ()=>{show('kinds');setHeader('The goods','At the seaside flea market, sellers lay out shells, stamps, keys and marbles. Collectors want sets of one kind.')},
+ ()=>{show('curve');setHeader('The score table: sets grow in value','1 card scores 1, 2 score 3, 3 score 6, 4 score 10. Each new card in a set adds more than the one before.')},
+ ()=>{show('table','market','plA','plB');renderGame();
+   setHeader('The market','Five cards lie face up. On your turn take one, then a new card fills the gap from the deck. Everyone sees everything.')},
+ ()=>{show('table','market','plA','plB');take('A',0);
+   setHeader('Turn 1 · A takes a shell','A starts a shell set. One shell is worth just 1 point.')},
+ ()=>{show('table','market','plA','plB');take('B',0);
+   setHeader('Turn 2 · B takes a key','B starts on keys. Also worth 1. So far, nothing exciting.')},
+ ()=>{show('table','market','plA','plB');take('A',0);
+   setHeader('Turn 3 · A takes a second shell: 1 → 3','The second shell adds 2 points, not 1. The set is now worth more than its parts.')},
+ ()=>{show('table','market','plA','plB');take('B',1);
+   setHeader('Turn 4 · B takes a second key: 1 → 3','B follows the same plan. Two players, two sets, both climbing the table.')},
+ ()=>{show('table','market','plA','plB');take('A',3);st.hot=3;st.tag='+4 for A<br>+1 for B';renderMarket();
+   setHeader('Turn 5 · A takes a third shell: 3 → 6','Then the deck deals a fourth shell into the market. For A it would add 4 points. Everyone can see that.')},
+ ()=>{show('table','market','plA','plB');take('B',3);st.pop.B='+1';st.hot=-1;
+   st.tag='';renderPlayer('B');
+   const t=document.createElement('div');t.className='tag';t.style.left=SLOTX(3)+'px';t.style.borderColor='var(--b)';t.style.color='var(--b)';
+   t.textContent='Denied! A loses +4';$('market').appendChild(t);
+   setHeader('Turn 6 · B takes the shell just to deny A','B gains only 1 point. But A just lost a 4-point card. In an open market, what you take away counts too.')},
+ ()=>{show('insight');setBars('chE',[1,2,3,4]);
+   setHeader('The insight: the next card is worth more and more','Each card adds more than the one before. The last piece is worth the most, so the race for it heats up.')},
+ ()=>{show('insight');setBars('chE',[1,2,3,4]);setBars('chF',[2,2,2,2]);$('insight').classList.add('flat');
+   setHeader('Compare: flat scoring','If every card scored 2, A\'s fourth shell would be worth the same as any card. B would have no reason to deny it.')},
+ ()=>{show('end');setHeader('','')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

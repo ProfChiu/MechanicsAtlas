@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Worker Placement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--deep:#071722;--sea:#0f3247;--panel:#13293a;--line:#2b4a60;--ink:#f4efe4;--muted:#9fb9c8;
+  --sand:#f1e3c6;--sand2:#e2cc9f;--wood:#6b4423;--brown:#2b1d0e;--gold:#ffc53d;
+  --red:#e5484d;--blue:#3e7bfa;--green:#30a46c}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 10%,#17465f 0%,#0b2333 45%,#071722 80%) fixed}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;
+  background:repeating-linear-gradient(170deg,rgba(255,255,255,.018) 0 22px,transparent 22px 44px)}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:20px;z-index:40}
+#header h1{margin:0;font-size:36px;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* title */
+#title{left:0;right:0;top:150px;bottom:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:20}
+#title .big{font-size:84px;font-weight:900;margin:0;line-height:1.05;text-align:center;
+  background:linear-gradient(90deg,var(--sand),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title .sub{font-size:28px;color:var(--muted);margin:0}
+#title .row{display:flex;gap:26px;margin:18px 0}
+#title .row svg{width:64px;height:76px;filter:drop-shadow(0 6px 6px rgba(0,0,0,.4));animation:hop 1.5s ease-in-out infinite}
+#title .row svg:nth-child(2){animation-delay:.15s}#title .row svg:nth-child(3){animation-delay:.3s}
+#title .row svg:nth-child(4){animation-delay:.45s}#title .row svg:nth-child(5){animation-delay:.6s}#title .row svg:nth-child(6){animation-delay:.75s}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* action spaces */
+.space{position:absolute;width:260px;height:238px;border-radius:18px;padding:12px 14px;text-align:center;color:var(--brown);
+  background:linear-gradient(160deg,var(--sand),var(--sand2));border:3px solid var(--wood);
+  box-shadow:0 2px 0 #a07a45 inset,0 10px 24px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.4);
+  opacity:0;transform:translateY(20px) scale(.92);transition:opacity .5s,transform .5s cubic-bezier(.3,1.5,.5,1),filter .5s,box-shadow .5s}
+.space.on{opacity:1;transform:none}
+.space .ic{font-size:46px;line-height:1.1}
+.space .nm{font-size:26px;font-weight:900;margin-top:2px}
+.space .ef{font-size:20px;line-height:1.2;margin-top:4px;font-weight:700;color:#5a4325}
+.space .slot{position:absolute;left:50%;bottom:10px;width:64px;height:58px;margin-left:-32px;border-radius:50%;
+  border:3px dashed rgba(107,68,35,.55);background:rgba(107,68,35,.08)}
+.space.tav .slot{width:200px;margin-left:-100px;border-radius:30px}
+.space .shade{position:absolute;inset:0;border-radius:15px;background:rgba(7,23,34,.55);opacity:0;transition:opacity .5s .45s}
+.space .lock{position:absolute;top:-16px;right:-14px;width:46px;height:46px;border-radius:50%;background:#1d2b36;border:3px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;font-size:22px;opacity:0;transform:scale(.3);
+  transition:opacity .4s .5s,transform .45s .5s cubic-bezier(.3,1.8,.5,1);box-shadow:0 4px 10px rgba(0,0,0,.5)}
+.space.taken .shade{opacity:1}.space.taken .lock{opacity:1;transform:none}
+.space.flash{box-shadow:0 0 0 6px var(--red),0 0 30px var(--red);animation:shake .5s .2s 2}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.space.glow{box-shadow:0 0 0 5px var(--gold),0 0 34px rgba(255,197,61,.7)}
+.space.paid::after{content:"✓";position:absolute;top:-16px;left:-14px;width:44px;height:44px;border-radius:50%;background:var(--green);color:#fff;
+  font-size:26px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,.5);animation:pop .4s both}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:none;opacity:1}}
+
+/* players */
+.pl{position:absolute;left:880px;width:360px;height:120px;border-radius:16px;background:linear-gradient(160deg,#18354a,#10283a);
+  border:2px solid var(--line);border-left:10px solid var(--c);box-shadow:0 8px 20px rgba(0,0,0,.4);
+  opacity:0;transform:translateX(30px);transition:opacity .5s,transform .5s}
+.pl.on{opacity:1;transform:none}
+.pl .nm{position:absolute;left:16px;top:8px;font-size:24px;font-weight:900;color:var(--c)}
+.pl .home{position:absolute;left:12px;top:46px;width:116px;height:62px;border-radius:12px;background:rgba(0,0,0,.22)}
+.pl .goods{position:absolute;left:142px;top:56px;width:206px;font-size:21px;font-weight:800;line-height:1.3}
+.pl .goods.pop{animation:pop .5s both}
+.pl .goods .boat{color:var(--gold)}
+
+.wk{position:absolute;width:48px;height:56px;z-index:15;opacity:0;
+  transition:left .75s cubic-bezier(.5,-.2,.3,1.2),top .75s cubic-bezier(.5,-.2,.3,1.2),opacity .4s}
+.wk.on{opacity:1}
+.wk svg{width:100%;height:100%;filter:drop-shadow(0 5px 4px rgba(0,0,0,.5))}
+.wk .n{position:absolute;right:-12px;top:-10px;width:28px;height:28px;border-radius:50%;background:#fff;color:#111;
+  font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s .6s;box-shadow:0 2px 5px rgba(0,0,0,.5)}
+.wk.num .n{opacity:1}
+
+#fp{position:absolute;width:46px;height:46px;border-radius:50%;z-index:16;opacity:0;
+  background:radial-gradient(circle at 35% 30%,#ffe08a,var(--gold) 55%,#b9861a);color:#3b2a00;
+  font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;border:3px solid #fff3c4;
+  box-shadow:0 5px 12px rgba(0,0,0,.5);transition:left .8s cubic-bezier(.5,-.2,.3,1.3),top .8s cubic-bezier(.5,-.2,.3,1.3),opacity .4s}
+#fp.on{opacity:1}
+
+/* thought bubble */
+#bub{left:880px;top:538px;width:360px;height:82px;border-radius:40px;background:#fff;color:#222;z-index:25;
+  display:flex;align-items:center;justify-content:center;gap:12px;font-size:22px;font-weight:800;
+  box-shadow:0 8px 20px rgba(0,0,0,.45);transform:scale(.6);transition:opacity .4s .3s,transform .5s .3s cubic-bezier(.3,1.6,.5,1)}
+#bub.on{transform:none}
+#bub::before,#bub::after{content:"";position:absolute;background:#fff;border-radius:50%}
+#bub::before{width:20px;height:20px;left:60px;top:-14px}
+#bub::after{width:11px;height:11px;left:48px;top:-28px}
+#bub .want{position:relative;padding:4px 12px;border-radius:12px;background:var(--sand);border:2px solid var(--wood);color:var(--brown)}
+#bub .want::after{content:"";position:absolute;left:-6px;right:-6px;top:50%;height:5px;background:var(--red);transform:rotate(-12deg);border-radius:3px}
+
+/* compare */
+#cmp{left:40px;right:40px;top:132px;bottom:46px;border-radius:22px;background:rgba(7,23,34,.96);border:2px solid var(--line);z-index:30;
+  padding:26px 40px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#cmp table{width:100%;border-collapse:separate;border-spacing:0 10px;font-size:24px}
+#cmp th{font-size:22px;color:var(--muted);text-align:left;padding:4px 18px}
+#cmp td{background:#13293a;padding:14px 18px;font-weight:800}
+#cmp td:first-child{border-radius:12px 0 0 12px;width:170px}
+#cmp td:last-child{border-radius:0 12px 12px 0}
+#cmp td.boat{background:linear-gradient(90deg,rgba(255,197,61,.28),rgba(255,197,61,.12));color:var(--gold)}
+#cmp .cr{color:var(--red)}#cmp .cb{color:var(--blue)}#cmp .cg{color:var(--green)}
+#cmp .take{margin-top:18px;font-size:24px;line-height:1.35;text-align:center}
+#cmp .take b{color:var(--gold)}
+
+/* tight vs loose */
+#tl{left:40px;right:40px;top:132px;bottom:46px;border-radius:22px;background:rgba(7,23,34,.96);border:2px solid var(--line);z-index:30;
+  display:flex;justify-content:space-around;align-items:center;padding:20px}
+#tl .side{display:flex;flex-direction:column;align-items:center;gap:14px;width:520px}
+#tl .grid{display:grid;gap:12px}
+#tl .sq{width:76px;height:76px;border-radius:14px;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center}
+#tl .sq svg{width:40px;height:48px}
+#tl .lab{font-size:34px;font-weight:900}
+#tl .lab.t{color:var(--red)}#tl .lab.l{color:var(--green)}
+#tl .why{font-size:22px;color:var(--muted);text-align:center;line-height:1.35}
+
+/* end */
+#end{inset:0;background:rgba(5,15,22,.86);display:flex;align-items:center;justify-content:center;z-index:50}
+#end .card{background:#13293a;border:2px solid #3a5f78;border-radius:24px;padding:34px 48px;width:960px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 14px;font-size:40px}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted)}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:60}
+#dots i{width:9px;height:9px;border-radius:50%;background:#2d4b60;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;left:20px;font-size:13px;color:#5f7f93;z-index:60}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <p class="big">First come,<br>first served.</p>
+    <div class="row" id="trow"></div>
+    <p class="sub">A harbour town, six jobs, and never enough workers.</p>
+    <div class="press">Click or press → to begin</div>
+  </div>
+
+  <div id="board"></div>
+  <div id="players"></div>
+  <div id="workers"></div>
+  <div id="fp">1st</div>
+
+  <div id="bub" class="panel">💭 I wanted <span class="want">🪵 Lumber Yard</span></div>
+
+  <div id="cmp" class="panel">
+    <table>
+      <tr><th>Player</th><th>Round 1: Red places first</th><th>Replay: Green places first</th></tr>
+      <tr><td class="cr">Red</td><td class="boat">⛵ Boat (3 pts)</td><td>🐟 2 food, 🪨 1 stone</td></tr>
+      <tr><td class="cb">Blue</td><td>🐟 2 food, 1st marker</td><td>1st marker, 🪙 1 coin</td></tr>
+      <tr><td class="cg">Green</td><td>🪨 1 stone, 🪙 1 coin</td><td class="boat">⛵ Boat (3 pts)</td></tr>
+    </table>
+    <div class="take">The boat went to whoever placed first, both times.<br>
+      Going first is worth about <b>one boat</b>. That is why <b>"take the first player marker"</b> is an action.</div>
+  </div>
+
+  <div id="tl" class="panel">
+    <div class="side"><div class="grid" id="g6" style="grid-template-columns:repeat(3,76px)"></div>
+      <div class="lab t">6 spaces / 6 workers = tight</div>
+      <div class="why">Every placement blocks someone.<br>The last worker takes the leftovers.</div></div>
+    <div class="side"><div class="grid" id="g10" style="grid-template-columns:repeat(5,76px)"></div>
+      <div class="lab l">10 spaces / 6 workers = loose</div>
+      <div class="why">Room for everyone.<br>Little blocking, little tension.</div></div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li><b>Actions are the scarce resource.</b> Each worker is one action, and you never have enough.</li>
+      <li><b>Blocking is the interaction.</b> No one attacks. You just get there first, and that takes the space from everyone else.</li>
+      <li><b>Balance spaces against workers.</b> 6 spaces for 6 workers is tight. 10 spaces is loose. Turn order matters more the tighter it gets.</li>
+    </ul>
+    <div class="see">You'll see this in: Stone Age, Lords of Waterdeep, Agricola, Everdell.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">← → to step · R restart</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), px=v=>v+'px';
+const COL={r:'#e5484d',b:'#3e7bfa',g:'#30a46c'}, NAME={r:'Red',b:'Blue',g:'Green'};
+const meeple=c=>`<svg viewBox="0 0 100 116"><path fill="${c}" stroke="rgba(0,0,0,.45)" stroke-width="4" stroke-linejoin="round"
+  d="M50 4a19 19 0 1 1 0 38a19 19 0 1 1 0-38zM30 44h40q26 3 28 22q1 8-9 8h-12l15 38h-30l-12-22l-12 22h-30l15-38h-12q-10 0-9-8q2-19 28-22z"/></svg>`;
+
+const SP=[
+ {id:'fish',  name:'Fish Market',icon:'🐟',eff:'+2 food'},
+ {id:'lumber',name:'Lumber Yard',icon:'🪵',eff:'+2 wood'},
+ {id:'quarry',name:'Quarry',     icon:'🪨',eff:'+1 stone'},
+ {id:'guild', name:'Guild Hall', icon:'🏛️',eff:'Take the first player marker'},
+ {id:'ship',  name:'Shipwright', icon:'⛵',eff:'Spend 2 wood: boat (3 pts)'},
+ {id:'tavern',name:'Tavern',     icon:'🍺',eff:'+1 coin. Always open, no limit'}
+];
+const SPX={};SP.forEach((s,i)=>{s.x=40+(i%3)*280;s.y=132+Math.floor(i/3)*250;SPX[s.id]=s});
+$('board').innerHTML=SP.map(s=>`<div class="space${s.id==='tavern'?' tav':''}" id="sp-${s.id}" style="left:${s.x}px;top:${s.y}px">
+  <div class="ic">${s.icon}</div><div class="nm">${s.name}</div><div class="ef">${s.eff}</div><div class="slot"></div>
+  <div class="shade"></div>${s.id==='tavern'?'':'<div class="lock">🔒</div>'}</div>`).join('');
+
+const PY={r:132,b:266,g:400};
+$('players').innerHTML=['r','b','g'].map(p=>`<div class="pl" id="pl-${p}" style="top:${PY[p]}px;--c:${COL[p]}">
+  <div class="nm">${NAME[p]}</div><div class="home"></div><div class="goods" id="gd-${p}"></div></div>`).join('');
+const W=['r0','r1','b0','b1','g0','g1'];
+$('workers').innerHTML=W.map(w=>`<div class="wk" id="wk-${w}">${meeple(COL[w[0]])}<div class="n"></div></div>`).join('');
+$('trow').innerHTML=['r','r','b','b','g','g'].map(p=>meeple(COL[p])).join('');
+$('g6').innerHTML=['r','b','g','r','b','g'].map(p=>`<div class="sq">${meeple(COL[p])}</div>`).join('');
+$('g10').innerHTML=['r','b','g','','','r','b','g','',''].map(p=>`<div class="sq">${p?meeple(COL[p]):''}</div>`).join('');
+
+let cur=0, occ={};
+function home(w){const e=$('wk-'+w),p=w[0],k=+w[1];
+  e.style.left=px(880+22+k*56);e.style.top=px(PY[p]+50);e.classList.remove('num')}
+function place(w,sp,n){const e=$('wk-'+w),s=SPX[sp];occ[sp]=(occ[sp]||0)+1;
+  const off=sp==='tavern'?(occ[sp]-1)*56:0;
+  e.style.left=px(s.x+130-24+off);e.style.top=px(s.y+238-66);
+  e.querySelector('.n').textContent=n;e.classList.add('num');
+  if(sp!=='tavern')$('sp-'+sp).classList.add('taken')}
+function fpTo(p){const f=$('fp');f.style.left=px(1240-58);f.style.top=px(PY[p]+8)}
+function goods(p,h,pop){const g=$('gd-'+p);g.innerHTML=h;g.classList.remove('pop');if(pop){void g.offsetWidth;g.classList.add('pop')}}
+function clearBoard(){occ={};document.querySelectorAll('.space').forEach(e=>e.classList.remove('taken','flash','glow','paid'))}
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s;
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){
+  document.querySelectorAll('.panel,.space,.pl,.wk,#fp').forEach(e=>e.classList.remove('on'));
+  clearBoard();W.forEach(home);fpTo('r');['r','b','g'].forEach(p=>goods(p,''));
+}
+const show=id=>$(id).classList.add('on'), hide=id=>$(id).classList.remove('on');
+const BOAT='<span class="boat">⛵ Boat = 3 pts</span>';
+
+const steps=[
+ ()=>{show('title');
+   setHeader('Worker Placement','Send a worker to an action and that action is taken. First come, first served.')},
+ ()=>{hide('title');SP.forEach((s,i)=>{const e=$('sp-'+s.id);e.style.transitionDelay=(i*90)+'ms';e.classList.add('on')});
+   setHeader('The harbour board: 6 action spaces','Each space is one action. Most hold a single worker. The Tavern is always open and has room for everyone.')},
+ ()=>{SP.forEach(s=>$('sp-'+s.id).style.transitionDelay='0ms');
+   ['r','b','g'].forEach((p,i)=>{const e=$('pl-'+p);e.style.transitionDelay=(i*120)+'ms';e.classList.add('on')});
+   W.forEach(w=>$('wk-'+w).classList.add('on'));show('fp');
+   ['r','b','g'].forEach(p=>goods(p,'<span style="color:var(--muted)">nothing yet</span>'));
+   setHeader('Three players, two workers each','Six workers in all. Red holds the first player marker, so the turn order is Red, Blue, Green.')},
+ ()=>{place('r0','lumber',1);
+   setHeader('Red places first: Lumber Yard','Red wants a boat, and boats need wood. The Lumber Yard is now locked for everyone else.')},
+ ()=>{place('b0','fish',2);
+   setHeader('Blue: Fish Market','Blue needs food. Another space closes. Four left.')},
+ ()=>{show('bub');$('sp-lumber').classList.add('flash');place('g0','quarry',3);
+   setHeader('Green gets blocked','Green wanted wood for a boat too. Red got there first, so Green settles for the Quarry.')},
+ ()=>{hide('bub');$('sp-lumber').classList.remove('flash');place('r1','ship',4);
+   setHeader("Red's second worker: Shipwright",'Red has wood coming and takes the only Shipwright. Nobody else can build a boat this round.')},
+ ()=>{place('b1','guild',5);
+   setHeader('Blue takes the Guild Hall','No goods here. Blue spends a whole action to buy the first player marker for next round.')},
+ ()=>{place('g1','tavern',6);$('sp-tavern').classList.add('glow');
+   setHeader('Green places last: whatever is left','Every locked space is gone. Green gets the Tavern, the space nobody fought for. The leftovers show what last place costs.')},
+ ()=>{$('sp-tavern').classList.remove('glow');document.querySelectorAll('.space').forEach(e=>e.classList.add('paid'));
+   goods('r','🪵 2 wood spent<br>'+BOAT,1);goods('b','🐟 2 food<br>+ 1st marker',1);goods('g','🪨 1 stone<br>🪙 1 coin',1);
+   setHeader('Resolve the actions','Spaces pay out in board order, top row first, so wood arrives before the Shipwright. Red turns 2 wood into a boat worth 3 points. Green, last in line, ends with the least.')},
+ ()=>{clearBoard();W.forEach(home);fpTo('b');
+   goods('r',BOAT);goods('b','🐟 2 food');goods('g','🪨 1 stone<br>🪙 1 coin');
+   setHeader('Workers come home','The board clears for the next round. Blue took the Guild Hall, so Blue places first next time.')},
+ ()=>{fpTo('g');
+   place('g0','lumber',1);place('r0','fish',2);place('b0','guild',3);place('g1','ship',4);place('r1','quarry',5);place('b1','tavern',6);
+   goods('r','🐟 2 food<br>🪨 1 stone');goods('b','1st marker<br>🪙 1 coin');goods('g',BOAT);
+   setHeader('Replay the round: Green goes first','Same players, same wants. Green grabs the Lumber Yard and the Shipwright. Now Red is the one squeezed out.')},
+ ()=>{show('cmp');
+   setHeader('Compare: turn order is worth something','Look at what each player got in the two rounds. Only the seat order changed.')},
+ ()=>{hide('cmp');show('tl');
+   setHeader('Space count vs worker count','Designers tune the tension by counting. The fewer open spaces per worker, the more blocking.')},
+ ()=>{show('end');
+   setHeader('What designers take from this','Three ideas to carry into your own games.')}
+];
+
+const dotsEl=$('dots');
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

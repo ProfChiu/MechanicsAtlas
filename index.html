@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mechanics Atlas</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="atlas.css">
+</head>
+<body class="hub">
+<header class="hero">
+  <div class="hero-inner">
+    <p class="kicker">GAME 121 · Introduction to Game Development</p>
+    <h1>Mechanics Atlas</h1>
+    <p class="lede">Short animated explainers of the mechanics tabletop games are built from.
+      Watch each one, then read the designer's notes: what the mechanic is made of,
+      what it makes players feel, and where you have seen it before.</p>
+    <div class="hero-meta" id="heroMeta"></div>
+  </div>
+  <div class="hero-dice" aria-hidden="true"><span>⚀</span><span>🂠</span><span>⬢</span></div>
+</header>
+
+<main id="families"></main>
+
+<footer class="foot">
+  <p>Anatomy follows the formal elements in Fullerton, <em>Game Design Workshop</em>, ch. 3.
+    Each animation steps forward with a click, Space or →, and back with ←.</p>
+</footer>
+
+<script src="mechanics.js"></script>
+<script>
+const built = MECHANICS.filter(m => m.file);
+document.getElementById('heroMeta').innerHTML =
+  `<span><b>${built.length}</b> mechanics ready</span><span><b>${FAMILIES.length}</b> families</span>` +
+  `<span><b>${built.reduce((t, m) => t + (m.minutes || 0), 0)}</b> minutes of viewing</span>` +
+  `<a class="btn primary" href="watch.html?id=${built[0].id}&tour=1&auto=1">▶ Watch them all in order</a>`;
+
+document.getElementById('families').innerHTML = FAMILIES.map(f => {
+  const ms = MECHANICS.filter(m => m.family === f.id);
+  return `<section class="family" style="--fam:${f.color}">
+    <div class="family-head"><h2>${f.name}</h2><p>${f.blurb}</p></div>
+    <div class="grid">${ms.map(card).join('')}</div>
+  </section>`;
+}).join('');
+
+function card(m) {
+  if (!m.file) return `<div class="card soon"><span class="tag">Coming soon</span>
+      <h3>${m.title}</h3><p>${m.hook}</p></div>`;
+  const games = m.examples.slice(0, 3).map(e => e.name).join(' · ');
+  return `<a class="card" href="watch.html?id=${m.id}">
+      <span class="tag">${m.minutes} min</span>
+      <h3>${m.title}</h3><p>${m.hook}</p>
+      <p class="games">${games}</p>
+      <span class="play">▶ Watch</span></a>`;
+}
+</script>
+</body>
+</html>
