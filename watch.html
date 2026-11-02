@@ -36,7 +36,7 @@
 <script src="mechanics.js"></script>
 <script>
 const params = new URLSearchParams(location.search);
-const built = MECHANICS.filter(m => m.file);
+const built = FAMILIES.flatMap(f => MECHANICS.filter(m => m.file && m.family === f.id)); // tour order = family order
 const idx = Math.max(0, built.findIndex(m => m.id === params.get('id')));
 const m = built[idx], fam = FAMILIES.find(f => f.id === m.family);
 const tour = params.get('tour') === '1';

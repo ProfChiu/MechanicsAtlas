@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Action Points</title>
+<style>
+:root{--bg:#17130e;--panel:#2a2219;--panel2:#33291e;--ink:#fbf3e4;--muted:#cdbb9c;--sand:#d9b77e;--soil:#6e4a2c;
+  --soil2:#57391f;--gold:#ffcf5a;--mira:#2fc4a8;--oskar:#ff7d4a;--red:#ef5a52;--line:rgba(255,236,200,.14)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#33261a 0%,#17130e 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 10px 30px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+#title .big{font-family:"Fredoka",sans-serif;font-size:150px;font-weight:700;line-height:1;margin:0;
+  background:linear-gradient(90deg,var(--mira),var(--gold),var(--oskar));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:36px;font-weight:700}
+#title .row{display:flex;gap:28px;margin:18px 0}
+#title .row .tok{width:78px;height:78px;animation:bob 2.2s ease-in-out infinite}
+#title .row .tok:nth-child(2){animation-delay:.2s}#title .row .tok:nth-child(3){animation-delay:.4s}#title .row .tok:nth-child(4){animation-delay:.6s}
+@keyframes bob{50%{transform:translateY(-10px)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+/* tokens */
+.tok{width:40px;height:40px;border-radius:50%;position:relative;
+  background:radial-gradient(circle at 35% 30%,#fff6c9 0%,var(--gold) 38%,#c98a12 100%);
+  box-shadow:0 0 14px rgba(255,207,90,.75),0 0 0 2px rgba(255,240,190,.5) inset,0 3px 6px rgba(0,0,0,.4);
+  transition:transform .45s ease,opacity .9s ease,filter .9s ease,box-shadow .45s}
+.tok.spent{transform:scale(.62);opacity:.28;filter:grayscale(1);box-shadow:none}
+.tok.wasted{transform:scale(.8);opacity:.85;background:transparent;border:3px dashed var(--red);box-shadow:none;transition-duration:.6s,2.2s,2.2s,.6s}
+.tok.wasted::after{content:"lost";position:absolute;left:-6px;right:-6px;top:38px;text-align:center;font-size:16px;font-weight:900;color:var(--red)}
+.tok.hide{opacity:0}
+
+/* game */
+#game{inset:0}
+#board{position:absolute;left:40px;top:128px;width:600px;height:478px;padding:0}
+#tent{position:absolute;left:18px;top:22px;width:104px;height:331px;border-radius:14px;
+  background:linear-gradient(180deg,#3d3122,#2b2218);border:1px solid var(--line);text-align:center}
+#tent .roof{width:0;height:0;margin:26px auto 0;border-left:40px solid transparent;border-right:40px solid transparent;border-bottom:52px solid #e9dcc0;
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.4))}
+#tent .lbl{font-family:"Fredoka",sans-serif;font-size:20px;margin-top:8px;letter-spacing:1px}
+#tent .cnt{font-size:56px;font-weight:900;color:var(--gold);margin-top:40px;line-height:1;transition:transform .4s}
+#tent .sub{font-size:18px;color:var(--muted)}
+.sq{position:absolute;width:105px;height:105px;border-radius:12px;border:2px solid rgba(0,0,0,.25);
+  background:repeating-linear-gradient(45deg,rgba(0,0,0,.07) 0 6px,transparent 6px 12px),linear-gradient(160deg,var(--soil),var(--soil2));
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.08),0 4px 8px rgba(0,0,0,.35);transition:background .5s,border-color .5s,box-shadow .5s}
+.sq .id{position:absolute;left:8px;top:4px;font-size:18px;font-weight:800;color:rgba(255,240,215,.6)}
+.sq .st{position:absolute;left:0;right:0;top:28px;text-align:center;font-size:18px;font-weight:800}
+.sq.seenF{border:3px dashed var(--gold)}.sq.seenF .st{color:var(--gold)}
+.sq.seenE{border:3px dashed rgba(255,240,215,.45)}.sq.seenE .st{color:rgba(255,240,215,.7)}
+.sq.dugE,.sq.dugF,.sq.dugC{background:radial-gradient(circle at 50% 55%,#1c120a 0%,#2e1e11 55%,var(--soil2) 100%);box-shadow:inset 0 6px 14px rgba(0,0,0,.7)}
+.sq.dugE .st{color:#c9b28f}
+.sq.dugF{border:3px solid var(--gold);box-shadow:inset 0 6px 14px rgba(0,0,0,.7),0 0 18px rgba(255,207,90,.55)}.sq.dugF .st{color:var(--gold)}
+.sq.dugC .st{color:#9fd9a8}
+.mp{position:absolute;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-family:"Fredoka",sans-serif;
+  font-size:22px;font-weight:700;color:#10100c;border:3px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.55);
+  transition:left .5s ease,top .5s ease,opacity .5s;z-index:3}
+.mp.M{background:var(--mira)}.mp.O{background:var(--oskar)}
+#badge{position:absolute;left:18px;top:376px;width:558px;display:flex;gap:12px}
+#badge span{padding:8px 14px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--line);font-size:20px;font-weight:700}
+#badge .cost{color:var(--gold)}
+#badge .cost.hot{background:rgba(255,207,90,.18);border-color:var(--gold)}
+#legend{position:absolute;left:18px;top:428px;font-size:18px;color:var(--muted)}
+
+#menu{position:absolute;left:660px;top:128px;width:580px;height:202px;padding:12px 18px;transition:opacity .5s}
+#menu h3{margin:0 0 6px;font-family:"Fredoka",sans-serif;font-size:22px;font-weight:600;color:var(--sand)}
+.mr{display:flex;align-items:center;height:38px;padding:0 10px;border-radius:9px;font-size:20px;transition:background .3s,box-shadow .3s}
+.mr .nm{flex:1}
+.mr .pips{display:flex;gap:5px;margin-right:12px}
+.mr .pips i{width:14px;height:14px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px rgba(255,207,90,.7)}
+.mr .c{width:72px;text-align:right;font-weight:900;color:var(--gold)}
+.mr .c s{color:var(--muted);font-weight:600;margin-right:6px}
+.mr.hot{background:rgba(255,207,90,.16);box-shadow:inset 0 0 0 2px rgba(255,207,90,.6)}
+.mr.changed{background:rgba(239,90,82,.16);box-shadow:inset 0 0 0 2px var(--red)}
+
+.pc{position:absolute;top:344px;width:284px;height:262px;padding:10px 16px;transition:opacity .5s,box-shadow .4s}
+#pcM{left:660px}#pcO{left:956px}
+.pc .nm{line-height:1.15;font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600;display:flex;align-items:center;gap:10px}
+.pc .nm b{width:18px;height:18px;border-radius:50%;display:inline-block}
+#pcM .nm{color:var(--mira)}#pcM .nm b{background:var(--mira)}
+#pcO .nm{color:var(--oskar)}#pcO .nm b{background:var(--oskar)}
+.pc .toks{display:flex;gap:12px;margin:6px 0 2px;height:44px;align-items:center}
+.pc .left{font-size:20px;font-weight:800;height:28px}
+.pc .left em{font-style:normal;color:var(--gold)}
+.pc .log{height:96px;margin-top:2px}
+.pc .log div{font-size:18px;height:24px;color:var(--ink);display:flex}
+.pc .log div span:first-child{flex:1}
+.pc .log div span:last-child{color:var(--gold);font-weight:800}
+.pc .log div.w span{color:var(--red)!important}
+.pc .res{font-size:18px;font-weight:800;color:var(--sand);border-top:1px solid var(--line);padding-top:6px}
+.pc.active{box-shadow:0 0 0 3px currentColor,0 10px 30px rgba(0,0,0,.45)}
+#pcM.active{color:var(--mira)}#pcO.active{color:var(--oskar)}
+.pc.active .left,.pc.active .log div:not(.w) span:first-child{color:var(--ink)}
+.pc.dim{opacity:.38}
+.wl{position:absolute;font-size:16px;font-weight:900;color:var(--red);letter-spacing:.5px}
+
+#note{position:absolute;left:40px;right:40px;top:620px;min-height:58px;padding:13px 20px;border-radius:14px;font-size:21px;
+  background:rgba(0,0,0,.3);border:1px solid var(--line);transition:opacity .5s}
+#note.warn{border-color:var(--red);background:rgba(239,90,82,.13)}
+#note.key{border-color:var(--gold);background:rgba(255,207,90,.1)}
+#note b.m{color:var(--mira)}#note b.o{color:var(--oskar)}#note b.g{color:var(--gold)}
+
+/* chart */
+#chart{left:40px;top:128px;width:1200px;height:478px;padding:22px 30px}
+#chart h3{margin:0;font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;color:var(--sand)}
+#plot{position:absolute;left:90px;top:80px;width:640px;height:300px;border-left:2px solid var(--line);border-bottom:2px solid var(--muted)}
+#plot .gl{position:absolute;left:0;right:0;border-top:1px dashed var(--line)}
+#plot .yl{position:absolute;left:-40px;width:30px;text-align:right;font-size:20px;color:var(--muted);transform:translateY(-50%)}
+#plot .grp{position:absolute;bottom:0;width:120px;height:100%}
+#plot .bar{position:absolute;bottom:0;width:52px;height:0;border-radius:8px 8px 0 0;transition:height .9s cubic-bezier(.2,.8,.2,1)}
+#plot .bar.a{left:4px;background:linear-gradient(180deg,#f2d79e,var(--sand));box-shadow:0 0 10px rgba(217,183,126,.4)}
+#plot .bar.b{left:64px;background:linear-gradient(180deg,#7ff0d9,var(--mira));box-shadow:0 0 10px rgba(47,196,168,.4)}
+#plot .bar span{position:absolute;top:-30px;left:0;right:0;text-align:center;font-size:20px;font-weight:900}
+#plot .xl{position:absolute;bottom:-34px;left:0;width:120px;text-align:center;font-size:20px;color:var(--muted)}
+#chart .lg{position:absolute;left:90px;top:428px;display:flex;gap:30px;font-size:20px}
+#chart .lg i{display:inline-block;width:18px;height:18px;border-radius:4px;margin-right:8px;vertical-align:-2px}
+#tot{position:absolute;left:790px;top:80px;width:370px}
+#tot .t{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-bottom:14px}
+#tot .t div:first-child{font-size:20px;color:var(--muted)}
+#tot .t div:last-child{font-size:40px;font-weight:900;font-family:"Fredoka",sans-serif}
+#tot .t .arr{color:var(--muted);margin:0 10px}
+
+/* end */
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(15,11,7,.88);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,240,215,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="row"><div class="tok"></div><div class="tok"></div><div class="tok"></div><div class="tok"></div></div>
+    <div class="big">4 AP</div>
+    <h2>A day on the dig site</h2>
+    <div class="press">Press SPACE to start the dig</div>
+  </div>
+
+  <div id="game" class="panel">
+    <div id="board" class="card">
+      <div id="tent"><div class="roof"></div><div class="lbl">TENT</div><div class="cnt" id="tentN">0</div><div class="sub">finds<br>stored</div></div>
+      <div id="badge"><span id="roundB">Round 1</span><span class="cost" id="costB">Dig costs 2 AP</span></div>
+      <div id="legend">Dashed edge = scouted · dark pit = dug</div>
+    </div>
+    <div id="menu" class="card"><h3>Action menu</h3><div id="menuRows"></div></div>
+    <div id="pcM" class="pc card"><div class="nm"><b></b>Mira</div><div class="toks"></div><div class="left"></div><div class="log"></div><div class="res"></div></div>
+    <div id="pcO" class="pc card"><div class="nm"><b></b>Oskar</div><div class="toks"></div><div class="left"></div><div class="log"></div><div class="res"></div></div>
+    <div id="note"></div>
+  </div>
+
+  <div id="chart" class="panel card">
+    <h3>Digs per round (both players together), from the same 4-round playthrough</h3>
+    <div id="plot"></div>
+    <div class="lg"><span><i style="background:var(--sand)"></i>Dig = 2 AP</span><span><i style="background:var(--mira)"></i>Dig = 3 AP</span></div>
+    <div id="tot">
+      <div class="t"><div>Digs in 4 rounds</div><div>7<span class="arr">→</span><span style="color:var(--mira)">4</span></div></div>
+      <div class="t"><div>Scouts in 4 rounds</div><div>5<span class="arr">→</span><span style="color:var(--mira)">11</span></div></div>
+      <div class="t"><div>What changed?</div><div style="font-size:22px;font-family:Nunito,sans-serif;font-weight:800">One number on the menu</div></div>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li>A <b>shared budget</b> makes every turn a small puzzle: not "what do I do?" but "what is the best way to spend four?"</li>
+      <li>The <b>cost menu steers behaviour</b>. Raising Dig from 2 to 3 cut digging from 7 to 4 and more than doubled scouting.</li>
+      <li><b>Leftover points and odd costs</b> create tension. A 1-point remainder with nothing worth 1 is a real loss, so players plan around it.</li>
+    </ol>
+    <div class="see">You'll see this in: Pandemic, Tikal, Forbidden Island, Through the Ages.</div>
+  </div></div>
+
+  <div id="dots"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), dotsEl=$('dots');
+const COLS='ABCD', key=(c,r)=>c+','+r, name=(c,r)=>COLS[c]+(r+1);
+const CONTENT={'1,2':'coin','1,1':'statuette','0,1':'pottery'};
+const MENU=[['move','Move 1 square'],['dig','Dig a square (reveals)'],['carry','Carry a find to the tent'],['scout','Scout: peek next door (or rest)']];
+const DIGS2=[2,1,2,2], DIGS3=[1,1,1,1];
+let cur=0, token=0, st, prevLog={M:0,O:0}, prevHdr='';
+
+/* build static DOM */
+const sqEl={};
+for(let r=0;r<3;r++)for(let c=0;c<4;c++){
+  const d=document.createElement('div');d.className='sq';d.style.left=(146+c*113)+'px';d.style.top=(22+r*113)+'px';
+  d.innerHTML=`<div class="id">${name(c,r)}</div><div class="st"></div>`;$('board').appendChild(d);sqEl[key(c,r)]=d}
+const mp={};
+['M','O'].forEach(p=>{const d=document.createElement('div');d.className='mp '+p;d.textContent=p;$('board').appendChild(d);mp[p]=d;
+  $('pc'+p).querySelector('.toks').innerHTML='<div class="tok"></div>'.repeat(4)});
+$('menuRows').innerHTML=MENU.map(([k,n])=>`<div class="mr" data-k="${k}"><span class="nm">${n}</span><span class="pips"></span><span class="c"></span></div>`).join('');
+const plot=$('plot');
+plot.innerHTML=[0,1,2].map(v=>`<div class="gl" style="bottom:${v*120}px"></div><div class="yl" style="bottom:${v*120}px;transform:translateY(50%)">${v}</div>`).join('')+
+  DIGS2.map((v,i)=>`<div class="grp" style="left:${20+i*155}px"><div class="bar a" data-h="${v*120}"><span>${v}</span></div><div class="bar b" data-h="${DIGS3[i]*120}"><span>${DIGS3[i]}</span></div><div class="xl">Round ${i+1}</div></div>`).join('');
+
+function fresh(){return{view:'title',dig:2,round:1,active:null,menuOn:false,toksOn:false,flash:null,changed:false,tent:0,note:'',noteCls:'',
+  h:'',p:'',sq:{},spent:{M:[],O:[]},
+  P:{M:{pos:[0,0],tok:['full','full','full','full'],log:[],digs:0,finds:0,dim:false},
+     O:{pos:[0,2],tok:['full','full','full','full'],log:[],digs:0,finds:0,dim:false}}}}
+function reset(){st=fresh();prevLog={M:0,O:0};prevHdr=''}
+const setHeader=(h,p)=>{st.h=h;st.p=p};
+const apLeft=p=>st.P[p].tok.filter(t=>t==='full').length;
+
+function act(p,kind,c,r){
+  const P=st.P[p], cost=kind==='dig'?st.dig:1; st.spent[p]=[];
+  for(let k=0;k<cost;k++){const i=P.tok.indexOf('full');P.tok[i]='spent';st.spent[p].push(i)}
+  st.flash=kind; let txt='';
+  if(kind==='move'){P.pos=[c,r];txt='Move to '+name(c,r)}
+  if(kind==='scout'){const f=CONTENT[key(c,r)];st.sq[key(c,r)]=f?'seenF':'seenE';txt='Scout '+name(c,r)+(f?': find!':': empty')}
+  if(kind==='dig'){const[x,y]=P.pos,f=CONTENT[key(x,y)];st.sq[key(x,y)]=f?'dugF':'dugE';P.digs++;if(f)P.finds++;txt='Dig '+name(x,y)+(f?': '+f+'!':': nothing')}
+  if(kind==='carry'){const[x,y]=P.pos;st.sq[key(x,y)]='dugC';st.tent++;txt='Carry '+CONTENT[key(x,y)]+' to tent'}
+  P.log.push([txt,'−'+cost]);
+}
+function waste(p){const P=st.P[p],i=P.tok.indexOf('full');P.tok[i]='wasted';st.flash=null;P.log.push(['1 AP unused: wasted','−1','w'])}
+function newRound(n){st.round=n;st.flash=null;['M','O'].forEach(p=>{const P=st.P[p];P.tok=['full','full','full','full'];P.log=[];P.digs=0;P.finds=0;P.dim=false})}
+function play(fns,instant){
+  if(instant){fns.forEach(f=>f());return}
+  const t=token;fns.forEach((f,i)=>setTimeout(()=>{if(t!==token)return;f();render(true)},350+i*600));
+}
+
+function render(anim){
+  ['title','game','chart','end'].forEach(v=>$(v).classList.toggle('on',st.view===v||(v==='game'&&st.view==='end')));
+  const h=S.querySelector('#header');
+  if(st.h+st.p!==prevHdr){h.querySelector('h1').textContent=st.h;h.querySelector('p').textContent=st.p;
+    if(anim){h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}prevHdr=st.h+st.p}
+  for(const k in sqEl){const s=st.sq[k]||'',el=sqEl[k];el.className='sq '+s;
+    el.querySelector('.st').textContent={seenF:'find?',seenE:'empty',dugE:'nothing',dugF:CONTENT[k]+'!',dugC:'carried'}[s]||''}
+  ['M','O'].forEach(p=>{
+    const P=st.P[p],[c,r]=P.pos;
+    mp[p].style.left=(146+c*113+(p==='M'?6:57))+'px';mp[p].style.top=(22+r*113+57)+'px';
+    const card=$('pc'+p);card.classList.toggle('active',st.active===p);card.classList.toggle('dim',P.dim);
+    [...card.querySelectorAll('.tok')].forEach((t,i)=>{t.className='tok '+(st.toksOn?(P.tok[i]==='full'?'':P.tok[i]):'hide');
+      const k=st.spent[p].indexOf(i);t.style.transitionDelay=(anim&&k>0?k*220:0)+'ms'});
+    card.querySelector('.left').innerHTML=st.toksOn?`AP left: <em>${apLeft(p)}</em> of 4`:'Waiting for the turn to start';
+    const lg=card.querySelector('.log');
+    lg.innerHTML=(P.dim?[['(turn not shown)','']]:P.log).map((l,i)=>`<div class="${(l[2]||'')+(anim&&i>=prevLog[p]?' anim':'')}"><span>${l[0]}</span><span>${l[1]}</span></div>`).join('');
+    prevLog[p]=P.log.length;
+    card.querySelector('.res').textContent=`This turn: digs ${P.digs} · finds ${P.finds}`;
+  });
+  $('tentN').textContent=st.tent;
+  $('roundB').textContent=st.round===0?'Replay: Round 1':'Round '+st.round;
+  const cb=$('costB');cb.textContent='Dig costs '+st.dig+' AP';cb.classList.toggle('hot',st.changed);
+  $('menu').style.opacity=st.menuOn?1:.25;
+  document.querySelectorAll('.mr').forEach(row=>{const k=row.dataset.k,cost=k==='dig'?st.dig:1;
+    row.querySelector('.pips').innerHTML='<i></i>'.repeat(cost);
+    row.querySelector('.c').innerHTML=(k==='dig'&&st.changed?'<s>2</s>':'')+cost+' AP';
+    row.classList.toggle('hot',st.flash===k);row.classList.toggle('changed',k==='dig'&&st.changed&&!st.flash)});
+  const n=$('note');n.innerHTML=st.note;n.className=st.noteCls;n.style.opacity=st.note?1:0;
+  document.querySelectorAll('#plot .bar').forEach(b=>b.style.height=(st.view==='chart'?b.dataset.h:0)+'px');
+}
+
+const steps=[
+ ()=>{st.view='title';setHeader('Action Points','Every turn you get the same budget of actions. How you spend it is the game.')},
+ ()=>{st.view='game';
+   setHeader('The dig site','Twelve squares of earth, a tent for finds, and two archaeologists: Mira (teal) and Oskar (orange).');
+   st.note='Some squares hide finds. Nobody knows which until someone scouts or digs.'},
+ ()=>{st.menuOn=true;st.toksOn=true;
+   setHeader('Four action points, one menu','Each turn a player gets 4 AP. Every action has a price. Spend them in any mix you like.');
+   st.note='Unspent points are lost at the end of the turn. Use them or lose them.';st.noteCls='key'},
+ (i)=>{st.active='M';st.noteCls='';st.note='Mira wants the far corner. Walking there is cheap: 1 AP a square.';
+   setHeader("Mira's turn: walk first",'She steps to B1, then C1. Each token goes out one at a time. 2 AP left.');
+   play([()=>act('M','move',1,0),()=>act('M','move',2,0)],i)},
+ (i)=>{setHeader('Mira digs blind','Dig costs 2 AP, her last two points. She finds nothing. Her turn is over.');
+   st.note='<b class="m">Mira:</b> move + move + dig = 1 + 1 + 2 = 4 AP. Result: an empty pit.';
+   play([()=>act('M','dig')],i)},
+ (i)=>{st.active='O';st.flash=null;
+   setHeader("Oskar's turn: look first",'He spends 1 AP to peek at B3 (a find!), then 1 AP to step onto it. 2 AP left.');
+   st.note='Scouting costs a point, but it tells him where his 2-point dig will pay off.';
+   play([()=>act('O','scout',1,2),()=>act('O','move',1,2)],i)},
+ (i)=>{setHeader('Same budget, different plan','Oskar digs where he knows something is buried. A coin. Both players spent exactly 4 AP.');
+   st.note='<b class="m">Mira:</b> move, move, dig → nothing. &nbsp; <b class="o">Oskar:</b> scout, move, dig → a coin.';st.noteCls='key';
+   play([()=>act('O','dig')],i)},
+ (i)=>{newRound(2);st.P.M.dim=true;st.active='O';st.noteCls='';
+   setHeader('Round 2: Oskar has a plan','Carry the coin home (1), peek at B2 (1), step onto it (1). One point left.');
+   st.note='He wants to dig B2 next. Dig costs 2. He has 1.';
+   play([()=>act('O','carry'),()=>act('O','scout',1,1),()=>act('O','move',1,1)],i)},
+ (i)=>{setHeader('The cost of leftovers','Nothing in his hands to carry. He is already on B2. A peek tells him nothing new. The last token fades.');
+   st.note='<b class="g">1 AP wasted.</b> When costs don\'t divide your budget neatly, leftovers hurt, so players plan around them.';st.noteCls='warn';
+   play([()=>waste('O')],i)},
+ ()=>{const M=st.P.M,O=st.P.O;st.sq={};st.tent=0;newRound(0);M.pos=[0,0];O.pos=[0,2];st.active=null;st.dig=3;st.changed=true;
+   setHeader('Designer move: Dig now costs 3','Same site, same opening, same 4 AP. Only one number on the menu changes.');
+   st.note='The old plans no longer fit. Move + move + dig = 5 AP. Scout + move + dig = 5 AP.';st.noteCls='warn'},
+ (i)=>{st.active='M';st.noteCls='';
+   setHeader('Mira scouts instead','Digging is pricey now, so she spends cheap points to find the best square. No dig this turn.');
+   st.note='<b class="m">Mira:</b> 3 scouts + 1 move, 0 digs. She now knows where two finds are.';
+   play([()=>act('M','scout',1,0),()=>act('M','scout',0,1),()=>act('M','move',0,1),()=>act('M','scout',1,1)],i)},
+ (i)=>{st.active='O';st.flash=null;
+   setHeader('Oskar can only afford one dig','No point left over to scout first. He walks to B3 and digs blind for 3 AP, and gets lucky.');
+   st.note='Round 1 digs: <b class="g">2 → 1</b>. Scouts: <b class="g">1 → 3</b>. The price changed what players chose to do.';st.noteCls='key';
+   play([()=>act('O','move',1,2),()=>act('O','dig')],i)},
+ ()=>{st.view='chart';st.flash=null;
+   setHeader('Four rounds, before and after','One price change: 7 digs become 4, and scouting more than doubles. The menu steers the play.')},
+ ()=>{st.view='end';setHeader('What designers take from this','A budget, a price list, and the leftovers in between.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  st.spent={M:[],O:[]};render(false);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

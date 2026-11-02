@@ -371,11 +371,27 @@ window.MECHANICS = [
     watchFor: 'Each extra die moves the chance of at least one success less than the one before it.',
     examples: [{ name: 'King of Tokyo' }, { name: 'Vampire: The Masquerade (V5)' }, { name: 'Shadowrun' }, { name: 'Yahtzee' }],
     brief: 'Pools of 1–6 d6 where 5–6 is a hit. Show the chance of at least one hit per pool size as a bar chart (33%, 56%, 70%, 80%, 87%, 91%): diminishing returns. Then rerolls as a second lever.' },
-  { id: 'roll-and-write', family: 'chance', title: 'Roll & Write', file: null,
+  {
+    id: 'roll-and-write', family: 'chance', title: 'Roll & Write',
+    file: 'mechanics/roll-and-write.html', w: 1280, h: 720, minutes: 4,
     hook: 'Everyone uses the same roll, then writes it onto their own sheet.',
+    anatomy: {
+      Procedures: 'One player rolls; everyone uses the same result and marks it on their own paper sheet.',
+      Rules: 'Marks are permanent: a box crossed off or skipped can never be used again.',
+      Resources: 'The empty boxes left on your sheet.',
+      Outcome: 'Same luck for everyone; the score gap comes from where each player chose to write.'
+    },
+    feel: ['Puzzle', 'Fairness', 'Quiet tension'],
+    feelText: 'Nobody waits for a turn and nobody blames the dice: everyone got the same roll. The pencil is the only thing that differs.',
     watchFor: 'Same dice, different sheets: identical luck for all, so the score gap is pure decision-making.',
-    examples: [{ name: 'Qwixx' }, { name: "That's Pretty Clever!" }, { name: 'Railroad Ink' }, { name: 'Welcome To…' }],
-    brief: 'Three players, one shared roll per turn, three paper sheets filling in differently. Show a crossed-off box that can never be used again. End with sheets side by side and different scores.' },
+    examples: [
+      { name: 'Qwixx', note: 'Cross off numbers left to right in four coloured rows.' },
+      { name: "That's Pretty Clever!", note: 'Dice drafting with chain-reaction bonuses on the sheet.' },
+      { name: 'Railroad Ink', note: 'Draw rail and road routes from shared dice.' },
+      { name: 'Welcome To…', note: 'A flip-and-write: cards instead of dice, houses on a street.' }
+    ],
+    brief: 'Three players, one shared roll per turn, three paper sheets filling in differently. Show a crossed-off box that can never be used again. End with sheets side by side and different scores.'
+  },
   { id: 'bag-building', family: 'chance', title: 'Bag Building', file: null,
     hook: 'Put better tokens in your bag, then draw blind. You control the odds, not the draw.',
     watchFor: 'Watch the chance of drawing a good token rise as the bag improves, and fall again when junk goes in.',
@@ -417,11 +433,27 @@ window.MECHANICS = [
     brief: 'A small map with 5 towns; a cart with 2 cargo slots; order cards ("salt to Ridge, 4 coins"). Plan two trips and compare: greedy biggest order first vs a chained route. Show coins per turn.' },
 
   /* Economy & Actions */
-  { id: 'action-points', family: 'economy', title: 'Action Points', file: null,
+  {
+    id: 'action-points', family: 'economy', title: 'Action Points',
+    file: 'mechanics/action-points.html', w: 1280, h: 720, minutes: 4,
     hook: 'You get a budget of actions each turn. Spend them however you like.',
+    anatomy: {
+      Procedures: 'Each turn, spend a fixed number of action points on any mix of actions from a menu.',
+      Rules: 'Every action has a cost; unspent points are usually lost at the end of the turn.',
+      Resources: 'Action points: the same budget for everyone, every turn.',
+      Outcome: 'Turns become small budgeting puzzles; the cost menu steers what players do.'
+    },
+    feel: ['Planning', 'Efficiency', 'Freedom'],
+    feelText: 'Instead of "pick one thing", players ask "what is the best way to spend four?" Small efficiencies add up.',
     watchFor: 'Watch the cost menu: making one action cost 2 points instead of 1 changes how often anyone takes it.',
-    examples: [{ name: 'Pandemic' }, { name: 'Tikal' }, { name: 'Forbidden Island' }, { name: 'Through the Ages' }],
-    brief: 'A turn with 4 AP and a menu (move 1, search 1, build 2, heal 3). Two players spend the same 4 points differently. Then raise "build" to 3 and show how plans change.' },
+    examples: [
+      { name: 'Pandemic', note: 'Four actions per turn: move, treat, build, share.' },
+      { name: 'Tikal', note: 'Ten action points per turn to explore a jungle temple site.' },
+      { name: 'Forbidden Island', note: 'Three actions: move, shore up, give, capture.' },
+      { name: 'Through the Ages', note: 'Civil and military actions as a growing budget.' }
+    ],
+    brief: 'A turn with 4 AP and a menu (move 1, search 1, build 2, heal 3). Two players spend the same 4 points differently. Then raise "build" to 3 and show how plans change.'
+  },
   { id: 'supply-demand', family: 'economy', title: 'Supply & Demand Markets', file: null,
     hook: 'The more players buy something, the more it costs the next buyer.',
     watchFor: 'Watch the price track: buying first is cheap, buying last is expensive, so turn order becomes money.',
@@ -444,9 +476,25 @@ window.MECHANICS = [
     watchFor: 'Watch the attacks pile onto the leader. Take-that is a built-in catch-up system, until it targets someone unfairly.',
     examples: [{ name: 'Munchkin' }, { name: 'Exploding Kittens' }, { name: 'Unstable Unicorns' }, { name: 'Love Letter' }],
     brief: 'Four players, attack cards ("steal 2", "skip a turn"). Score bars show the leader attacked and pulled back. Then a beat on kingmaking and player elimination as the risks designers must manage.' },
-  { id: 'deduction', family: 'people', title: 'Deduction', file: null,
+  {
+    id: 'deduction', family: 'people', title: 'Deduction',
+    file: 'mechanics/deduction.html', w: 1280, h: 720, minutes: 4,
     hook: 'The answer is hidden. Every clue rules something out.',
+    anatomy: {
+      Procedures: 'Ask questions or test guesses; each answer is a clue.',
+      Rules: 'Answers must be truthful; the first player to name the hidden answer correctly wins.',
+      Resources: 'Information: what you have ruled out, tracked on a grid or notes.',
+      Outcome: 'Logic, not luck, decides the winner once the clues are in.'
+    },
+    feel: ['Detective work', 'The aha moment', 'Racing to solve'],
+    feelText: 'Each clue makes the world smaller. The best moment is the one where the last possibility clicks into place.',
     watchFor: 'Watch the grid of possibilities shrink with each clue. A good clue cuts the space in half.',
-    examples: [{ name: 'Clue' }, { name: 'Mastermind' }, { name: 'Cryptid' }, { name: 'Codenames' }],
-    brief: 'A hidden answer among 12 suspects (3 traits each). Questions and answers cross off rows in a deduction grid; show how many remain after each clue (12 → 6 → 3 → 1). Compare a weak and a strong question.' }
+    examples: [
+      { name: 'Clue', note: 'Who, where, with what: crossed off on a notepad.' },
+      { name: 'Mastermind', note: 'Guess a code; pegs tell you how close you were.' },
+      { name: 'Cryptid', note: 'Each player holds one clue about a creature\'s location.' },
+      { name: 'Codenames', note: 'One-word clues point teammates at hidden agents.' }
+    ],
+    brief: 'A hidden answer among 12 suspects (3 traits each). Questions and answers cross off rows in a deduction grid; show how many remain after each clue (12 → 6 → 3 → 1). Compare a weak and a strong question.'
+  }
 ];

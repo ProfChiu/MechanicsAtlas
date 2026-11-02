@@ -29,7 +29,7 @@
 
 <script src="mechanics.js"></script>
 <script>
-const built = MECHANICS.filter(m => m.file);
+const built = FAMILIES.flatMap(f => MECHANICS.filter(m => m.file && m.family === f.id)); // tour order = family order
 document.getElementById('heroMeta').innerHTML =
   `<span><b>${built.length}</b> mechanics ready</span><span><b>${FAMILIES.length}</b> families</span>` +
   (MECHANICS.length > built.length ? `<span><b>${MECHANICS.length - built.length}</b> coming soon</span>` : '') +
