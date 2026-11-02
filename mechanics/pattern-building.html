@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Pattern Building</title>
+<style>
+:root{--bg:#121220;--panel:#1f1f35;--panel2:#282843;--ink:#f2f1fb;--muted:#b0aecb;--line:rgba(225,220,255,.14);
+  --blue:#4f8dff;--blue2:#2b5bc4;--orange:#ff9a3c;--orange2:#cf6516;--gold:#ffd25a;--ok:#6ee08a;--red:#ff6b6b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#2a2a4a 0%,#121220 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#boardC{left:40px;top:136px;width:500px;height:490px;padding:18px 22px}
+#grid{position:absolute;left:30px;top:52px;display:grid;grid-template-columns:repeat(5,82px);grid-auto-rows:82px;gap:6px}
+.cell{border-radius:12px;background:rgba(255,255,255,.05);border:2px dashed rgba(225,220,255,.16);position:relative;display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:900;transition:box-shadow .4s,border-color .4s}
+.cell.corner{border-color:rgba(255,210,90,.35)}
+.tile{position:absolute;inset:4px;border-radius:10px;box-shadow:inset 0 -5px 0 rgba(0,0,0,.25),inset 0 3px 0 rgba(255,255,255,.25),0 6px 12px rgba(0,0,0,.45)}
+.tile.B{background:linear-gradient(145deg,#8db6ff,var(--blue) 50%,var(--blue2))}
+.tile.O{background:linear-gradient(145deg,#ffc58a,var(--orange) 50%,var(--orange2))}
+.tile.new{animation:drop .5s cubic-bezier(.3,1.5,.5,1) both;animation-delay:var(--d)}
+@keyframes drop{from{transform:translateY(-50px) scale(.6);opacity:0}to{transform:none;opacity:1}}
+.cell.hl{border:3px solid var(--gold);box-shadow:0 0 18px rgba(255,210,90,.7);z-index:2}
+.cell.hl2{border:3px solid #fff;box-shadow:0 0 24px rgba(255,255,255,.8),0 0 0 4px var(--gold);z-index:3}
+.cell.bad{border:3px solid var(--red);box-shadow:0 0 22px rgba(255,107,107,.9);z-index:2}
+.cell.bad::after{content:"✕";position:absolute;inset:4px;border-radius:10px;background:rgba(255,80,80,.45);display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;z-index:3}
+.cell .heat{position:relative;z-index:2;font-family:"Fredoka",sans-serif;font-size:30px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.6)}
+
+#goals{left:570px;top:136px;width:320px;height:490px;display:flex;flex-direction:column;gap:14px}
+.goal{flex:1;padding:14px 16px;display:flex;gap:14px;align-items:center;position:relative;transition:box-shadow .4s,border-color .4s}
+.goal .mini{display:grid;gap:3px;flex-shrink:0}
+.goal .mini i{width:16px;height:16px;border-radius:4px;background:rgba(255,255,255,.1)}
+.goal .mini i.f{background:var(--gold)}
+.goal .t{font-family:"Fredoka",sans-serif;font-size:23px;font-weight:600}
+.goal .d{font-size:18px;color:var(--muted);line-height:1.3}
+.goal .pts{position:absolute;right:14px;top:10px;font-family:"Fredoka",sans-serif;font-size:22px;color:var(--gold)}
+.goal .prog{font-size:19px;font-weight:900;margin-top:4px}
+.goal.done{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok),0 0 22px rgba(110,224,138,.35),0 12px 32px rgba(0,0,0,.45)}
+.goal.done .prog{color:var(--ok)}
+
+#score{left:920px;top:136px;width:320px;height:200px;padding:18px 22px;text-align:center}
+#score .big{font-family:"Fredoka",sans-serif;font-size:84px;font-weight:700;color:var(--gold);line-height:1.1}
+#pop{position:absolute;left:0;right:0;top:146px;font-size:26px;font-weight:900;color:var(--ok)}
+#pop.go{animation:pop .8s cubic-bezier(.3,1.6,.5,1) both}
+#pop.dbl{color:#fff;text-shadow:0 0 14px var(--gold)}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+#note{left:920px;top:352px;width:320px;height:274px;padding:18px 22px;font-size:21px;line-height:1.4}
+#note b{color:var(--gold)}#note .r{color:#ff9d9d}#note .g{color:var(--ok)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:130px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--blue),var(--gold),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:12px 0 0;font-size:36px;font-weight:700}
+#title .tg{display:grid;grid-template-columns:repeat(4,50px);gap:6px;margin:28px 0 16px}
+#title .tg i{width:50px;height:50px;border-radius:8px;background:rgba(255,255,255,.07);animation:tw 3s ease-in-out infinite}
+#title .tg i.B{background:var(--blue)}#title .tg i.O{background:var(--orange)}
+@keyframes tw{50%{transform:scale(.9)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(12,12,22,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(225,220,255,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Pattern Building</div>
+    <h2>Place pieces into the shapes that score.</h2>
+    <div class="tg"><i class="B"></i><i class="B"></i><i></i><i class="O"></i><i class="B"></i><i class="B"></i><i></i><i class="O"></i><i></i><i></i><i></i><i class="O"></i></div>
+    <div class="press">Press SPACE to place a tile</div>
+  </div>
+
+  <div id="boardC" class="panel card"><div class="lbl">YOUR 5×5 GARDEN</div><div id="grid"></div></div>
+  <div id="goals" class="panel"></div>
+  <div id="score" class="panel card"><div class="lbl">SCORE</div><div class="big" id="sc">0</div><div id="pop"></div></div>
+  <div id="note" class="panel card"></div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Goals name shapes.</b> Players read the board as a puzzle: which cells could still become a line, a block, a corner?</li>
+      <li><b>Overlap is the skill.</b> One tile that serves two goals scored 8 points; an average tile scored about 1.</li>
+      <li><b>Conflicting goals create tension.</b> When two patterns want different colours in the same cell, every placement is a choice about which goal to give up.</li>
+    </ol>
+    <div class="see">You'll see this in: Azul, Cascadia, Patchwork, Sagrada.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const GOALS=[
+ {id:'line',t:'Line of 3',d:'Three tiles of one colour in a row or column.',pts:3,mini:[3,1,[0,1,2]],need:3},
+ {id:'block',t:'2×2 block',d:'Four tiles of one colour in a square.',pts:4,mini:[2,2,[0,1,2,3]],need:4},
+ {id:'corn',t:'Four corners',d:'A tile, any colour, in every corner.',pts:5,mini:[3,3,[0,2,6,8]],need:4}
+];
+const CORNERS=['0,0','0,4','4,0','4,4'];
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',tiles:{},fresh:[],prog:{line:0,block:0,corn:0},done:{},score:0,pop:'',dbl:false,hl:[],hl2:[],bad:[],heat:null,note:''}}
+function place(list){st.fresh=[];list.forEach(([k,c])=>{st.tiles[k]=c;st.fresh.push(k)});st.hl=[];st.hl2=[];st.pop=''}
+
+function render(anim){
+  ['title','boardC','goals','score','note','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  ['boardC','goals','score','note'].forEach(id=>$(id).classList.add('on'));
+  if(st.view==='end')$('end').classList.add('on');
+  let h='';
+  for(let r=0;r<5;r++)for(let c=0;c<5;c++){const k=r+','+c,t=st.tiles[k],fi=st.fresh.indexOf(k);
+    const cls=['cell',CORNERS.includes(k)?'corner':'',st.hl.includes(k)?'hl':'',st.hl2.includes(k)?'hl2':'',st.bad.includes(k)?'bad':''].join(' ');
+    h+=`<div class="${cls}">${t?`<div class="tile ${t} ${anim&&fi>=0?'new':''}" style="--d:${fi*.35}s"></div>`:''}${st.heat&&st.heat[k]?`<span class="heat">${st.heat[k]}</span>`:''}</div>`}
+  $('grid').innerHTML=h;
+  $('goals').innerHTML=GOALS.map(g=>{const [w,hh,f]=g.mini;
+    return `<div class="goal card ${st.done[g.id]?'done':''}"><div class="mini" style="grid-template-columns:repeat(${w},16px)">${Array.from({length:w*hh},(_,i)=>`<i class="${f.includes(i)?'f':''}"></i>`).join('')}</div>
+      <div><div class="t">${g.t}</div><div class="d">${g.d}</div><div class="prog">${st.done[g.id]?'DONE':`${st.prog[g.id]} / ${g.need}`}</div></div><div class="pts">+${g.pts}</div></div>`}).join('');
+  $('sc').textContent=st.score;
+  const p=$('pop');p.textContent=st.pop;p.classList.toggle('dbl',st.dbl);p.classList.remove('go');if(anim&&st.pop){void p.offsetWidth;p.classList.add('go')}
+  $('note').innerHTML=st.note;
+}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='board';
+   st.note='Each turn you place <b>one tile</b> on your own grid. Gold-edged cells are the corners. Score by matching the three goal cards.';
+   setHeader('An empty grid and three goals','Every player has their own 5×5 garden. The goal cards on the right name the shapes that score.')},
+ ()=>{place([['0,0','B']]);st.prog={line:1,block:1,corn:1};st.hl=['0,0'];
+   st.note='A blue tile in the top-left corner. It already counts toward <b>all three</b> goals: a corner, the start of a block, the start of a line.';
+   setHeader('Turn 1: a corner tile','Good first tiles keep many patterns open.')},
+ ()=>{place([['0,1','B'],['1,0','B']]);st.prog={line:2,block:3,corn:1};
+   st.note='Three blue tiles in an L. One more in the gap makes a <b>2×2 block</b>.';
+   setHeader('Turns 2 and 3: build toward the block','The block needs four tiles of one colour.')},
+ ()=>{place([['1,1','B']]);st.prog={line:2,block:4,corn:1};st.done.block=1;st.score+=4;st.pop='Block! +4';st.hl=['0,0','0,1','1,0','1,1'];
+   st.note='<span class="g">Block complete: +4.</span> Note that the top row now holds two blue tiles. That will matter.';
+   setHeader('Turn 4: the 2×2 block','Four blue tiles in a square. The first goal pays out.')},
+ ()=>{place([['4,0','O'],['4,4','O']]);st.prog={line:2,block:4,corn:3};
+   st.note='Orange tiles in two more corners. Corners: <b>3 of 4</b>. Only the top-right corner is missing.';
+   setHeader('Turns 5 and 6: claim corners','Corners take any colour, so these orange tiles count.')},
+ ()=>{place([['0,2','O'],['0,3','O']]);st.prog={line:2,block:4,corn:3};st.hl=['0,4'];
+   st.note='Two orange tiles in the top row. Look at the empty top-right cell: it would finish an <b>orange line</b> and the <b>corners</b>.';
+   setHeader('Turns 7 and 8: set up a double','The player builds toward one cell that two goals both need.')},
+ ()=>{place([['0,4','O']]);st.prog={line:3,block:4,corn:4};st.done.line=1;st.done.corn=1;st.score+=8;st.pop='Double! +3 +5';st.dbl=true;
+   st.hl=['0,2','0,3','0,0','4,0','4,4'];st.hl2=['0,4'];
+   st.note='One tile, two goals: <span class="g">line +3</span> and <span class="g">corners +5</span>. <b>8 points from a single placement.</b>';
+   setHeader('Turn 9: one tile, two goals','The top-right tile finishes the orange line and the last corner at the same time.')},
+ ()=>{st.fresh=[];st.hl=[];st.hl2=[];st.pop='';st.dbl=false;
+   st.heat={'0,0':2,'0,1':1,'1,0':1,'1,1':1,'4,0':1,'4,4':1,'0,2':1,'0,3':1,'0,4':2};
+   st.note='Numbers show how many goals each tile helped. The two corner tiles in the top row served <b>two goals</b> each. 9 tiles, 12 points.';
+   setHeader('Where did the points come from?','Tiles that serve two patterns are worth far more than tiles that serve one.')},
+ ()=>{st.heat=null;st.bad=['0,1'];st.hl=['0,2','0,3'];
+   st.note='<span class="r">The blue tile at the top</span> helped the block. Orange there would have finished the <b>orange line</b> two turns sooner, but cost the block. Goals can fight over the same cell.';
+   setHeader('Goals can also conflict','The same cell cannot be blue for one goal and orange for another.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Shapes, overlap and conflict.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

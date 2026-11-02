@@ -516,16 +516,48 @@ window.MECHANICS = [
     ],
     brief: 'A hero moves 3 spaces on a square grid, then the same move on hexes. Show line of sight blocked by a wall, cover reducing a hit, and why movement points make terrain matter.'
   },
-  { id: 'pattern-building', family: 'space', title: 'Pattern Building', file: null,
+  {
+    id: 'pattern-building', family: 'space', title: 'Pattern Building',
+    file: 'mechanics/pattern-building.html', w: 1280, h: 720, minutes: 4,
     hook: 'Arrange pieces into the shapes the scoring rules reward.',
+    anatomy: {
+      Procedures: 'Each turn, place one piece on your own grid.',
+      Rules: 'Goal cards score specific shapes: a line of 3, a 2×2 block, all four corners. Pieces never move once placed.',
+      Resources: 'Empty cells on your grid, and the pieces you get to place.',
+      Outcome: 'Players who make one piece serve several goals score far more than those who chase goals one at a time.'
+    },
+    feel: ['Puzzle', 'Calm focus', 'Satisfying click'],
+    feelText: 'It feels like a quiet puzzle you build in front of yourself. The best moment is one tile snapping two patterns into place at once.',
     watchFor: 'Each goal card names a shape. Watch one placement serve two patterns at once: that overlap is the skill.',
-    examples: [{ name: 'Azul' }, { name: 'Cascadia' }, { name: 'Patchwork' }, { name: 'Sagrada' }],
-    brief: 'A 5×5 personal grid; goal cards ask for a line of 3, a 2×2 block, and corners. Pieces placed one by one; a single piece completes two goals at once with a double score pop.' },
-  { id: 'pick-up-deliver', family: 'space', title: 'Pick-Up & Deliver', file: null,
+    examples: [
+      { name: 'Azul', note: 'Draft tiles to fill pattern rows, then wall spaces that score lines and colours.' },
+      { name: 'Cascadia', note: 'Place habitat tiles and animals to match shapes on wildlife scoring cards.' },
+      { name: 'Patchwork', note: 'Fit odd-shaped patches into a 9×9 quilt; empty squares cost points.' },
+      { name: 'Sagrada', note: 'Place dice in a window grid under colour and number rules.' }
+    ],
+    brief: 'A 5×5 personal grid; goal cards ask for a line of 3, a 2×2 block, and corners. Pieces placed one by one; a single piece completes two goals at once with a double score pop.'
+  },
+  {
+    id: 'pick-up-deliver', family: 'space', title: 'Pick-Up & Deliver',
+    file: 'mechanics/pick-up-deliver.html', w: 1280, h: 720, minutes: 4,
     hook: 'Load goods here, carry them there, get paid on arrival.',
+    anatomy: {
+      Procedures: 'Move a cart along roads, load goods where they are made, and drop them where an order wants them.',
+      Rules: 'Each road takes one turn. The cart holds only two goods at a time.',
+      Resources: 'Turns, cargo slots and open orders.',
+      Outcome: 'Coins per turn depend on the route: chaining small orders can beat chasing the biggest one.'
+    },
+    feel: ['Planning', 'Efficiency', 'Momentum'],
+    feelText: 'Finding a route where every stop pays and loads the next order feels like solving a puzzle on the move. An empty cart feels like wasted time.',
     watchFor: 'Watch the route planning: the best delivery is not the richest one, it is the one on the way to the next.',
-    examples: [{ name: 'Istanbul' }, { name: 'Merchants & Marauders' }, { name: 'Firefly: The Game' }, { name: 'Steam' }],
-    brief: 'A small map with 5 towns; a cart with 2 cargo slots; order cards ("salt to Ridge, 4 coins"). Plan two trips and compare: greedy biggest order first vs a chained route. Show coins per turn.' },
+    examples: [
+      { name: 'Istanbul', note: 'Move a merchant through a bazaar, leaving assistants behind to act.' },
+      { name: 'Merchants & Marauders', note: 'Sail between ports trading goods, while pirates and navies get in the way.' },
+      { name: 'Firefly: The Game', note: 'Fly a ship across the \'Verse picking up cargo, passengers and jobs.' },
+      { name: 'Steam', note: 'Build rail links, then ship coloured goods to matching cities over your track.' }
+    ],
+    brief: 'A small map with 5 towns; a cart with 2 cargo slots; order cards ("salt to Ridge, 4 coins"). Plan two trips and compare: greedy biggest order first vs a chained route. Show coins per turn.'
+  },
 
   /* Economy & Actions */
   {
@@ -549,11 +581,26 @@ window.MECHANICS = [
     ],
     brief: 'A turn with 4 AP and a menu (move 1, search 1, build 2, heal 3). Two players spend the same 4 points differently. Then raise "build" to 3 and show how plans change.'
   },
-  { id: 'supply-demand', family: 'economy', title: 'Supply & Demand Markets', file: null,
+  {
+    id: 'supply-demand', family: 'economy', title: 'Supply & Demand Markets',
+    file: 'mechanics/supply-demand.html', w: 1280, h: 720, minutes: 4,
     hook: 'The more players buy something, the more it costs the next buyer.',
+    anatomy: {
+      Procedures: 'Players buy resources from a price track in turn order, always taking the cheapest first.',
+      Rules: 'Each purchase empties a slot, so the next unit costs more. Between rounds a refill adds supply back.',
+      Resources: 'Coins, the resources in the market, and your place in turn order.',
+      Outcome: 'The same goods cost different players very different amounts; turn order becomes a tool for balance.'
+    },
+    feel: ['Pressure', 'Competition', 'Timing'],
+    feelText: 'Watching other players buy what you need before your turn makes prices feel personal. Going first feels like a gift; going last feels like a tax.',
     watchFor: 'Watch the price track: buying first is cheap, buying last is expensive, so turn order becomes money.',
-    examples: [{ name: 'Power Grid' }, { name: 'Brass' }, { name: 'Food Chain Magnate' }],
-    brief: 'A resource market track priced 1–8 with tokens in the cheap slots first. Three players buy coal in turn order; the price climbs. Refill phase brings prices down. Show the cost each player paid.' },
+    examples: [
+      { name: 'Power Grid', note: 'Resource markets for coal, oil, garbage and uranium; the leader buys last.' },
+      { name: 'Brass', note: 'Coal and iron markets whose prices rise as players take cubes.' },
+      { name: 'Food Chain Magnate', note: 'Players set prices and compete for customers; the cheapest restaurant gets the sale.' }
+    ],
+    brief: 'A resource market track priced 1–8 with tokens in the cheap slots first. Three players buy coal in turn order; the price climbs. Refill phase brings prices down. Show the cost each player paid.'
+  },
   { id: 'dice-placement', family: 'economy', title: 'Dice Placement', file: null,
     hook: 'Roll your dice, then use them as workers. The number decides where they can go.',
     watchFor: 'Watch high rolls and low rolls both find uses: good design makes no roll a total loss.',

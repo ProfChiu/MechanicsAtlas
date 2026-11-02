@@ -1,5 +1,10 @@
 # Mechanics Atlas — progress log
 
+## 2026-11-02 (3 more, batch 3)
+- Accomplished: Built Pattern Building (5×5 garden, one tile finishes two goals), Pick-Up & Deliver (five towns, greedy vs chained routes) and Supply & Demand Markets (coal track 1–8, three buyers, refill). Atlas now 29 mechanics, 3 planned, ~120 min. All pass the checker.
+- Decisions: Pattern goals: line of 3 (+3), 2×2 block (+4), four corners (+5). Deliver: greedy 7 coins vs chained 13 in the same 4 turns. Market: buyers pay 4 / 8 / 13 for the same 3 coal; refill fills down from the remaining supply.
+- Next: Dice Placement, Negotiation & Trading, Take-That.
+
 ## 2026-11-02 (3 more, batch 2)
 - Accomplished: Built Ladder Climbing (four-player climb with a bomb), Tableau Building (treehouse village, 6 turns and a trigger chain) and Grid Movement & Line of Sight (squares vs hexes, LOS, cover, bog terrain). Atlas now 26 mechanics, 6 planned, ~108 min. All pass the checker.
 - Decisions: Ladder hands shown open for teaching; Bo wins with a bomb of 2s to show the lead matters more than high cards. Tableau economy: +2 acorns a turn, Seed Shed pays back 5 for 1. Grid: hit on 3+ open vs 5+ in cover; bog costs 3 so the 7 MP detour beats the 9 MP straight line.

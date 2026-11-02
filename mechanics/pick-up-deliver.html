@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Pick-Up &amp; Deliver</title>
+<style>
+:root{--bg:#15130e;--panel:#25211a;--panel2:#2f2a21;--ink:#f8f3e8;--muted:#c7bca5;--line:rgba(255,240,210,.14);
+  --grass:#3e5a34;--grass2:#2f4728;--road:#c9a873;--gold:#ffcf4a;--ok:#6ee08a;--red:#ff7a6b;--greedy:#ff7a6b;--chain:#5fd3c0;
+  --grain:#e8c35a;--salt:#eef2f6;--fish:#5bb8ff;--wool:#c9a2ff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#3a3122 0%,#15130e 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#mapC{left:40px;top:136px;width:640px;height:490px;border-radius:22px;overflow:hidden;
+  background:radial-gradient(circle at 30% 30%,#4a6a3e,var(--grass) 50%,var(--grass2));box-shadow:inset 0 0 40px rgba(0,0,0,.45),0 14px 34px rgba(0,0,0,.5)}
+#map{position:absolute;left:0;top:0}
+.road{stroke:var(--road);stroke-width:14;stroke-linecap:round;opacity:.75}
+.road2{stroke:#8a6d3f;stroke-width:14;stroke-linecap:round;stroke-dasharray:2 16;opacity:.8}
+.trail{fill:none;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:14 10}
+.town circle{fill:#f3e6c8;stroke:#5a4220;stroke-width:4}
+.town text{font:700 22px "Fredoka",sans-serif;fill:#fff;text-anchor:middle;paint-order:stroke;stroke:#1d150a;stroke-width:5px}
+.good{stroke:#1d150a;stroke-width:2}
+#cart{transition:transform .7s cubic-bezier(.45,0,.3,1)}
+.flash{font:900 24px "Nunito",sans-serif;text-anchor:middle;paint-order:stroke;stroke:#1d150a;stroke-width:6px;animation:fl 1.2s ease both}
+@keyframes fl{0%{opacity:0;transform:translateY(10px)}20%{opacity:1;transform:none}100%{opacity:1}}
+
+#side{left:700px;top:136px;width:540px;height:490px;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
+#top{display:flex;gap:14px;align-items:stretch}
+#cartBox{flex:1.2;background:rgba(0,0,0,.2);border-radius:14px;padding:10px 14px}
+#cartBox .slots{display:flex;gap:10px;margin-top:6px}
+#cartBox .sl{flex:1;height:52px;border-radius:10px;border:2px dashed rgba(255,240,210,.25);display:flex;align-items:center;justify-content:center;gap:8px;font-size:19px;font-weight:800}
+#cartBox .sl.full{border-style:solid;border-color:rgba(255,240,210,.5);background:rgba(255,255,255,.06)}
+.dot{width:22px;height:22px;border-radius:50%;display:inline-block;box-shadow:0 0 0 2px #1d150a}
+.stat{flex:.6;background:rgba(0,0,0,.2);border-radius:14px;padding:10px 12px;text-align:center}
+.stat b{display:block;font-family:"Fredoka",sans-serif;font-size:40px;font-weight:700;line-height:1.1;color:var(--gold)}
+.stat span{font-size:16px;font-weight:800;color:var(--muted)}
+#orders{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ord{border-radius:12px;padding:8px 12px;background:#f3e6c8;color:#2a1f0e;display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800;
+  box-shadow:0 4px 10px rgba(0,0,0,.4);transition:opacity .4s,transform .4s,box-shadow .4s}
+.ord .pay{margin-left:auto;font-family:"Fredoka",sans-serif;font-size:24px;color:#8a5a00}
+.ord.done{opacity:.4;transform:scale(.96)}
+.ord.done .pay::after{content:" ✓";color:#2a8a3a}
+.ord.tgt{box-shadow:0 0 0 3px var(--gold),0 0 18px rgba(255,207,74,.6)}
+#note{font-size:21px;line-height:1.4;margin-top:auto;border-top:1px solid var(--line);padding-top:12px}
+#note b{color:var(--gold)}#note .r{color:var(--red)}#note .c{color:var(--chain)}
+#plan{display:inline-block;padding:4px 12px;border-radius:12px;font-size:18px;font-weight:900}
+
+#cmp{left:40px;right:40px;top:136px;height:490px;padding:26px 34px;display:flex;gap:40px}
+#cmp .col{flex:1}
+#cmp h3{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600}
+#cmp .bars{display:flex;gap:40px;align-items:flex-end;height:250px;margin:10px 0 16px}
+#cmp .bar{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:20px;font-weight:800;text-align:center}
+#cmp .bar i{display:block;width:130px;border-radius:12px 12px 0 0;transition:height .9s cubic-bezier(.3,1.3,.5,1)}
+#cmp .bar b{font-family:"Fredoka",sans-serif;font-size:34px}
+#cmp p{font-size:22px;line-height:1.4;margin:0 0 12px}
+#cmp .r{color:var(--red)}#cmp .c{color:var(--chain)}#cmp b{color:var(--gold)}
+#cmp .tl{display:flex;gap:6px;margin:6px 0 14px;align-items:center;font-size:19px;font-weight:800}
+#cmp .tl i{width:64px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:16px}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:124px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--grain),var(--gold),var(--fish));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:12px 0 0;font-size:36px;font-weight:700}
+#title .road{position:relative;width:560px;height:90px;margin:26px 0 12px}
+#title .road::before{content:"";position:absolute;left:0;right:0;top:56px;height:10px;border-radius:6px;background:repeating-linear-gradient(90deg,var(--road) 0 30px,transparent 30px 44px)}
+#title .crt{position:absolute;top:10px;left:0;width:84px;height:50px;border-radius:10px;background:#8a5a2a;box-shadow:0 6px 10px rgba(0,0,0,.4);animation:roll 4s ease-in-out infinite alternate;display:flex;gap:6px;align-items:center;justify-content:center}
+@keyframes roll{to{left:476px}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(16,13,9,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,240,210,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Pick-Up &amp; Deliver</div>
+    <h2>Load it here. Carry it there. Get paid.</h2>
+    <div class="road"><div class="crt"><span class="dot" style="background:var(--grain)"></span><span class="dot" style="background:var(--fish)"></span></div></div>
+    <div class="press">Press SPACE to hit the road</div>
+  </div>
+
+  <div id="mapC" class="panel"><svg id="map" width="640" height="490"></svg></div>
+  <div id="side" class="panel card">
+    <div id="top">
+      <div id="cartBox"><div class="lbl">CART: 2 SLOTS</div><div class="slots" id="slots"></div></div>
+      <div class="stat"><b id="vT">0</b><span>turns</span></div>
+      <div class="stat"><b id="vC">0</b><span>coins</span></div>
+    </div>
+    <div class="lbl">ORDERS</div>
+    <div id="orders"></div>
+    <div id="note"></div>
+  </div>
+
+  <div id="cmp" class="panel card">
+    <div class="col">
+      <h3>Same 4 turns, two plans</h3>
+      <div class="bars">
+        <div class="bar"><b class="r">7</b><i style="height:70px;background:linear-gradient(var(--greedy),#9a3a30)"></i>Greedy<br>1.75 coins / turn</div>
+        <div class="bar"><b class="c">13</b><i style="height:130px;background:linear-gradient(var(--chain),#1f7d6f)"></i>Chained<br>3.25 coins / turn</div>
+      </div>
+    </div>
+    <div class="col">
+      <h3>What was in the cart?</h3>
+      <div class="tl"><span style="width:90px" class="r">Greedy</span><i style="background:#4a3a2a">empty</i><i style="background:#4a3a2a">empty</i><i style="background:var(--fish);color:#06233a">fish</i><i style="background:var(--fish);color:#06233a">fish</i></div>
+      <div class="tl"><span style="width:90px" class="c">Chained</span><i style="background:var(--grain);color:#3a2a00">grain</i><i style="background:var(--salt);color:#222">salt</i><i style="background:var(--fish);color:#06233a">fish</i><i style="background:var(--fish);color:#06233a">fish+wool</i></div>
+      <p>The greedy cart drove <span class="r">half its trip empty</span>. The chained cart was <span class="c">earning every turn</span>, and it ends the trip already carrying the next order.</p>
+      <p>The 7-coin order was in both plans. <b>The route around it decides the score.</b></p>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Distance is the cost.</b> Every road takes a turn, so an order is only as good as the trip it needs.</li>
+      <li><b>Chain your deliveries.</b> The best order is the one on the way to the next one. Chaining nearly doubled the coins in the same 4 turns.</li>
+      <li><b>Cargo space is the limit.</b> Two slots force choices about what to carry now and what to leave for later.</li>
+    </ol>
+    <div class="see">You'll see this in: Istanbul, Merchants &amp; Marauders, Firefly: The Game, Steam.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const T={Mill:[120,150,'grain'],Ridge:[340,90,'salt'],Port:[540,240,'fish'],Fen:[330,310,'wool'],Oak:[140,410,null]};
+const ROADS=[['Mill','Ridge'],['Ridge','Port'],['Port','Fen'],['Fen','Oak'],['Oak','Mill'],['Mill','Fen']];
+const GC={grain:'var(--grain)',salt:'var(--salt)',fish:'var(--fish)',wool:'var(--wool)'};
+const ORD=[{id:'fish',g:'fish',to:'Oak',pay:7},{id:'grain',g:'grain',to:'Ridge',pay:3},{id:'salt',g:'salt',to:'Port',pay:3},{id:'wool',g:'wool',to:'Mill',pay:2}];
+let cur=0,st,token=0,cartAt='Mill';
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',pos:'Mill',hops:[],trail:['Mill'],plan:null,cargo:[],turns:0,coins:0,done:[],tgt:[],flash:[],note:'',showOrders:false}}
+const xy=n=>T[n].slice(0,2);
+function base(){
+  let h=ROADS.map(([a,b])=>{const [x1,y1]=xy(a),[x2,y2]=xy(b);return `<line class="road" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><line class="road2" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`}).join('');
+  h+=`<text x="620" y="470" text-anchor="end" style="font:800 19px Nunito;fill:#f3e6c8;opacity:.9">1 road = 1 turn</text>`;
+  return h}
+function towns(){return Object.entries(T).map(([n,[x,y,g]])=>`<g class="town"><circle cx="${x}" cy="${y}" r="26"/>${g?`<circle class="good" cx="${x}" cy="${y}" r="13" fill="${GC[g]}"/>`:`<path d="M${x-10},${y+8}L${x},${y-12}L${x+10},${y+8}Z" fill="#2f4728"/>`}<text x="${x}" y="${y+54}">${n}${g?` · ${g}`:''}</text></g>`).join('')}
+function cartSvg(){return `<g id="cart" style="transform:translate(${xy(cartAt)[0]}px,${xy(cartAt)[1]-46}px)"><rect x="-30" y="-18" width="60" height="34" rx="8" fill="#8a5a2a" stroke="#1d150a" stroke-width="3"/>
+  ${[0,1].map(i=>{const g=st.cargo[i];return `<circle cx="${-13+i*26}" cy="-1" r="10" fill="${g?GC[g]:'#4a3420'}" stroke="#1d150a" stroke-width="2"/>`}).join('')}
+  <circle cx="-18" cy="18" r="7" fill="#2a1d0e"/><circle cx="18" cy="18" r="7" fill="#2a1d0e"/></g>`}
+function render(anim){
+  token++;const my=token;
+  ['title','mapC','side','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='cmp'||st.view==='end'){$('cmp').classList.add('on');if(st.view==='end')$('end').classList.add('on');return}
+  $('mapC').classList.add('on');$('side').classList.add('on');
+  const col=st.plan==='greedy'?'var(--greedy)':'var(--chain)';
+  const trail=st.trail.length>1?`<polyline class="trail" stroke="${col}" points="${st.trail.map(n=>xy(n).join(',')).join(' ')}"/>`:'';
+  const hops=anim?st.hops:[];
+  cartAt=hops.length?hops[0]:st.pos;
+  const fl=st.flash.map(([n,t,c],i)=>`<text class="flash" style="fill:${c};animation-delay:${anim?Math.max(0,hops.length-1)*.75+i*.3:0}s" x="${xy(n)[0]}" y="${xy(n)[1]<150?xy(n)[1]+88:xy(n)[1]-84}">${t}</text>`).join('');
+  $('map').innerHTML=base()+trail+towns()+cartSvg()+fl;
+  if(hops.length>1){hops.slice(1).forEach((n,i)=>setTimeout(()=>{if(my!==token)return;const c=document.getElementById('cart');if(c)c.style.transform=`translate(${xy(n)[0]}px,${xy(n)[1]-46}px)`},120+i*750))}
+  $('slots').innerHTML=[0,1].map(i=>{const g=st.cargo[i];return `<div class="sl ${g?'full':''}">${g?`<span class="dot" style="background:${GC[g]}"></span>${g}`:'empty'}</div>`}).join('');
+  $('vT').textContent=st.turns;$('vC').textContent=st.coins;
+  $('orders').innerHTML=ORD.map(o=>`<div class="ord ${st.done.includes(o.id)?'done':''} ${st.tgt.includes(o.id)?'tgt':''}"><span class="dot" style="background:${GC[o.g]}"></span>${o.g} → ${o.to}<span class="pay">${o.pay}</span></div>`).join('');
+  $('orders').style.opacity=st.showOrders?1:.25;
+  $('note').innerHTML=st.note;
+}
+function trip(path,turns){st.hops=[st.pos,...path];st.trail=st.trail.concat(path);st.pos=path[path.length-1];st.turns+=turns}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='map';
+   st.note='Five towns, each making one good. Oak makes nothing but buys a lot. Moving along <b>one road takes one turn</b>.';
+   setHeader('A map of five towns','Goods appear in one place and are wanted in another. Your cart starts at the Mill.')},
+ ()=>{st.showOrders=true;
+   st.note='The cart holds <b>2 goods</b>. Each order pays when its good arrives at the right town. The fish order is the big one: <b>7 coins</b>.';
+   setHeader('A cart and four orders','Pick up at the source, drop off at the destination, collect the coins.')},
+ ()=>{st.plan='greedy';st.tgt=['fish'];trip(['Fen','Port'],2);st.cargo=['fish'];st.flash=[['Port','load fish','#bfe3ff']];
+   st.note='<span class="r">Greedy plan:</span> chase the biggest order. The shortest way to the fish is through Fen. The cart drives there <b>empty</b> for 2 turns.';
+   setHeader('Plan 1: go for the biggest order','Head straight for the 7-coin fish.')},
+ ()=>{trip(['Fen','Oak'],2);st.cargo=[];st.coins=7;st.done=['fish'];st.tgt=[];st.flash=[['Oak','+7','#ffcf4a']];
+   st.note='Fish delivered: <b>7 coins in 4 turns</b>. Half of those turns the cart carried nothing.';
+   setHeader('Greedy: deliver the fish','Two more turns back to Oak. Done.')},
+ ()=>{reset();st.view='map';st.showOrders=true;st.plan='chain';st.tgt=['grain'];st.cargo=['grain'];
+   trip(['Ridge'],1);st.cargo=['salt'];st.coins=3;st.done=['grain'];st.flash=[['Mill','load grain','#ffe9a8'],['Ridge','+3, load salt','#ffcf4a']];
+   st.note='<span class="c">Chained plan:</span> same start. Load grain at the Mill, drive to Ridge, get paid, and <b>load salt</b> before leaving.';
+   setHeader('Plan 2: chain the small orders','Start again. This time, never drive empty.')},
+ ()=>{trip(['Port'],1);st.cargo=['fish'];st.coins=6;st.done=['grain','salt'];st.flash=[['Port','+3, load fish','#ffcf4a']];
+   st.note='Salt delivered at Port, and Port is exactly where the fish waits. <b>6 coins in 2 turns.</b>';
+   setHeader('Chained: Ridge to Port','Each delivery drops the cart where the next pickup is.')},
+ ()=>{trip(['Fen','Oak'],2);st.cargo=['wool'];st.coins=13;st.done=['grain','salt','fish'];st.tgt=['wool'];st.flash=[['Fen','load wool','#e3d0ff'],['Oak','+7','#ffcf4a']];
+   st.note='Wool picked up on the way through Fen. Fish delivered: <b>13 coins in 4 turns</b>, and the cart already holds the next order.';
+   setHeader('Chained: through Fen to Oak','The same last two turns as the greedy plan, with a free pickup on the way.')},
+ ()=>{st.view='cmp';
+   setHeader('Greedy vs chained','Both plans took 4 turns and both delivered the fish.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Routes, not orders, make the money.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;st.hops=[];st.flash=[];steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

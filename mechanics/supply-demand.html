@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Supply &amp; Demand Markets</title>
+<style>
+:root{--bg:#141210;--panel:#24201c;--panel2:#2e2924;--ink:#f6f1ea;--muted:#c3b7a8;--line:rgba(255,235,210,.14);
+  --gold:#ffc24a;--ok:#6ee08a;--red:#ff6b5b;--ada:#5ba8ff;--bo:#ff9d4a;--cy:#c48bff;--coal:#2b2b2e}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#3a2f24 0%,#141210 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#track{left:40px;right:40px;top:134px;height:236px;padding:16px 22px}
+#cols{display:flex;gap:12px;margin-top:12px}
+.col{flex:1;border-radius:14px;padding:10px 6px 12px;text-align:center;
+  background:linear-gradient(180deg,hsla(var(--h),60%,40%,.35),hsla(var(--h),60%,25%,.25));border:1px solid var(--line);transition:box-shadow .4s}
+.col .pr{font-family:"Fredoka",sans-serif;font-size:34px;font-weight:700;color:var(--gold);line-height:1}
+.col .pr small{font-size:16px;color:var(--muted);font-family:"Nunito",sans-serif;font-weight:800;margin-left:2px}
+.col .tk{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:12px}
+.col.cheap{box-shadow:0 0 0 3px var(--gold),0 0 22px rgba(255,194,74,.5)}
+.coal{width:56px;height:56px;border-radius:14px;position:relative;
+  background:radial-gradient(circle at 35% 30%,#6a6a72,var(--coal) 55%,#121214);box-shadow:inset 0 -4px 0 rgba(0,0,0,.4),0 4px 8px rgba(0,0,0,.5);
+  transition:opacity .5s,transform .5s}
+.coal.gone{background:transparent;box-shadow:none;border:3px dashed rgba(255,255,255,.18)}
+.coal.gone::after{content:"";position:absolute;inset:16px;border-radius:50%;background:var(--by)}
+.coal.out{animation:out .6s ease both;animation-delay:var(--d)}
+@keyframes out{0%{transform:none}40%{transform:translateY(-16px) scale(1.1)}100%{transform:translateY(0)}}
+.coal.new{animation:inn .55s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d)}
+@keyframes inn{from{transform:translateY(-60px) scale(.4);opacity:0}to{transform:none;opacity:1}}
+.coal.empty{background:transparent;box-shadow:none;border:2px dashed rgba(255,255,255,.1)}
+#nextP{position:absolute;right:24px;top:14px;font-size:20px;font-weight:800}
+#nextP b{font-family:"Fredoka",sans-serif;font-size:28px;color:var(--gold)}
+
+#players{left:40px;right:40px;top:388px;height:150px;display:flex;gap:20px}
+.pl{flex:1;padding:14px 18px;position:relative;transition:box-shadow .4s,border-color .4s}
+.pl .nm{font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600}
+.pl .ord{position:absolute;right:16px;top:14px;padding:4px 12px;border-radius:14px;font-size:18px;font-weight:900;background:rgba(255,255,255,.1)}
+.pl .row{display:flex;gap:8px;margin-top:10px;align-items:center;min-height:40px}
+.pl .row .coal{width:36px;height:36px;border-radius:9px}
+.pl .paid{font-size:22px;font-weight:800;margin-top:6px}
+.pl .paid b{font-family:"Fredoka",sans-serif;font-size:30px;color:var(--gold)}
+.pl .sum{font-size:19px;color:var(--muted);margin-left:8px}
+.pl.act{border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 24px color-mix(in srgb,var(--c) 45%,transparent),0 12px 32px rgba(0,0,0,.45)}
+#note{left:40px;right:40px;top:556px;height:70px;font-size:22px;line-height:1.35;text-align:center;display:flex;align-items:center;justify-content:center}
+#note b{color:var(--gold)}#note .g{color:var(--ok)}
+
+#cmp{left:40px;right:40px;top:134px;height:492px;padding:24px 34px;display:flex;gap:40px}
+#cmp .c1{flex:1}#cmp .c2{flex:1}
+#cmp h3{margin:0 0 10px;font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--gold)}
+#cmp .bars{display:flex;gap:36px;align-items:flex-end;height:290px;margin:10px 0}
+#cmp .bar{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:20px;font-weight:800}
+#cmp .bar i{display:block;width:100px;border-radius:12px 12px 0 0}
+#cmp .bar b{font-family:"Fredoka",sans-serif;font-size:34px;color:var(--gold)}
+#cmp p{font-size:22px;line-height:1.4;margin:0 0 14px}
+#cmp p b{color:var(--gold)}
+#cmp .rule{padding:16px 20px;border-radius:14px;background:rgba(255,194,74,.1);border:2px solid var(--gold);font-size:22px;line-height:1.4;margin-top:6px}
+#cmp .c2>*{opacity:0;transition:opacity .5s}
+#cmp.dial .c2>*{opacity:1}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:124px;font-weight:700;line-height:1;text-align:center;
+  background:linear-gradient(90deg,var(--ok),var(--gold),var(--red));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:12px 0 0;font-size:36px;font-weight:700}
+#title .stairs{display:flex;align-items:flex-end;gap:10px;margin:26px 0 14px}
+#title .stairs i{width:44px;border-radius:8px 8px 0 0;background:linear-gradient(var(--gold),#a86d10);animation:grow 2.4s ease-in-out infinite}
+@keyframes grow{50%{transform:scaleY(.85)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(16,13,10,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,235,210,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Supply &amp; Demand</div>
+    <h2>Every purchase raises the price for the next buyer.</h2>
+    <div class="stairs"><i style="height:30px"></i><i style="height:45px;animation-delay:.15s"></i><i style="height:60px;animation-delay:.3s"></i><i style="height:80px;animation-delay:.45s"></i><i style="height:100px;animation-delay:.6s"></i><i style="height:125px;animation-delay:.75s"></i></div>
+    <div class="press">Press SPACE to open the market</div>
+  </div>
+
+  <div id="track" class="panel card"><div class="lbl">COAL MARKET: PRICE PER COAL</div><div id="nextP"></div><div id="cols"></div></div>
+  <div id="players" class="panel"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="cmp" class="panel card">
+    <div class="c1">
+      <h3>Same 3 coal, three prices</h3>
+      <div class="bars" id="cmpBars"></div>
+      <p>Cy paid <b>more than three times</b> what Ada paid for the same goods. Nothing differed but the turn order.</p>
+    </div>
+    <div class="c2">
+      <h3>A designer dial: who buys first?</h3>
+      <p>Turn order is now worth money, so designers use it on purpose.</p>
+      <div class="rule"><b>Leader buys last.</b> The player in first place shops after everyone else and pays the highest prices. A built-in brake on the leader.</div>
+      <p style="margin-top:16px">Turn the dial the other way (leader buys first) and the rich get richer. Same market, opposite feel.</p>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Buying moves the price.</b> Each coal bought makes the next one cost more, so the market reacts to what players do.</li>
+      <li><b>Turn order becomes money.</b> Going first paid 4; going third paid 13 for the same goods. Designers use that to slow down the leader.</li>
+      <li><b>Refills set the pace.</b> How much comes back each round decides whether prices stay high (scarcity) or drift back down.</li>
+    </ol>
+    <div class="see">You'll see this in: Power Grid, Brass, Food Chain Magnate.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const P={A:{nm:'Ada',c:'var(--ada)'},B:{nm:'Bo',c:'var(--bo)'},C:{nm:'Cy',c:'var(--cy)'}};
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){
+  // slots[price] = array of 2 cells: null (never filled), {st:'in'} or {st:'gone',by}
+  const slots={};for(let p=1;p<=8;p++)slots[p]=[p<=5?{st:'in'}:null,p<=5?{st:'in'}:null];
+  st={view:'title',slots,bought:{A:[],B:[],C:[]},act:null,showOrder:false,note:'',fresh:[],dial:false};
+}
+const cheapest=()=>{for(let p=1;p<=8;p++)for(let i=0;i<2;i++)if(st.slots[p][i]&&st.slots[p][i].st!=='gone')return p;return null};
+function buy(who,n){st.fresh=[];st.act=who;
+  for(let k=0;k<n;k++){const p=cheapest();const i=st.slots[p].findIndex(c=>c&&c.st!=='gone');st.slots[p][i]={st:'gone',by:who,k};st.bought[who].push(p);st.fresh.push(p+','+i)}}
+function refill(n){st.fresh=[];st.act=null;
+  // fill downward from the highest price that still has coal
+  let top=8;while(top>0&&!st.slots[top].some(c=>c&&c.st==='in'))top--;
+  for(let p=top;p>=1&&n>0;p--)for(let i=0;i<2&&n>0;i++){const c=st.slots[p][i];if(!c||c.st==='gone'){st.slots[p][i]={st:'in',nw:1};st.fresh.push(p+','+i);n--}}}
+function render(anim){
+  ['title','track','players','note','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='cmp'||st.view==='end'){
+    $('cmp').classList.add('on');$('cmp').classList.toggle('dial',st.dial);if(st.view==='end')$('end').classList.add('on');
+    $('cmpBars').innerHTML=['A','B','C'].map((w,i)=>{const t=st.bought[w].reduce((a,b)=>a+b,0);
+      return `<div class="bar"><b>${t}</b><i style="height:${t*14}px;background:${P[w].c}"></i>${P[w].nm}<br><span style="color:var(--muted)">buys ${['1st','2nd','3rd'][i]}</span></div>`}).join('');
+    return}
+  ['track','players','note'].forEach(id=>$(id).classList.add('on'));
+  const cp=cheapest();let k=0;
+  $('cols').innerHTML=Object.keys(st.slots).map(p=>`<div class="col ${+p===cp?'cheap':''}" style="--h:${120-(p-1)*16}"><div class="pr">${p}<small>coin</small></div><div class="tk">${
+    st.slots[p].map((c,i)=>{const f=st.fresh.indexOf(p+','+i);
+      if(!c)return '<div class="coal empty"></div>';
+      if(c.st==='gone')return `<div class="coal gone ${anim&&f>=0?'out':''}" style="--by:${P[c.by].c};--d:${f*.25}s"></div>`;
+      return `<div class="coal ${anim&&f>=0?'new':''}" style="--d:${f*.15}s"></div>`}).join('')}</div></div>`).join('');
+  $('nextP').innerHTML=cp?`Next coal costs <b>${cp}</b>`:'';
+  $('players').innerHTML=['A','B','C'].map((w,i)=>{const b=st.bought[w],t=b.reduce((a,x)=>a+x,0);
+    return `<div class="pl card ${st.act===w?'act':''}" style="--c:${P[w].c}"><div class="nm" style="color:${P[w].c}">${P[w].nm}</div>${st.showOrder?`<div class="ord">buys ${['1st','2nd','3rd'][i]}</div>`:''}
+      <div class="row">${b.map(()=>'<div class="coal"></div>').join('')||'<span style="color:var(--muted);font-size:19px">Needs 3 coal</span>'}</div>
+      <div class="paid">${b.length?`Paid <b>${t}</b><span class="sum">(${b.join(' + ')})</span>`:''}</div></div>`}).join('');
+  $('note').innerHTML='<div>'+st.note+'</div>';
+}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='market';
+   st.note='Coal sits on a price track. <b>Buyers always take the cheapest coal left.</b> Right now the cheapest costs 1.';
+   setHeader('A market track from 1 to 8','Each price has room for two coal. Today ten coal fill the cheap end.')},
+ ()=>{st.showOrder=true;
+   st.note='All three players need <b>exactly 3 coal</b> this round to run their factories. They shop in turn order.';
+   setHeader('Three buyers, one turn order','Ada buys first, then Bo, then Cy.')},
+ ()=>{buy('A',3);
+   st.note='Ada takes the three cheapest: 1 + 1 + 2 = <b>4 coins</b>. The price for the next buyer jumps to 2.';
+   setHeader('Ada buys first','First in line gets the bargain coal.')},
+ ()=>{buy('B',3);
+   st.note='The cheap coal is gone. Bo pays 2 + 3 + 3 = <b>8 coins</b>, twice what Ada paid.';
+   setHeader('Bo buys second','Same 3 coal, but the market has already moved.')},
+ ()=>{buy('C',3);
+   st.note='Cy pays 4 + 4 + 5 = <b>13 coins</b>. Only one coal is left, at 5.';
+   setHeader('Cy buys last','Demand pushed the price up step by step.')},
+ ()=>{st.view='cmp';st.act=null;
+   setHeader('Turn order became money','Three players bought the same thing and paid three very different prices.')},
+ ()=>{st.view='market';refill(6);
+   st.note='Six coal return, filling down from where the supply sits. The cheapest coal now costs <b>2</b> instead of 5. <span class="g">Prices fall when supply returns.</span>';
+   setHeader('Refill: supply comes back','Between rounds, new coal enters the market and prices drop.')},
+ ()=>{st.view='cmp';st.dial=true;
+   setHeader('Designers choose who buys first','If buying order is worth money, it can be used to balance the game.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Price, order and supply.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;st.fresh=[];steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>
