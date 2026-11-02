@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Card Draw &amp; Shuffling</title>
+<style>
+:root{--bg:#0f1a22;--panel:#18303d;--panel2:#1f3c4c;--ink:#f3f7f4;--muted:#9fb7bf;--felt:#13392f;
+  --sun:#ff9a3c;--moon:#7fb8ff;--star:#ffd34d;--die:#e5484d;--cream:#fbf5e6;--line:#2f5566}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 20%,#1d4a3c 0%,#0f2a24 45%,#0a1416 100%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:40}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-weight:600;font-size:38px;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:21px;color:var(--muted);max-width:1180px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* scenes */
+.scene{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .5s}
+#stage[data-scene=title] #sceneTitle,#stage[data-scene=comp] #sceneComp,#stage[data-scene=dice] #sceneDice,
+#stage[data-scene=deck] #sceneDeck,#stage[data-scene=chart] #sceneChart,#stage[data-scene=recap] #sceneChart{opacity:1}
+.lbl{position:absolute;font-size:20px;color:var(--muted);white-space:nowrap}
+.lbl b{color:var(--ink)}
+
+/* die */
+#die{position:absolute;z-index:20;transition:left .6s ease,top .6s ease,width .6s ease,height .6s ease,opacity .5s}
+.die{display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);aspect-ratio:1;border-radius:18%;padding:13%;background:var(--die);
+  box-shadow:inset 0 -6px 0 rgba(0,0,0,.25),inset 0 4px 0 rgba(255,255,255,.18),0 8px 18px rgba(0,0,0,.45)}
+.pip{width:72%;height:72%;border-radius:50%;background:#fff;place-self:center;opacity:0;box-shadow:inset 0 2px 2px rgba(0,0,0,.25)}
+.pip.v{opacity:1}
+#die.tumble{animation:tumble .9s cubic-bezier(.3,.6,.4,1)}
+@keyframes tumble{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-70px) rotate(200deg)}
+  55%{transform:translateY(0) rotate(420deg)}75%{transform:translateY(-22px) rotate(560deg)}100%{transform:translateY(0) rotate(720deg)}}
+
+/* cards */
+.card{position:absolute;width:96px;height:134px;perspective:700px;
+  transition:left .6s cubic-bezier(.3,.7,.3,1),top .6s cubic-bezier(.3,.7,.3,1),opacity .5s}
+.card .inner{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(180deg);transition:transform .6s ease}
+.card.up .inner{transform:rotateY(0)}
+.face{position:absolute;inset:0;border-radius:10px;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 4px 10px rgba(0,0,0,.45)}
+.front{background:linear-gradient(160deg,#fffdf6,var(--cream));border:2px solid #d9cfb4;display:flex;align-items:center;justify-content:center}
+.front svg.big{width:56px;height:56px}
+.front svg.cn{position:absolute;width:20px;height:20px}
+.front svg.tl{left:6px;top:6px}.front svg.br{right:6px;bottom:6px;transform:rotate(180deg)}
+.back{transform:rotateY(180deg);border:3px solid #e8dcc0;
+  background:radial-gradient(circle at 50% 50%,#2c6e8f 0 16px,transparent 17px),
+   repeating-linear-gradient(45deg,#163a52 0 6px,#1c4a66 6px 12px);}
+.back::after{content:"";position:absolute;inset:8px;border:2px solid rgba(232,220,192,.55);border-radius:6px}
+.card.sun .front{color:var(--sun)}.card.moon .front{color:#4f8fe0}.card.star .front{color:#e0a800}
+.card.star .front{border-color:#efc24a}
+.card.riffle{animation:riffle 1.3s ease-in-out both;animation-delay:calc(.55s + var(--i)*25ms)}
+@keyframes riffle{0%,100%{transform:none}
+  25%{transform:translateX(calc(var(--s)*70px)) rotate(calc(var(--s)*9deg))}
+  50%{transform:translateX(calc(var(--s)*20px)) translateY(-14px) rotate(calc(var(--s)*3deg))}
+  75%{transform:translateX(calc(var(--s)*-40px)) rotate(calc(var(--s)*-6deg))}}
+
+/* panel */
+#panel{position:absolute;left:950px;top:170px;width:290px;padding:22px 24px;border-radius:18px;z-index:15;
+  background:linear-gradient(170deg,var(--panel2),var(--panel));border:2px solid var(--line);
+  box-shadow:0 14px 36px rgba(0,0,0,.45);opacity:0;transition:opacity .5s}
+#stage[data-scene=dice] #panel,#stage[data-scene=deck] #panel{opacity:1}
+#pTitle{font-size:20px;color:var(--muted);line-height:1.25}
+#pFrac{font-family:"Fredoka",sans-serif;font-size:72px;font-weight:600;line-height:1.05;margin-top:8px;color:var(--star)}
+#pPct{font-size:26px;font-weight:700}
+#track{position:relative;height:30px;margin:16px 0 8px;border-radius:15px;background:#0c1c24;border:2px solid var(--line);overflow:visible}
+#fill{position:absolute;left:0;top:0;bottom:0;border-radius:13px;background:linear-gradient(90deg,#e0a800,var(--star));
+  transition:width .6s ease;box-shadow:0 0 14px rgba(255,211,77,.45)}
+#tick{position:absolute;left:16.67%;top:-6px;bottom:-6px;width:3px;background:var(--die);border-radius:2px}
+#tickL{position:absolute;left:calc(16.67% - 30px);top:34px;font-size:18px;color:#ff8a8e;white-space:nowrap}
+#pScale{display:flex;justify-content:space-between;font-size:18px;color:var(--muted);margin-top:30px}
+#pRows{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+#pRows div{font-size:21px;margin:6px 0}
+#pRows b{font-family:"Fredoka",sans-serif;font-size:24px}
+.bump{animation:bump .45s ease}
+@keyframes bump{40%{transform:scale(1.15)}}
+
+/* dice scene */
+.hist{position:absolute;top:240px;width:120px;text-align:center;opacity:0;transform:translateY(16px);transition:opacity .5s,transform .5s}
+.hist.on{opacity:1;transform:none}
+.hist .die{width:96px;margin:0 auto 10px}
+.hist span{font-size:19px;color:var(--muted)}
+#forget{position:absolute;left:390px;top:440px;width:520px;padding:16px 22px;border-radius:14px;background:rgba(229,72,77,.14);
+  border:2px solid rgba(229,72,77,.5);font-size:23px;opacity:0;transition:opacity .5s}
+#forget.on{opacity:1}
+
+/* deck scene */
+.tally{position:absolute;left:200px;display:flex;align-items:center;gap:10px}
+.tally .nm{width:96px;font-size:20px;color:var(--muted)}
+.tally svg{width:34px;height:34px;transition:opacity .4s,filter .4s}
+.tally svg.gone{opacity:.18;filter:grayscale(1)}
+.tally.st .nm{color:var(--star);font-weight:700}
+.tally .cnt{margin-left:10px;font-size:20px;width:140px}
+#trail{position:absolute;left:60px;top:560px;width:860px;display:flex;flex-wrap:wrap;gap:6px 4px;font-size:20px;align-items:center}
+#trail .t{padding:3px 9px;border-radius:8px;background:rgba(255,255,255,.07);font-family:"Fredoka",sans-serif;animation:fadeUp .4s ease both}
+#trail .t.now{background:rgba(255,211,77,.22);color:var(--star)}
+#trail .t.rs{background:rgba(127,184,255,.2);color:var(--moon)}
+#trail .ar{color:var(--muted)}
+
+/* chart */
+#chart{position:absolute;inset:0}
+#chart text{font-family:"Nunito",sans-serif;fill:var(--muted);font-size:18px}
+#chart .pl{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.6s ease .3s}
+#stage[data-scene=chart] #chart .pl,#stage[data-scene=recap] #chart .pl{stroke-dashoffset:0}
+#chart .pts{opacity:0;transition:opacity .6s 1.4s}
+#stage[data-scene=chart] #chart .pts,#stage[data-scene=recap] #chart .pts{opacity:1}
+
+/* recap */
+#end{position:absolute;inset:0;background:rgba(6,14,16,.84);display:flex;align-items:center;justify-content:center;z-index:50;
+  opacity:0;pointer-events:none;transition:opacity .5s}
+#stage[data-scene=recap] #end{opacity:1}
+#end .box{background:linear-gradient(170deg,var(--panel2),var(--panel));border:2px solid var(--line);border-radius:24px;padding:34px 48px;width:980px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:40px;font-weight:600}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--star)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted)}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:60}
+#dots i{width:9px;height:9px;border-radius:50%;background:#2f5566;transition:background .3s,transform .3s}
+#dots i.on{background:var(--star);transform:scale(1.4)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="sym-sun" viewBox="-50 -50 100 100"><g fill="currentColor"><circle r="20"/>
+      <g stroke="currentColor" stroke-width="8" stroke-linecap="round"><line y1="-30" y2="-44"/><line y1="30" y2="44"/><line x1="-30" x2="-44"/><line x1="30" x2="44"/>
+      <line x1="21" y1="21" x2="31" y2="31"/><line x1="-21" y1="21" x2="-31" y2="31"/><line x1="21" y1="-21" x2="31" y2="-31"/><line x1="-21" y1="-21" x2="-31" y2="-31"/></g></g></symbol>
+    <symbol id="sym-moon" viewBox="-50 -50 100 100"><path fill="currentColor" d="M10,-36 A38,38 0 1 0 10,36 A44,44 0 0 1 10,-36Z"/></symbol>
+    <symbol id="sym-star" viewBox="-50 -50 100 100"><polygon fill="currentColor" stroke="currentColor" stroke-width="4" stroke-linejoin="round"
+      points="0,-44 12,-15 43,-14 19,6 27,36 0,19 -27,36 -19,6 -43,-14 -12,-15"/></symbol>
+  </defs>
+</svg>
+<div id="stage">
+  <div id="header"><h1 id="h1"></h1><p id="cap"></p></div>
+
+  <div class="scene" id="sceneTitle">
+    <div class="lbl" style="left:560px;top:330px;font-family:Fredoka,sans-serif;font-size:44px;color:var(--ink)">vs</div>
+    <div class="lbl" style="left:345px;top:480px">A die</div>
+    <div class="lbl" style="left:740px;top:480px">A deck</div>
+  </div>
+
+  <div class="scene" id="sceneComp">
+    <div class="lbl" style="left:110px;top:460px;line-height:1.4">A six-sided die<br><b>6 faces, 1 in 6 each</b></div>
+    <div class="lbl" style="left:560px;top:232px;color:var(--sun)"><b style="color:var(--sun)">4 suns</b></div>
+    <div class="lbl" style="left:560px;top:380px"><b style="color:var(--moon)">4 moons</b></div>
+    <div class="lbl" style="left:560px;top:528px"><b style="color:var(--star)">4 stars</b></div>
+    <div class="lbl" style="left:700px;top:626px">12 cards, each one a single copy in the deck</div>
+  </div>
+
+  <div class="scene" id="sceneDice">
+    <div class="lbl" style="left:390px;top:196px">Rolls so far</div>
+    <div class="hist" style="left:390px"><div class="die"></div><span>was 1/6</span></div>
+    <div class="hist" style="left:560px"><div class="die"></div><span>was 1/6</span></div>
+    <div class="hist" style="left:730px"><div class="die"></div><span>was 1/6</span></div>
+    <div id="forget">Two sixes in a row change nothing. <b>Dice forget.</b> Every roll starts from scratch.</div>
+  </div>
+
+  <div class="scene" id="sceneDeck">
+    <div class="lbl" style="left:60px;top:168px">Deck</div>
+    <div class="lbl" style="left:200px;top:168px">Discard (out until a reshuffle)</div>
+    <div class="lbl" id="deckN" style="left:60px;top:350px"></div>
+    <div class="tally" style="top:396px"><span class="nm">Suns</span><span class="ic"></span><span class="cnt"></span></div>
+    <div class="tally" style="top:442px"><span class="nm">Moons</span><span class="ic"></span><span class="cnt"></span></div>
+    <div class="tally st" style="top:488px"><span class="nm">Stars</span><span class="ic"></span><span class="cnt"></span></div>
+    <div id="trail"></div>
+  </div>
+
+  <div class="scene" id="sceneChart">
+    <svg id="chart" viewBox="0 0 1280 720"></svg>
+  </div>
+
+  <div id="panel">
+    <div id="pTitle"></div>
+    <div id="pFrac"></div>
+    <div id="pPct"></div>
+    <div id="track"><div id="fill"></div><div id="tick"></div><div id="tickL">die: 1/6</div></div>
+    <div id="pScale"><span>0%</span><span>50%</span><span>100%</span></div>
+    <div id="pRows"></div>
+  </div>
+
+  <div class="die" id="die"></div>
+  <div id="cards"></div>
+
+  <div id="end"><div class="box">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Decks remember.</b> Drawn cards stay out until a reshuffle, so luck evens out over a deck: every star shows up once per pass.</li>
+      <li><b>Deck size, duplicates and reshuffle timing</b> are the dials. A small deck swings fast, extra copies make a card common, an early reshuffle brings it back.</li>
+      <li><b>Players who track cards gain an edge.</b> Counting what is gone tells you what is coming.</li>
+    </ol>
+    <div class="see">You'll see this in: Blackjack, Pandemic, Exploding Kittens, Catan Event Cards.</div>
+  </div></div>
+
+  <div id="dots"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), dotsEl=$('dots'), px=v=>v+'px';
+const FACES={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function buildDie(el){el.innerHTML=Array.from({length:9},()=>'<i class="pip"></i>').join('')}
+function setFace(el,v){[...el.children].forEach((p,i)=>p.classList.toggle('v',FACES[v].includes(i)))}
+const use=(s,c='')=>`<svg class="${c}"><use href="#sym-${s}"/></svg>`;
+
+/* ---------- cards ---------- */
+const SUITS=['sun','moon','star'];
+const ORDER=['moon0','star0','sun0','sun1','star1','moon1','star2','sun2','moon2','moon3','sun3','star3']; // top first
+const NAMES={sun:'a sun',moon:'a moon',star:'a star'};
+const cards={};
+SUITS.forEach((s,si)=>{for(let k=0;k<4;k++){const id=s+k,el=document.createElement('div');
+  el.className='card '+s;el.innerHTML=`<div class="inner"><div class="face front">${use(s,'cn tl')}${use(s,'big')}${use(s,'cn br')}</div><div class="face back"></div></div>`;
+  $('cards').appendChild(el);cards[id]={el,suit:s,row:si,col:k};}});
+ORDER.forEach((id,i)=>{cards[id].el.style.setProperty('--i',i);cards[id].el.style.setProperty('--s',i%2?1:-1)});
+const suitOf=id=>id.replace(/\d/,'');
+function starsLeft(k){return 4-ORDER.slice(0,k).filter(id=>suitOf(id)==='star').length}
+function frac(k){return starsLeft(k)+'/'+(12-k)}
+function pct(a,b){return Math.round(a/b*100)}
+
+/* ---------- static builds ---------- */
+buildDie($('die'));
+document.querySelectorAll('.hist .die').forEach(buildDie);
+document.querySelectorAll('.tally').forEach((t,i)=>{t.querySelector('.ic').innerHTML=Array.from({length:4},()=>use(SUITS[i])).join('');
+  t.querySelector('.ic').style.cssText='display:flex;gap:10px;color:var(--'+SUITS[i]+')'});
+(function chart(){
+  const X=k=>150+(k-1)*(960/9), Y=p=>600-p/0.6*420;
+  let g='';
+  [0,.2,.4,.6].forEach(p=>{g+=`<line x1="130" x2="1130" y1="${Y(p)}" y2="${Y(p)}" stroke="#2f5566" stroke-width="${p?1:2}"/>
+    <text x="118" y="${Y(p)+6}" text-anchor="end">${Math.round(p*100)}%</text>`});
+  for(let k=1;k<=10;k++)g+=`<text x="${X(k)}" y="630" text-anchor="middle">${k}</text>`;
+  g+=`<text x="640" y="664" text-anchor="middle">roll number / cards drawn so far</text>`;
+  const dieP=[],deckP=[];for(let k=1;k<=10;k++){dieP.push([X(k),Y(1/6)]);deckP.push([X(k),Y(starsLeft(k)/(12-k))])}
+  const path=pts=>'M'+pts.map(p=>p.join(',')).join(' L');
+  g+=`<path class="pl" pathLength="1" d="${path(dieP)}" fill="none" stroke="#e5484d" stroke-width="5" stroke-linecap="round"/>`;
+  g+=`<path class="pl" pathLength="1" d="${path(deckP)}" fill="none" stroke="#ffd34d" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  let pts='<g class="pts">';
+  dieP.forEach(([x,y])=>{pts+=`<circle cx="${x}" cy="${y}" r="7" fill="#e5484d"/><text x="${x}" y="${y+30}" text-anchor="middle" style="fill:#ff8a8e">1/6</text>`});
+  deckP.forEach(([x,y],i)=>{const k=i+1,last=k===10;pts+=`<circle cx="${x}" cy="${y}" r="${last?10:7}" fill="#ffd34d"/>
+    <text x="${x}" y="${y-18}" text-anchor="middle" style="fill:#ffd34d;font-weight:700;font-size:${last?24:19}px">${frac(k)}</text>`});
+  pts+='</g>';
+  g+=pts;
+  g+=`<g><line x1="170" x2="210" y1="200" y2="200" stroke="#ffd34d" stroke-width="5"/><text x="222" y="207" style="fill:#f3f7f4;font-size:20px">Deck: chance the next card is a star</text>
+    <line x1="170" x2="210" y1="236" y2="236" stroke="#e5484d" stroke-width="5"/><text x="222" y="243" style="fill:#f3f7f4;font-size:20px">Die: chance the next roll is a six</text></g>`;
+  $('chart').innerHTML=g;
+})();
+
+/* ---------- state + render ---------- */
+let st, cur=0, token=0;
+const timers=[];
+function later(fn,ms){const t=token;timers.push(setTimeout(()=>{if(t===token)fn()},ms))}
+function reset(){timers.forEach(clearTimeout);timers.length=0;
+  st={scene:'title',rolls:[],shown:0,drawn:0,maxDrawn:0,reshuffled:false,shuffled:false};
+  $('trail').innerHTML='';$('die').classList.remove('tumble');
+  Object.values(cards).forEach(c=>c.el.classList.remove('riffle'));
+  render();}
+
+function setHeader(t,c){const h=$('h1'),p=$('cap');h.textContent=t;p.textContent=c;
+  [h,p].forEach(e=>{e.classList.remove('anim');void e.offsetWidth;e.classList.add('anim')})}
+
+function placeDie(){
+  const d=$('die'),pos={title:[340,290,150],comp:[130,250,170],dice:[110,220,200]}[st.scene];
+  if(pos){Object.assign(d.style,{left:px(pos[0]),top:px(pos[1]),width:px(pos[2]),height:px(pos[2]),padding:px(pos[2]*.13),opacity:1})}
+  else d.style.opacity=0;
+}
+function placeCards(){
+  Object.entries(cards).forEach(([id,c])=>{
+    let x,y,z,up=false,op=1;const i=ORDER.indexOf(id);
+    if(st.scene==='title'){x=740-i*1.5;y=300-i*1.5;z=10+i}
+    else if(st.scene==='comp'){x=700+c.col*112;y=180+c.row*148;z=10;up=true}
+    else if(st.scene==='deck'){
+      if(i<st.drawn){x=200+i*68;y=200;z=100+i;up=true}
+      else{const d=i-st.drawn;x=60+d*1.5;y=200+d*1.5;z=60-d}}
+    else{x=1400;y=300;z=10;op=0}
+    if(st.scene==='dice'){x=1400;op=0}
+    Object.assign(c.el.style,{left:px(x),top:px(y),zIndex:z,opacity:op});
+    c.el.classList.toggle('up',up);
+  });
+}
+function panel(){
+  const P=$('pFrac'),rows=$('pRows');let f,p,title,html;
+  if(st.scene==='dice'){f='1/6';p=1/6;title='Chance the next roll is a six';
+    const n=st.shown,six=st.rolls.slice(0,n).filter(v=>v===6).length;
+    html=`<div>Rolls so far: <b>${n}</b></div><div>Sixes so far: <b>${six}</b></div>`}
+  else{const k=st.drawn,s=starsLeft(k),n=12-k;f=s+'/'+n;p=s/n;title='Chance the next card is a star';
+    html=`<div>Cards left: <b>${n}</b></div><div>Stars left: <b style="color:var(--star)">${s}</b></div>`}
+  $('pTitle').textContent=title;
+  if(P.textContent!==f){P.textContent=f;P.classList.remove('bump');void P.offsetWidth;P.classList.add('bump')}
+  $('pPct').textContent='about '+Math.round(p*100)+'%';
+  $('fill').style.width=(p*100)+'%';rows.innerHTML=html;
+}
+function deckBits(){
+  const k=st.drawn;$('deckN').innerHTML=`<b>${12-k}</b> cards`;
+  const gone=s=>ORDER.slice(0,k).filter(id=>suitOf(id)===s).length;
+  document.querySelectorAll('.tally').forEach((t,i)=>{const g=gone(SUITS[i]);
+    [...t.querySelectorAll('.ic svg')].forEach((sv,j)=>sv.classList.toggle('gone',j<g));
+    t.querySelector('.cnt').textContent=(4-g)+' left'});
+  // trail
+  const items=[];if(st.shuffled)for(let j=0;j<=st.maxDrawn;j++)items.push({t:frac(j)});
+  if(st.reshuffled)items.push({t:'reshuffle: 4/12',rs:1});
+  const tr=$('trail'),have=tr.querySelectorAll('.t').length;
+  if(have!==items.length){tr.innerHTML='<span class="lbl" style="position:static;margin-right:6px">Star odds so far:</span>'+
+    items.map((o,j)=>`${j?'<span class="ar">→</span>':''}<span class="t${o.rs?' rs':''}${j===items.length-1?' now':''}" style="animation-delay:${j<have?0:.3}s${j<have?';animation:none':''}">${o.t}</span>`).join('')}
+}
+function hist(){document.querySelectorAll('.hist').forEach((h,i)=>{if(i<st.shown)setFace(h.querySelector('.die'),st.rolls[i]);h.classList.toggle('on',i<st.shown)});
+  $('forget').classList.toggle('on',st.shown>=3)}
+function render(){S.dataset.scene=st.scene;placeDie();placeCards();panel();deckBits();hist();
+  setFace($('die'),st.rolls.length?st.rolls[st.rolls.length-1]:6)}
+
+/* ---------- actions ---------- */
+function roll(v,instant){st.scene='dice';st.rolls.push(v);
+  if(instant){st.shown=st.rolls.length;render();return}
+  render();const d=$('die');setFace(d,1+Math.floor(Math.random()*6));
+  d.classList.remove('tumble');void d.offsetWidth;d.classList.add('tumble');
+  [120,240,360,480,600,720].forEach((ms,j)=>later(()=>setFace(d,[3,5,2,6,1,v][j]),ms));
+  later(()=>{st.shown=st.rolls.length;render()},950);
+}
+function riffle(instant){if(instant)return;
+  Object.values(cards).forEach(c=>{c.el.classList.remove('riffle');void c.el.offsetWidth;c.el.classList.add('riffle')})}
+function draw(to,instant){
+  if(instant){st.drawn=to;st.maxDrawn=Math.max(st.maxDrawn,to);render();return}
+  let t=100;for(let k=st.drawn+1;k<=to;k++){const kk=k;later(()=>{st.drawn=kk;st.maxDrawn=Math.max(st.maxDrawn,kk);render()},t);t+=600}
+}
+
+/* ---------- beats ---------- */
+const steps=[
+ ()=>{st.scene='title';render();
+   setHeader('Card Draw & Shuffling','A die and a deck both make luck. Only one of them remembers what already happened.')},
+ ()=>{st.scene='comp';render();
+   setHeader('Two randomizers','A six-sided die, and a small deck of 12 cards: 4 suns, 4 moons and 4 stars.')},
+ (i)=>{roll(4,i);setHeader('Roll 1: a four','Before the roll, a six had a 1 in 6 chance. That is about 17%.')},
+ (i)=>{roll(6,i);setHeader('Roll 2: a six','What is the chance the next roll is a six? Still 1 in 6. The die keeps no record of the last roll.')},
+ (i)=>{roll(6,i);setHeader('Roll 3: another six','Two sixes in a row, and the next roll is still 1 in 6. Dice forget.')},
+ (i)=>{st.scene='deck';st.shuffled=true;st.drawn=0;render();riffle(i);
+   setHeader('Now the deck: shuffle it','12 cards, 4 of them stars. The chance the top card is a star is 4 in 12.')},
+ (i)=>{draw(1,i);setHeader('Draw 1: a moon','The moon goes to the discard and stays there until a reshuffle. Stars are now 4 in 11.')},
+ (i)=>{draw(3,i);setHeader('Draws 2 and 3: a star, then a sun','Every draw changes the odds. 4/11 became 3/10, then 3/9.')},
+ (i)=>{draw(6,i);setHeader('Draws 4 to 6: a sun, a star, a moon','Two stars are gone now. The bar moves with every single card.')},
+ (i)=>{draw(9,i);setHeader('Draws 7 to 9: one star left','Three stars are gone. The last one hides in 3 cards, so the next card is a star 1 time in 3.')},
+ (i)=>{draw(10,i);setHeader('Draw 10: the last star is a coin flip','Two cards left, and one is the star: 1 in 2. A die never climbs like this. It stays at 1 in 6.')},
+ (i)=>{st.drawn=0;st.reshuffled=true;render();riffle(i);
+   setHeader('Reshuffle: the memory resets','The discard goes back in. 12 cards, 4 stars, 4 in 12 again. Everything the deck remembered is gone.')},
+ ()=>{st.scene='chart';render();
+   setHeader('Die vs deck, draw by draw','The die line is flat: every roll is 1 in 6. The deck line moves with what is gone, and climbs to 1/2 at the end.')},
+ ()=>{st.scene='recap';render();setHeader('Decks remember','A die forgets every roll. A deck remembers, so luck evens out and attentive players gain an edge.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

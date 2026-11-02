@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Auctions &amp; Bidding</title>
+<style>
+:root{--bg:#1b130d;--panel:#2d2018;--panel2:#3a2a1e;--line:#5a4330;--ink:#f6ecd8;--muted:#c4b196;
+  --brass:#e0ac4f;--brass2:#a8742a;--good:#7fd17a;--bad:#ef7a6a;
+  --ada:#3fb6a8;--ben:#e8735a;--cy:#9b7fe0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 10%,#3a2717 0%,#1b130d 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 0%,rgba(224,172,79,.10),transparent 60%)}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:20px;z-index:10}
+#header h1{margin:0;font-family:"Cinzel",serif;font-size:36px;letter-spacing:.5px;color:var(--brass)}
+#header p{margin:6px 0 0;font-size:21px;color:var(--muted);max-width:1180px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* lot panel */
+#lot{left:40px;top:140px;width:320px;height:545px;border-radius:22px;background:linear-gradient(170deg,var(--panel2),var(--panel));
+  border:2px solid var(--line);box-shadow:0 14px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06)}
+#lotTag{position:absolute;top:14px;left:0;right:0;text-align:center;font-family:"Cinzel",serif;font-weight:700;font-size:22px;color:var(--brass);min-height:28px}
+#owl{position:absolute;left:70px;top:48px;width:180px;height:180px;filter:drop-shadow(0 8px 10px rgba(0,0,0,.5))}
+#owl .eye{animation:blinkEye 4s infinite;transform-origin:center;transform-box:fill-box}
+@keyframes blinkEye{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+#owl .gear{animation:spin 6s linear infinite;transform-origin:center;transform-box:fill-box}
+@keyframes spin{to{transform:rotate(360deg)}}
+#lotName{position:absolute;top:228px;left:0;right:0;text-align:center;font-family:"IM Fell English",serif;font-size:26px}
+#priceBox{position:absolute;top:272px;left:30px;right:30px;height:120px;text-align:center;opacity:0;transition:opacity .4s}
+#priceBox.on{opacity:1}
+#priceLbl{font-size:20px;color:var(--muted)}
+#priceVal{font-size:64px;font-weight:900;line-height:1.1;color:var(--brass);transition:transform .3s}
+#priceVal.pop{animation:pop .4s ease}
+@keyframes pop{50%{transform:scale(1.25)}}
+#dial{position:absolute;top:270px;left:95px;width:130px;height:130px;border-radius:50%;opacity:0;transition:opacity .4s;
+  background:radial-gradient(circle at 40% 35%,#f8e7c2,#cfa766 70%,#8a6229);border:5px solid var(--brass2);
+  box-shadow:0 6px 18px rgba(0,0,0,.5),inset 0 -6px 10px rgba(0,0,0,.25)}
+#dial.on{opacity:1}
+#dial .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:58px;font-weight:900;color:#3a2410}
+#dial .hand{position:absolute;left:58px;top:2px;width:5px;height:16px;background:#c0392b;border-radius:3px;transform-origin:2.5px 58px;transition:transform .5s}
+#lot:has(#result.on) #dial .lbl{opacity:0}
+#dial .lbl{position:absolute;top:134px;left:-40px;right:-40px;text-align:center;font-size:20px;color:var(--muted)}
+#result{position:absolute;left:18px;right:18px;top:418px;height:110px;border-radius:16px;background:#1d140d;border:2px solid var(--brass);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;opacity:0;transform:scale(.8);
+  transition:opacity .4s,transform .45s cubic-bezier(.3,1.6,.5,1)}
+#result.on{opacity:1;transform:none}
+#result .r1{font-family:"Cinzel",serif;font-size:24px;font-weight:700;color:var(--brass)}
+#result .r2{font-size:21px}
+.plus{color:var(--good);font-weight:900}.zero{color:var(--muted);font-weight:900}
+
+/* bidders */
+.bidder{position:absolute;top:470px;width:260px;margin-left:-130px;height:220px;opacity:0;transition:opacity .5s}
+.bidder.on{opacity:1}
+.avatar{position:absolute;left:65px;top:0;width:130px;height:130px;border-radius:50%;
+  box-shadow:0 8px 20px rgba(0,0,0,.5),inset 0 -10px 0 rgba(0,0,0,.18);transition:opacity .4s,box-shadow .5s,filter .4s;overflow:hidden}
+.avatar .face{position:absolute;left:30px;top:26px;width:70px;height:72px;border-radius:50%;background:#f3d6b5}
+.avatar .face::before,.avatar .face::after{content:"";position:absolute;top:28px;width:8px;height:10px;border-radius:50%;background:#2a1a10}
+.avatar .face::before{left:18px}.avatar .face::after{right:18px}
+.avatar .mouth{position:absolute;left:55px;top:80px;width:20px;height:9px;border-bottom:3px solid #2a1a10;border-radius:0 0 12px 12px}
+.avatar .hat{position:absolute;left:22px;top:6px;width:86px;height:30px;border-radius:40px 40px 6px 6px;background:rgba(0,0,0,.35)}
+.bidder.out .avatar{opacity:.4;filter:grayscale(.8)}
+.bidder.win .avatar{box-shadow:0 0 0 6px var(--brass),0 0 34px rgba(224,172,79,.8)}
+.bname{position:absolute;top:138px;left:0;right:0;text-align:center;font-size:26px;font-weight:800}
+.purse{position:absolute;top:174px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:8px;font-size:22px;font-weight:800;color:var(--brass)}
+.coin{display:inline-block;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe7a3,#d39b37 65%,#8f6020);box-shadow:0 2px 3px rgba(0,0,0,.4)}
+.think{position:absolute;left:200px;top:-56px;width:116px;height:58px;border-radius:30px;background:#fff8ea;color:#3a2410;
+  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;opacity:0;transform:scale(.4);
+  transition:opacity .4s,transform .5s cubic-bezier(.3,1.6,.5,1);box-shadow:0 4px 10px rgba(0,0,0,.35)}
+.think::before,.think::after{content:"";position:absolute;border-radius:50%;background:#fff8ea}
+.think::before{left:4px;bottom:-14px;width:16px;height:16px}
+.think::after{left:-8px;bottom:-26px;width:10px;height:10px}
+.think b{font-size:30px;margin-left:6px}
+.think.on{opacity:1;transform:none}
+.say{position:absolute;left:50px;top:-140px;width:160px;height:76px;border-radius:18px;background:var(--ink);color:#2a1a10;
+  display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;opacity:0;transform:translateY(16px) scale(.6);
+  transition:opacity .35s,transform .45s cubic-bezier(.3,1.6,.5,1),background .3s;box-shadow:0 6px 14px rgba(0,0,0,.4)}
+.say::after{content:"";position:absolute;left:68px;bottom:-16px;border:12px solid transparent;border-top:16px solid var(--ink);border-bottom:0;transition:border-color .3s}
+.say.on{opacity:1;transform:none}
+.say.small{font-size:24px}
+.say.out{background:#7a6a58;color:#f6ecd8}.say.out::after{border-top-color:#7a6a58}
+.say.shout{background:var(--brass);font-size:34px}.say.shout::after{border-top-color:var(--brass)}
+.say.bump{animation:pop .4s ease}
+.card{position:absolute;left:70px;top:-238px;width:120px;height:160px;perspective:700px;opacity:0;transform:translateY(-20px);transition:opacity .4s,transform .5s}
+.card.on{opacity:1;transform:none}
+.card .in{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.4,1.4,.5,1)}
+.card.up .in{transform:rotateY(180deg)}
+.card .f,.card .b{position:absolute;inset:0;border-radius:12px;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 16px rgba(0,0,0,.45)}
+.card .b{background:repeating-linear-gradient(45deg,#6b3f22 0 10px,#7d4b2a 10px 20px);border:4px solid var(--brass2);font-size:22px;color:var(--brass);font-family:"Cinzel",serif;font-weight:700}
+.card .f{background:#fff8ea;border:4px solid var(--brass2);transform:rotateY(180deg);flex-direction:column;color:#3a2410}
+.card .f span{font-size:20px}
+.card .f b{font-size:62px;line-height:1}
+.card.win .f{box-shadow:0 0 0 5px var(--brass),0 0 30px rgba(224,172,79,.8)}
+.ribbon{position:absolute;left:60px;top:-30px;width:140px;text-align:center;font-family:"Cinzel",serif;font-weight:700;font-size:22px;
+  background:var(--brass);color:#2a1a10;border-radius:8px;padding:2px 0;opacity:0;transform:scale(.5);transition:opacity .4s,transform .5s cubic-bezier(.3,1.6,.5,1);z-index:3}
+.bidder.win .ribbon{opacity:1;transform:none}
+
+/* title */
+#title{left:0;right:0;top:130px;bottom:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--bg);z-index:12}
+#title .big{font-family:"Cinzel",serif;font-size:96px;font-weight:700;margin:0;line-height:1;
+  background:linear-gradient(90deg,#f6d38a,var(--brass),#b0752a);-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-family:"IM Fell English",serif;font-weight:400;font-size:36px;color:var(--ink)}
+#title svg{width:200px;height:200px;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-12px) rotate(3deg)}}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* overlays */
+.over{left:40px;right:40px;top:140px;height:545px;border-radius:22px;background:linear-gradient(170deg,#33251b,#21170f);border:2px solid var(--line);
+  box-shadow:0 14px 40px rgba(0,0,0,.5);z-index:12}
+#tbl{position:absolute;left:60px;right:60px;top:34px;border-collapse:separate;border-spacing:0 10px;font-size:26px}
+#tbl th{font-size:21px;color:var(--muted);text-align:left;padding:0 20px;font-weight:700}
+#tbl td{background:var(--panel2);padding:14px 20px;opacity:0;transform:translateX(-30px);transition:opacity .5s,transform .5s,background .5s}
+#tbl tr.on td{opacity:1;transform:none}
+#tbl td:first-child{border-radius:12px 0 0 12px;font-weight:800}
+#tbl td:last-child{border-radius:0 12px 12px 0}
+#tbl tr.hl td{background:#4a3520}
+.who{font-weight:900}
+.ada{color:var(--ada)}.ben{color:var(--ben)}.cy{color:var(--cy)}
+#tblNote{position:absolute;left:60px;right:60px;bottom:30px;font-size:24px;line-height:1.4;padding:16px 22px;border-left:5px solid var(--brass);
+  background:rgba(224,172,79,.08);border-radius:0 12px 12px 0;opacity:0;transition:opacity .6s .9s}
+#tblNote.on{opacity:1}
+#tblNote b{color:var(--brass)}
+
+#purseP .col{position:absolute;top:30px;width:520px;height:480px}
+#purseP .ttl{font-size:26px;font-weight:800;margin-bottom:14px}
+#bag{position:absolute;left:40px;top:70px;width:300px;height:250px;border-radius:40% 40% 46% 46%/30% 30% 60% 60%;
+  background:radial-gradient(circle at 40% 30%,#8a5a33,#4e2f17 75%);box-shadow:0 12px 26px rgba(0,0,0,.5),inset 0 -14px 20px rgba(0,0,0,.35);
+  transition:transform .9s cubic-bezier(.4,1.4,.5,1)}
+#bag::before{content:"";position:absolute;left:100px;top:-20px;width:100px;height:36px;border-radius:12px;background:#3d2410;border-bottom:5px solid var(--brass2)}
+#bag.thin{transform:scale(.72)}
+#coins{position:absolute;left:18px;top:40px;width:264px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+#coins .coin{width:42px;height:42px;transition:opacity .5s,transform .7s}
+#coins .coin.gone{opacity:0;transform:translate(260px,-40px) scale(.4)}
+#bagCount{position:absolute;left:40px;top:340px;width:300px;text-align:center;font-size:40px;font-weight:900;color:var(--brass)}
+#bagCap{position:absolute;left:0;top:398px;width:380px;text-align:center;font-size:22px;color:var(--muted)}
+#nextLot{position:absolute;left:600px;top:40px;width:540px;height:300px;border-radius:18px;background:var(--panel2);border:2px dashed var(--line);
+  padding:20px 26px;opacity:0;transform:translateX(30px);transition:opacity .6s 1s,transform .6s 1s}
+#nextLot.on{opacity:1;transform:none}
+#nextLot h3{margin:0 0 10px;font-family:"IM Fell English",serif;font-weight:400;font-size:30px}
+#nextLot p{margin:8px 0;font-size:23px;line-height:1.35}
+#nextLot .no{color:var(--bad);font-weight:800}
+#pointsNote{position:absolute;left:600px;top:362px;width:540px;font-size:23px;line-height:1.4;padding:14px 20px;border-left:5px solid var(--brass);
+  background:rgba(224,172,79,.08);border-radius:0 12px 12px 0;opacity:0;transition:opacity .6s 1.6s}
+#pointsNote.on{opacity:1}
+#pointsNote b{color:var(--brass)}
+
+#end{left:0;right:0;top:130px;bottom:30px;display:flex;align-items:center;justify-content:center;z-index:20;background:rgba(20,13,8,.9)}
+#end .card2{background:linear-gradient(170deg,#33251b,#21170f);border:2px solid var(--brass2);border-radius:24px;padding:30px 46px;width:960px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#end h2{margin:0 0 12px;font-family:"Cinzel",serif;font-size:36px;color:var(--brass)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:24px;margin:12px 0;line-height:1.35}
+#end b{color:var(--brass)}
+#end .see{margin-top:18px;font-size:21px;color:var(--muted);font-style:italic}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#4a3826;transition:background .3s,transform .3s}
+#dots i.on{background:var(--brass);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;left:20px;font-size:13px;color:#8a7458;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <svg viewBox="0 0 200 200" id="titleOwl"></svg>
+    <div class="big">Auctions</div>
+    <h2>One Clockwork Owl, sold three ways</h2>
+    <div class="press">Press SPACE to open the fair</div>
+  </div>
+
+  <div id="lot" class="panel">
+    <div id="lotTag"></div>
+    <svg id="owl" viewBox="0 0 200 200"></svg>
+    <div id="lotName">The Clockwork Owl</div>
+    <div id="priceBox"><div id="priceLbl">Current bid</div><div id="priceVal">–</div></div>
+    <div id="dial"><div class="hand"></div><div class="num">10</div><div class="lbl">Price drops each tick</div></div>
+    <div id="result"><div class="r1"></div><div class="r2"></div></div>
+  </div>
+
+  <div id="bidders"></div>
+
+  <div id="tableP" class="panel over">
+    <table id="tbl">
+      <tr><th>Method</th><th>Winner</th><th>Price paid</th><th>Winner's profit (value − price)</th></tr>
+      <tr><td>Open, rising bids</td><td class="who ada">Ada</td><td>7</td><td>8 − 7 = <span class="plus">+1</span></td></tr>
+      <tr class="hl"><td>Sealed bid</td><td class="who ben">Ben</td><td>6</td><td>6 − 6 = <span class="zero">0</span></td></tr>
+      <tr><td>Falling price</td><td class="who ada">Ada</td><td>8</td><td>8 − 8 = <span class="zero">0</span></td></tr>
+    </table>
+    <div id="tblNote">Same owl, same three people, same private values. Only the <b>format</b> changed, and it changed <b>who won</b> and <b>what they paid</b>. In the sealed round the owl even went to Ben, who values it less than Ada does.</div>
+  </div>
+
+  <div id="purseP" class="panel over">
+    <div class="col" style="left:40px">
+      <div class="ttl"><span class="ada">Ada's</span> purse after the falling-price round</div>
+      <div id="bag"><div id="coins"></div></div>
+      <div id="bagCount">10 coins</div>
+      <div id="bagCap">She paid 8 for an owl worth 8 to her.</div>
+    </div>
+    <div id="nextLot">
+      <h3>Next lot: a Brass Telescope</h3>
+      <p>Ada would value it at <b>6</b>.</p>
+      <p>Cy opens the bidding at <b>3</b>.</p>
+      <p class="no">Ada has 2 coins. She cannot even answer, so Cy takes it for 3.</p>
+    </div>
+    <div id="pointsNote">In many auction games, coins left at the end <b>also count as points</b>. Every coin spent on the owl is a coin that cannot win the next lot or score later.</div>
+  </div>
+
+  <div id="end" class="panel"><div class="card2">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>The players set the prices,</b> so the designer does not have to. The table decides what each item is worth.</li>
+      <li><b>The auction format changes who wins and what they pay.</b> Open, sealed and falling-price auctions sold one owl three different ways.</li>
+      <li><b>Limited money makes every bid a trade-off.</b> Overpaying now leaves you short for the next lot and the final score.</li>
+    </ol>
+    <div class="see">You'll see this in: Modern Art, For Sale, Power Grid, Ra.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">SPACE / click ▸ next &nbsp;·&nbsp; ← back &nbsp;·&nbsp; R restart</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const S=$('stage'),dotsEl=$('dots');
+let cur=0,token=0;
+
+const OWL=`<defs><radialGradient id="gB" cx="40%" cy="35%"><stop offset="0" stop-color="#f6d38a"/><stop offset=".7" stop-color="#c58a35"/><stop offset="1" stop-color="#7a4f1c"/></radialGradient></defs>
+ <g class="gear"><circle cx="100" cy="128" r="34" fill="none" stroke="#7a4f1c" stroke-width="10" stroke-dasharray="9 7"/></g>
+ <ellipse cx="100" cy="120" rx="62" ry="70" fill="url(#gB)" stroke="#5c3a14" stroke-width="4"/>
+ <path d="M48 70 L60 30 L80 58 Z M152 70 L140 30 L120 58 Z" fill="#c58a35" stroke="#5c3a14" stroke-width="4" stroke-linejoin="round"/>
+ <circle cx="76" cy="92" r="24" fill="#fff4dc" stroke="#5c3a14" stroke-width="4"/><circle cx="124" cy="92" r="24" fill="#fff4dc" stroke="#5c3a14" stroke-width="4"/>
+ <circle class="eye" cx="76" cy="92" r="11" fill="#2b9c8f"/><circle class="eye" cx="124" cy="92" r="11" fill="#2b9c8f"/>
+ <path d="M92 110 L108 110 L100 126 Z" fill="#e8735a" stroke="#5c3a14" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M70 140 Q100 160 130 140 M74 158 Q100 176 126 158" fill="none" stroke="#7a4f1c" stroke-width="4"/>
+ <rect x="70" y="186" width="60" height="10" rx="4" fill="#5c3a14"/>`;
+$('owl').innerHTML=OWL;$('titleOwl').innerHTML=OWL.replace(/gB/g,'gT');
+
+const B=[{n:'Ada',c:'var(--ada)',v:8,x:500},{n:'Ben',c:'var(--ben)',v:6,x:780},{n:'Cy',c:'var(--cy)',v:5,x:1060}];
+$('bidders').innerHTML=B.map((b,i)=>`<div class="bidder" id="b${i}" style="left:${b.x}px">
+  <div class="card"><div class="in"><div class="b">SEALED</div><div class="f"><span>bid</span><b>?</b></div></div></div>
+  <div class="say"></div><div class="think">worth<b>${b.v}</b></div>
+  <div class="avatar" style="background:${b.c}"><div class="hat"></div><div class="face"></div><div class="mouth"></div></div>
+  <div class="ribbon">WINS</div>
+  <div class="bname" style="color:${b.c}">${b.n}</div>
+  <div class="purse"><i class="coin"></i><span>10</span></div></div>`).join('');
+const bd=i=>$('b'+i),q=(i,s)=>bd(i).querySelector(s);
+for(let i=0;i<10;i++)$('coins').insertAdjacentHTML('beforeend','<i class="coin"></i>');
+
+function setHeader(t,p){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=p;
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function say(i,txt,cls){const s=q(i,'.say');s.className='say on'+(cls?' '+cls:'');s.textContent=txt;
+  if(!S.classList.contains('instant')){s.classList.remove('bump');void s.offsetWidth;s.classList.add('bump')}}
+function hush(i){q(i,'.say').className='say'}
+function price(v,lbl){$('priceBox').classList.add('on');if(lbl)$('priceLbl').textContent=lbl;const p=$('priceVal');p.textContent=v;
+  p.classList.remove('pop');void p.offsetWidth;p.classList.add('pop')}
+function result(a,b){const r=$('result');r.querySelector('.r1').textContent=a;r.querySelector('.r2').innerHTML=b;r.classList.add('on')}
+function dial(v){$('dial').querySelector('.num').textContent=v;$('dial').querySelector('.hand').style.transform=`rotate(${(10-v)*36}deg)`}
+// timed sequence: instant -> run all now; otherwise schedule
+function seq(instant,list){const t=token;let d=0;list.forEach(([ms,fn])=>{d+=ms;if(instant)fn();else setTimeout(()=>{if(t===token)fn()},d)})}
+// clear a round: bubbles, cards, flags, result
+function clearRound(tag){[0,1,2].forEach(i=>{hush(i);bd(i).classList.remove('out','win');const c=q(i,'.card');c.className='card';c.querySelector('.f b').textContent='?'});
+  $('result').classList.remove('on');$('priceBox').classList.remove('on');$('dial').classList.remove('on');$('lotTag').textContent=tag}
+
+function reset(){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  [0,1,2].forEach(i=>{bd(i).className='bidder';q(i,'.think').classList.remove('on')});
+  clearRound('');
+  document.querySelectorAll('#tbl tr').forEach(r=>r.classList.remove('on'));$('tblNote').classList.remove('on');
+  document.querySelectorAll('#coins .coin').forEach(c=>c.classList.remove('gone'));$('bag').classList.remove('thin');
+  $('bagCount').textContent='10 coins';$('nextLot').classList.remove('on');$('pointsNote').classList.remove('on');
+}
+
+const steps=[
+ ()=>{$('title').classList.add('on');
+   setHeader('Auctions & Bidding','The players set the prices. Today we sell one antique three different ways.')},
+ (instant)=>{$('title').classList.remove('on');$('lot').classList.add('on');$('lotTag').textContent='The Antique Fair';
+   seq(instant,[[200,()=>bd(0).classList.add('on')],[200,()=>bd(1).classList.add('on')],[200,()=>bd(2).classList.add('on')]]);
+   setHeader('The lot and the bidders','One Clockwork Owl is up for sale. Ada, Ben and Cy each bring a purse of 10 coins.')},
+ (instant)=>{seq(instant,[[100,()=>q(0,'.think').classList.add('on')],[350,()=>q(1,'.think').classList.add('on')],[350,()=>q(2,'.think').classList.add('on')]]);
+   setHeader('Each bidder has a private value','Only you can see these thoughts. Ada would pay up to 8, Ben up to 6, Cy up to 5. Nobody knows the others’ numbers.')},
+ // ---- open auction
+ (instant)=>{clearRound('Way 1: Open auction');price('–','Current bid');
+   seq(instant,[[300,()=>{say(1,'2');price(2)}],[700,()=>{say(2,'3');price(3)}],[700,()=>{say(0,'4');price(4)}]]);
+   setHeader('Way 1: Open auction, bids rise out loud','Anyone may top the last bid. Ben says 2, Cy says 3, Ada says 4. Everyone hears every bid.')},
+ (instant)=>{seq(instant,[[200,()=>{say(2,'5');price(5)}],[700,()=>{say(1,'6');price(6)}],[800,()=>{say(2,'I’m out','small out');bd(2).classList.add('out')}]]);
+   setHeader('Cy reaches his limit','Cy bids 5, his full value. Ben says 6. Paying 7 would cost Cy more than the owl is worth to him, so he drops.')},
+ (instant)=>{seq(instant,[[200,()=>{say(0,'7');price(7)}],[800,()=>{say(1,'I’m out','small out');bd(1).classList.add('out')}],
+     [700,()=>{bd(0).classList.add('win');result('SOLD to Ada for 7','value 8 − price 7 = <span class="plus">+1</span>')}]]);
+   setHeader('Ben drops at 6, Ada wins at 7','Ada only had to beat Ben’s limit of 6. In an open auction the winner pays just above the second-highest value.')},
+ // ---- sealed bid
+ (instant)=>{clearRound('Way 2: Sealed bid');
+   seq(instant,[[200,()=>q(0,'.card').classList.add('on')],[250,()=>q(1,'.card').classList.add('on')],[250,()=>q(2,'.card').classList.add('on')]]);
+   setHeader('Way 2: Sealed bid, one secret card each','Same owl, fresh start. Each bidder writes one bid in secret. Highest card wins and pays what it says.')},
+ (instant)=>{const bids=[5,6,4];[0,1,2].forEach(i=>q(i,'.card .f b').textContent=bids[i]);
+   seq(instant,[[200,()=>[0,1,2].forEach(i=>q(i,'.card').classList.add('up'))],
+     [1100,()=>{q(1,'.card').classList.add('win');bd(1).classList.add('win');result('SOLD to Ben for 6','value 6 − price 6 = <span class="zero">0</span>')}]]);
+   setHeader('Flip! Ben wins with 6','Ada wrote 5, hoping to save money. She shaded her bid too low, and the owl went to the player who values it less.')},
+ // ---- dutch
+ (instant)=>{clearRound('Way 3: Falling price');$('dial').classList.add('on');dial(10);
+   seq(instant,[[900,()=>dial(9)]]);
+   setHeader('Way 3: Falling price, the first shout wins','A price dial starts at 10 and ticks down. Nobody bids against anyone. The first player to shout buys it at that price.')},
+ (instant)=>{seq(instant,[[400,()=>dial(8)],[500,()=>{say(0,'Mine!','shout');bd(0).classList.add('win')}],
+     [700,()=>result('SOLD to Ada for 8','value 8 − price 8 = <span class="zero">0</span>')]]);
+   setHeader('Ada grabs it at 8','Waiting could get her a bargain, but Ben might shout first. Fear of losing it makes her pay her full value.')},
+ // ---- insight 1
+ (instant)=>{$('tableP').classList.add('on');$('lot').classList.remove('on');[0,1,2].forEach(i=>bd(i).classList.remove('on'));const rows=[...document.querySelectorAll('#tbl tr')];
+   seq(instant,[[0,()=>rows[0].classList.add('on')],[300,()=>rows[1].classList.add('on')],[350,()=>rows[2].classList.add('on')],[350,()=>{rows[3].classList.add('on');$('tblNote').classList.add('on')}]]);
+   setHeader('Same owl, three results','The winner and the price changed each time. The format is a design choice, not a detail.')},
+ // ---- insight 2
+ (instant)=>{$('tableP').classList.remove('on');$('purseP').classList.add('on');
+   const cs=[...document.querySelectorAll('#coins .coin')];
+   seq(instant,[[500,()=>{cs.filter((c,k)=>k!==2&&k!==7).forEach((c,k)=>{c.style.transitionDelay=(k*90)+'ms';c.classList.add('gone')});$('bag').classList.add('thin');$('bagCount').textContent='2 coins'}],
+     [0,()=>{$('nextLot').classList.add('on');$('pointsNote').classList.add('on')}]]);
+   setHeader('Money is limited, so every bid is a trade-off','Coins spent now are gone for the next lot, and often they are also your score.')},
+ ()=>{$('purseP').classList.remove('on');$('end').classList.add('on');
+   setHeader('Recap','Players price the goods, the format shapes the outcome, and scarce money makes bidding a real decision.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Route & Network Building</title>
+<style>
+:root{--bg:#10202a;--panel:#1b3140;--ink:#f3ecd9;--muted:#a9bcc4;--paper:#efe2bf;--paper2:#e2cf9f;--brown:#3b2a1a;
+  --teal:#159a8b;--tealL:#5fd6c6;--plum:#b8336e;--plumL:#f07aae;--detour:#e9750e;--gold:#ffc53d}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#1f3a4a 0%,#10202a 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:20px;z-index:10}
+#header h1{margin:0;font-family:"Cinzel",serif;font-size:36px;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* map */
+#map{position:absolute;left:30px;top:116px;width:800px;height:584px;border-radius:18px;
+  box-shadow:0 0 0 3px #6b5434,0 0 0 7px #2a1d12,0 18px 40px rgba(0,0,0,.55);transition:opacity .6s}
+#map.faint{opacity:.22}
+#map text{font-family:"Cinzel",serif;font-weight:700}
+.vlabel{font-size:20px;fill:var(--brown)}
+.guide{stroke:#a8915e;stroke-width:2;stroke-dasharray:2 7;stroke-linecap:round}
+.seg-o{stroke:#4a3620;stroke-width:15;stroke-linecap:round}
+.seg-f{stroke:#f8f0d8;stroke-width:9;stroke-linecap:round;transition:stroke .5s}
+.link.cA .seg-f{stroke:var(--teal)} .link.cB .seg-f{stroke:var(--plum)}
+.link.flash .seg-o{stroke:#fff;animation:blink .5s 3}
+@keyframes blink{50%{stroke:#4a3620}}
+.node circle.v{fill:#fbf4df;stroke:#4a3620;stroke-width:4}
+.ring{fill:none;stroke-width:6;opacity:0;transition:opacity .5s}
+.ring.on{opacity:1}
+.band{fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .6s}
+.band.on{opacity:.38}.band.dim{opacity:.16}
+.detour{fill:none;stroke:var(--detour);stroke-width:22;stroke-dasharray:18 12;stroke-linecap:butt;stroke-linejoin:round;opacity:0;transition:opacity .6s}
+.detour.on{opacity:.8}.detour.dim{opacity:.35}
+.glow{fill:none;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .7s;filter:url(#blur)}
+.glow.on{opacity:.95;animation:pulse 1.6s ease-in-out 2}
+@keyframes pulse{50%{opacity:.45}}
+.block{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.3);transition:opacity .4s,transform .4s cubic-bezier(.3,1.6,.5,1)}
+.block.on{opacity:1;transform:scale(1)}
+.pop{font-size:34px;opacity:0;transform-box:fill-box;transform-origin:center;transform:translateY(16px) scale(.5);
+  transition:opacity .5s,transform .6s cubic-bezier(.3,1.6,.5,1)}
+.pop.on{opacity:1;transform:none}
+.heat{stroke:#d9480f;stroke-linecap:round;opacity:0;transition:opacity .6s}
+.badge{opacity:0;transition:opacity .5s}
+#map.heatmode .heat{opacity:.55} #map.heatmode .badge{opacity:1}
+#map.heatmode .link .seg-o,#map.heatmode .link .seg-f{opacity:.35}
+.badge circle{fill:#2a1d12;stroke:#f8f0d8;stroke-width:2}
+.badge text{fill:#fff;font-family:"Nunito",sans-serif!important;font-size:18px;font-weight:800}
+.badge.top circle{fill:var(--gold);stroke:#2a1d12;stroke-width:3}
+.badge.top text{fill:#2a1d12;font-size:22px}
+
+/* right column */
+.card{position:absolute;left:860px;width:390px;border-radius:16px;background:var(--panel);
+  box-shadow:inset 0 0 0 2px #2c4a5c,0 10px 26px rgba(0,0,0,.4);opacity:0;transform:translateX(30px);transition:opacity .5s,transform .5s}
+.card.on{opacity:1;transform:none}
+.goal{height:98px;padding:12px 16px 0 78px}
+.goal .who{font-size:18px;color:var(--muted)}
+.goal .dest{font-size:25px;font-weight:800;margin-top:2px}
+.goal .chip{position:absolute;left:16px;top:20px;width:48px;height:58px;border-radius:8px;display:grid;place-items:center;
+  font-family:"Cinzel",serif;font-size:28px;font-weight:700;color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.goal .pts{position:absolute;right:14px;top:12px;font-size:20px;font-weight:800;color:var(--gold);transition:color .4s}
+.goal .stat{white-space:nowrap;font-size:18px;color:var(--muted);margin-top:2px}
+.goal.done{box-shadow:inset 0 0 0 3px var(--gold),0 0 26px rgba(255,197,61,.45)}
+#goalA{top:116px}#goalB{top:226px}
+#goalA .chip{background:var(--teal)}#goalB .chip{background:var(--plum)}
+.pane{top:338px;height:362px;padding:18px 22px}
+.pane h3{margin:0 0 10px;font-size:22px;color:var(--gold)}
+.pane ul{margin:0;padding-left:22px}
+.pane li{font-size:20px;line-height:1.3;margin:7px 0}
+#log ol{list-style:none;margin:0;padding:0}
+#log li{font-size:20px;margin:6px 0;display:flex;gap:10px;align-items:center;opacity:0;transform:translateX(16px);transition:opacity .4s,transform .4s}
+#log li.on{opacity:1;transform:none}
+#log li i{width:16px;height:16px;border-radius:50%;flex:none}
+#log li b{color:var(--muted);font-weight:700;width:30px}
+#legend{position:absolute;left:22px;right:22px;bottom:16px;padding:10px 14px;border-radius:10px;background:#13242f;opacity:0;transition:opacity .5s}
+#legend.on{opacity:1}
+#legend div{font-size:19px;display:flex;align-items:center;gap:10px;margin:4px 0}
+#legend s{display:inline-block;width:46px;height:12px;border-radius:6px}
+.bar{display:flex;align-items:center;gap:12px;margin:10px 0 4px}
+.bar span{font-size:20px;width:84px}
+.bar .blocks{display:flex;gap:5px}
+.bar .blocks i{width:34px;height:30px;border-radius:7px;opacity:0;transform:scale(.4);transition:opacity .3s,transform .3s}
+.bar .blocks i.on{opacity:1;transform:none}
+.bar em{font-style:normal;font-size:28px;font-weight:800}
+.note{font-size:20px;line-height:1.35;margin-top:12px}
+.note b{color:var(--gold)}
+
+/* overlays */
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:20;opacity:0;pointer-events:none;transition:opacity .6s}
+.overlay.on{opacity:1}
+#title .card2{background:rgba(16,32,42,.92);border:2px solid #6b5434;border-radius:24px;padding:34px 54px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#title h2{margin:0;font-family:"Cinzel",serif;font-size:58px;color:var(--paper)}
+#title p{margin:12px 0 0;font-size:26px;color:var(--muted)}
+#title .boats{margin-top:18px;display:flex;gap:10px;justify-content:center}
+#title .boats i{width:40px;height:14px;border-radius:7px;background:var(--teal)}
+#title .boats i:nth-child(n+4){background:var(--plum)}
+#end{background:rgba(8,16,22,.84)}
+#end .card2{background:#1b3140;border:2px solid #6b5434;border-radius:24px;padding:34px 48px;width:960px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 14px;font-family:"Cinzel",serif;font-size:38px}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .seen{margin-top:18px;font-size:21px;color:var(--muted)}
+
+#dots{position:absolute;bottom:4px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#35505e;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1 id="h1"></h1><p id="cap"></p></div>
+  <svg id="map" viewBox="0 0 800 584"></svg>
+
+  <div class="card goal" id="goalA"><div class="chip">A</div><div class="pts">7 pts</div>
+    <div class="who">Player A · Teal · secret goal</div><div class="dest">Mill → Harbor</div><div class="stat" id="statA"></div></div>
+  <div class="card goal" id="goalB"><div class="chip">B</div><div class="pts">8 pts</div>
+    <div class="who">Player B · Plum · secret goal</div><div class="dest">Orchard → Lighthouse</div><div class="stat" id="statB"></div></div>
+
+  <div class="card pane" id="rules"><h3>Rules of the canals</h3><ul>
+    <li>On your turn, claim <b>one</b> canal. Fill every segment with your boats.</li>
+    <li>A canal can be claimed <b>once</b>. After that it belongs to its owner.</li>
+    <li>Connect the two villages on your secret goal card to score it.</li></ul></div>
+  <div class="card pane" id="log"><h3>Turn log</h3><ol id="logList"></ol>
+    <div id="legend"><div><s style="background:var(--teal);opacity:.6"></s>Planned: 3 steps (blocked)</div>
+      <div><s style="background:repeating-linear-gradient(90deg,var(--detour) 0 12px,transparent 12px 20px)"></s>Detour: 6 steps</div></div></div>
+  <div class="card pane" id="cmp"><h3>Path length, Mill → Harbor</h3>
+    <div class="bar"><span>Planned</span><div class="blocks" id="barP"></div><em>3</em></div>
+    <div class="bar"><span>Actual</span><div class="blocks" id="barA"></div><em>6</em></div>
+    <div class="note">Boats spent: <b>3 → 6</b>. Turns: <b>3 → 4</b>.</div>
+    <div class="note">The shortest path is the <b>hidden economy</b>. Every claim makes someone else's shortest path longer.</div></div>
+  <div class="card pane" id="choke"><h3>Chokepoint: Bridge–Market</h3>
+    <div class="note" style="margin-top:0">It sits on a shortest route for <b>12 of the 36</b> village pairs. No canal sits on more.</div>
+    <div class="note">Market–Harbor, the canal Plum took, is close behind at <b>10</b>.</div>
+    <div class="note">Links on many shortest paths are the most contested. That is where the tension lives.</div></div>
+
+  <div class="overlay" id="title"><div class="card2"><h2>Route &amp; Network Building</h2>
+    <p>Canal boats, nine villages, and one link that changes everything.</p>
+    <div class="boats"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+  <div class="overlay" id="end"><div class="card2"><h2>What designers take from this</h2><ul>
+    <li><b>Claims are permanent and exclusive.</b> Every link taken is gone for everyone else, so the open board keeps shrinking.</li>
+    <li><b>Secret goals create quiet races.</b> Plum never meant to block Teal. Two hidden plans just wanted the same canal.</li>
+    <li><b>Chokepoints are where designers put the tension.</b> Count the shortest paths through a link to see where players will collide.</li></ul>
+    <div class="seen">You'll see this in: Ticket to Ride, Power Grid, Catan, Railways of the World.</div></div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), map=$('map'), dotsEl=$('dots');
+let cur=0, token=0;
+const V={M:['Mill',80,200,'end',52,207],F:['Fen',220,90,'middle',220,58],B:['Bridge',220,300,'start',236,278],
+  K:['Market',370,330,'end',343,368],H:['Harbor',530,360,'start',556,367],A:['Abbey',430,150,'middle',430,118],
+  L:['Lighthouse',700,150,'middle',700,118],O:['Orchard',300,520,'middle',300,563],Q:['Quarry',590,530,'middle',590,572]};
+const E=[['M','F',1,8],['M','B',1,11],['B','K',1,12],['K','H',1,10],['F','A',2,4],['A','K',2,5],['A','L',2,3],['L','H',2,6],
+  ['O','K',2,4],['O','B',2,3],['O','Q',3,1],['Q','H',2,2],['K','Q',2,5],['M','O',3,2]];
+const NS='http://www.w3.org/2000/svg';
+const pts=r=>r.split('').map(k=>V[k][1]+','+V[k][2]).join(' ');
+const lid=(a,b)=>'l-'+[a,b].sort().join('');
+
+function drawMap(){
+  let h=`<defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3e7c6"/><stop offset="1" stop-color="#dcc795"/></linearGradient>
+    <filter id="blur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter></defs>
+    <rect width="800" height="584" rx="18" fill="url(#pg)"/>
+    <g stroke="#9fb7b5" stroke-width="2" fill="none" opacity=".7"><path d="M640 470 q12 -8 24 0 t24 0"/><path d="M660 490 q12 -8 24 0 t24 0"/>
+    <path d="M40 300 q12 -8 24 0 t24 0"/><path d="M500 60 q12 -8 24 0 t24 0"/></g>
+    <g transform="translate(70 515)" fill="#6b5434" opacity=".75"><circle r="26" fill="none" stroke="#6b5434" stroke-width="2"/>
+    <path d="M0 -34 L7 0 L0 34 L-7 0Z"/><path d="M-34 0 L0 -6 L34 0 L0 6Z" opacity=".6"/><text y="-40" text-anchor="middle" font-size="15">N</text></g>`;
+  // heat lines + guides
+  E.forEach(([a,b,n,c])=>{const [,x1,y1]=V[a],[,x2,y2]=V[b];
+    h+=`<line class="heat" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width="${4+c*2.2}"/>`;
+    h+=`<line class="guide" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`});
+  h+=`<polyline id="bandB" class="band" points="${pts('OKHL')}" stroke="var(--plum)" stroke-width="34"/>
+      <polyline id="bandA" class="band" points="${pts('MBKH')}" stroke="var(--teal)" stroke-width="34"/>
+      <polyline id="detour" class="detour" points="${pts('MBKQH')}"/>
+      <polyline id="glowB" class="glow" points="${pts('OKHL')}" stroke="var(--plumL)"/>
+      <polyline id="glowA" class="glow" points="${pts('MBKQH')}" stroke="var(--tealL)"/>`;
+  // links as dotted segments
+  E.forEach(([a,b,n])=>{const [,x1,y1]=V[a],[,x2,y2]=V[b],d=Math.hypot(x2-x1,y2-y1),ux=(x2-x1)/d,uy=(y2-y1)/d;
+    const st=30,gap=16,len=(d-2*st-(n-1)*gap)/n;let g=`<g class="link" id="${lid(a,b)}">`;
+    for(let k=0;k<n;k++){const s=st+k*(len+gap)+7.5,e=st+k*(len+gap)+len-7.5;
+      const c=`x1="${(x1+ux*s).toFixed(1)}" y1="${(y1+uy*s).toFixed(1)}" x2="${(x1+ux*e).toFixed(1)}" y2="${(y1+uy*e).toFixed(1)}"`;
+      g+=`<line class="seg-o" ${c}/><line class="seg-f" ${c}/>`}
+    h+=g+'</g>'});
+  // badges
+  E.forEach(([a,b,n,c])=>{const x=(V[a][1]+V[b][1])/2,y=(V[a][2]+V[b][2])/2,top=c===12;
+    h+=`<g class="badge${top?' top':''}"><circle cx="${x}" cy="${y}" r="${top?20:15}"/><text x="${x}" y="${y+(top?8:6)}" text-anchor="middle">${c}</text></g>`});
+  // nodes
+  Object.entries(V).forEach(([k,[name,x,y,anc,lx,ly]])=>{
+    h+=`<g class="node"><circle class="ring" id="ring${k}" cx="${x}" cy="${y}" r="30"/><circle class="v" cx="${x}" cy="${y}" r="17"/>
+      <circle cx="${x}" cy="${y}" r="6" fill="#4a3620"/><text class="vlabel" x="${lx}" y="${ly}" text-anchor="${anc}">${name}</text></g>`});
+  h+=`<g id="block" class="block"><circle cx="450" cy="345" r="19" fill="#d6262b" stroke="#fff" stroke-width="3"/>
+      <path d="M442 337 L458 353 M458 337 L442 353" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g>
+      <text id="popB" class="pop" x="742" y="200" fill="var(--plum)" stroke="#fff" stroke-width="1.5">+8</text>
+      <text id="popA" class="pop" x="574" y="420" fill="var(--teal)" stroke="#fff" stroke-width="1.5">+7</text>`;
+  map.innerHTML=h;
+  ['ringM','ringH'].forEach(i=>$(i).setAttribute('stroke','var(--teal)'));
+  ['ringO','ringL'].forEach(i=>$(i).setAttribute('stroke','var(--plum)'));
+}
+
+function reset(){
+  drawMap();map.setAttribute('class','');
+  document.querySelectorAll('.card,.overlay').forEach(e=>e.classList.remove('on','done'));
+  $('logList').innerHTML='';$('legend').classList.remove('on');
+  $('statA').textContent='';$('statB').textContent='';
+  $('barP').innerHTML='<i></i>'.repeat(3);$('barA').innerHTML='<i></i>'.repeat(6);
+  [...$('barP').children].forEach(i=>i.style.background='var(--teal)');
+  [...$('barA').children].forEach((i,k)=>i.style.background=k<2?'var(--teal)':'var(--detour)');
+  document.querySelectorAll('#goalA .pts,#goalB .pts').forEach((p,k)=>p.textContent=k?'8 pts':'7 pts');
+}
+function setHeader(t,c){const h=$('h1'),p=$('cap');h.textContent=t;p.textContent=c;
+  [h,p].forEach(e=>{e.classList.remove('anim');void e.offsetWidth;e.classList.add('anim')})}
+const on=(...ids)=>ids.forEach(i=>$(i).classList.add('on'));
+const off=(...ids)=>ids.forEach(i=>$(i).classList.remove('on'));
+function claim(a,b,who,turn,boats,instant){
+  const l=$(lid(a,b));l.classList.add(who==='A'?'cA':'cB');
+  const li=document.createElement('li');
+  li.innerHTML=`<b>T${turn}</b><i style="background:var(--${who==='A'?'teal':'plum'})"></i>${V[a][0]}–${V[b][0]} · ${boats} boat${boats>1?'s':''}`;
+  $('logList').appendChild(li);void li.offsetWidth;li.classList.add('on');
+}
+function showPane(id){['rules','log','cmp','choke'].forEach(p=>$(p).classList.toggle('on',p===id))}
+
+const steps=[
+ ()=>{map.classList.add('faint');on('title');
+   setHeader('Route & Network Building','Connect the dots before someone blocks the path.')},
+ ()=>{off('title');map.classList.remove('faint');showPane('rules');
+   setHeader('The map: nine villages, fourteen canals','Each canal is 1 to 3 dotted segments long. Count the segments: that is its length, and the boats it costs.')},
+ ()=>{on('goalA','goalB','ringM','ringH','ringO','ringL');
+   setHeader('Two secret goal cards','Each player draws one goal and hides it. The players can’t see each other’s cards. You can see both.')},
+ ()=>{on('bandA','bandB');$('statA').textContent='Plan: 3 segments via Bridge';$('statB').textContent='Plan: 5 segments via Harbor';
+   setHeader('Each player plans the shortest route','Teal needs 3 segments, Plum needs 5. Both plans run through Market–Harbor, and neither player knows it.')},
+ (i)=>{$('bandA').classList.add('dim');$('bandB').classList.add('dim');showPane('log');claim('M','B','A',1,1,i);
+   setHeader('Turn 1: Teal claims Mill–Bridge','One canal per turn. Teal starts down its 3-step plan.')},
+ (i)=>{claim('O','K','B',2,2,i);
+   setHeader('Turn 2: Plum claims Orchard–Market','Plum heads north toward Market. A 2-segment canal costs two boats, still one turn.')},
+ (i)=>{claim('B','K','A',3,1,i);$('statA').textContent='Plan: 2 of 3 links done';
+   setHeader('Turn 3: Teal claims Bridge–Market','Teal is one canal away from Harbor.')},
+ (i)=>{claim('K','H','B',4,1,i);on('block');$(lid('K','H')).classList.add('flash');$('statA').textContent='Plan blocked at Market–Harbor';
+   setHeader('Turn 4: Plum claims Market–Harbor','Plum only wanted it for its own route. Teal’s last link is gone for the rest of the game.')},
+ ()=>{$('bandB').classList.remove('on','dim');$('bandA').classList.remove('dim');on('detour','legend');
+   $('statA').textContent='Detour via Quarry: 6 segments';
+   setHeader('Teal’s detour: 6 steps instead of 3','The shortest open route now runs Market–Quarry–Harbor. Same goal card, twice the boats.')},
+ (i)=>{$('bandA').classList.remove('on');off('legend');$('detour').classList.add('dim');claim('K','Q','A',5,2,i);
+   setHeader('Turn 5: Teal claims Market–Quarry','Two boats on a canal Teal never planned to use.')},
+ (i)=>{claim('H','L','B',6,2,i);on('glowB','popB');$('goalB').classList.add('done');
+   document.querySelector('#goalB .pts').textContent='✓ +8';$('statB').textContent='Done: 5 segments, 3 turns';
+   setHeader('Turn 6: Plum completes Orchard → Lighthouse','Harbor–Lighthouse closes Plum’s 5-step route. The goal card scores +8.')},
+ (i)=>{claim('Q','H','A',7,2,i);off('glowB','popB','detour');on('glowA','popA');$('goalA').classList.add('done');
+   document.querySelector('#goalA .pts').textContent='✓ +7';$('statA').textContent='Done: 6 segments, 4 turns';
+   setHeader('Turn 7: Teal completes Mill → Harbor','Quarry–Harbor closes the detour. Teal scores +7, but it cost 6 boats and 4 turns.')},
+ (i)=>{off('popA','block');on('bandA');showPane('cmp');
+   const bl=[...$('barP').children,...$('barA').children];
+   bl.forEach((b,k)=>{b.style.transitionDelay=(i?0:300+k*140)+'ms';b.classList.add('on')});
+   setHeader('Planned 3 → actual 6','One claimed canal doubled the cost of Teal’s goal. The shortest path is the hidden economy of this board.')},
+ ()=>{off('bandA','glowA');map.classList.add('heatmode');showPane('choke');
+   setHeader('Chokepoints: where the routes pile up','Each number counts the village pairs whose shortest route uses that canal. Bridge–Market tops the map at 12 of 36.')},
+ ()=>{on('end');
+   setHeader('What designers take from this','Claims are permanent, goals are secret, and the map decides where players collide.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

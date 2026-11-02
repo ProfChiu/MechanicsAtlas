@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Hidden Roles</title>
+<style>
+:root{--bg:#0b1522;--panel:#14263a;--panel2:#1b3149;--line:#2b4766;--ink:#eef4fb;--muted:#9fb3c8;
+  --gold:#ffc94a;--red:#ef5b52;--teal:#3fc1b0;--sea:#123552}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 20%,#183150 0%,#0b1522 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Cinzel",serif;font-size:38px;letter-spacing:.5px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px;line-height:1.35}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* title */
+#title{left:0;right:0;top:120px;bottom:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+#title .big{font-family:"Cinzel",serif;font-size:96px;font-weight:700;margin:0;line-height:1;
+  background:linear-gradient(90deg,var(--gold),#fff3c4,var(--red));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-family:"IM Fell English",serif;font-size:36px;font-weight:400;color:#dfe8f2}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite;margin-top:8px}
+@keyframes blink{50%{opacity:.35}}
+#title svg{width:180px;height:200px}
+.beam{transform-origin:90px 52px;animation:sweep 3.2s ease-in-out infinite}
+@keyframes sweep{0%,100%{transform:rotate(-18deg)}50%{transform:rotate(18deg)}}
+
+/* circle of seats */
+#ring{left:0;top:0;width:640px;height:720px}
+#lines{position:absolute;left:0;top:0;width:640px;height:720px;z-index:3;pointer-events:none}
+#lines line{stroke-linecap:round;transition:opacity .6s}
+#lamp{position:absolute;left:270px;top:330px;width:120px;height:150px;z-index:2;text-align:center}
+#lamp svg{width:120px;height:120px}
+#lamp .st{font-weight:900;font-size:20px;letter-spacing:1px;margin-top:-4px;opacity:0;transition:opacity .5s}
+#lamp.crash .st{opacity:1;color:var(--red)}
+#lamp.safe .st{opacity:1;color:var(--teal)}
+#lamp .glow{transition:opacity .6s}
+#lamp.crash .glow{opacity:.08}
+#ring.night #lamp{opacity:.25}
+
+.seat{position:absolute;width:150px;height:150px;margin:-42px 0 0 -75px;z-index:4;text-align:center;
+  opacity:0;transform:scale(.4);transition:opacity .5s,transform .6s cubic-bezier(.3,1.5,.5,1),filter .6s}
+.seat.show{opacity:1;transform:none}
+.av{position:relative;width:84px;height:84px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:"Fredoka",sans-serif;font-size:40px;font-weight:600;color:#0b1522;
+  box-shadow:inset 0 -6px 0 rgba(0,0,0,.18),0 6px 16px rgba(0,0,0,.45);border:4px solid #0b1522;transition:box-shadow .5s,border-color .5s}
+.nm{font-size:22px;font-weight:800;margin-top:4px;text-shadow:0 2px 4px #000}
+.tag{font-size:18px;font-weight:800;height:22px;opacity:0;transition:opacity .4s}
+.tag.on{opacity:1}
+.seat.team .av{border-color:var(--gold);box-shadow:0 0 0 5px rgba(255,201,74,.25),0 0 26px rgba(255,201,74,.7)}
+.cap{position:absolute;left:50%;top:-30px;transform:translateX(-50%);background:var(--gold);color:#2a1c00;
+  font-size:15px;font-weight:900;letter-spacing:1px;padding:2px 9px;border-radius:9px;opacity:0;transition:opacity .4s;white-space:nowrap}
+.seat.captain .cap{opacity:1}
+.rc{position:absolute;right:28px;top:50px;width:34px;height:46px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:20px;border:2px solid #0b1522;box-shadow:0 3px 8px rgba(0,0,0,.5);opacity:0;transform:translateY(-40px) rotate(-30deg);
+  transition:opacity .4s,transform .6s cubic-bezier(.3,1.4,.5,1),background .4s}
+.rc.on{opacity:1;transform:rotate(8deg)}
+.rc.back{background:repeating-linear-gradient(45deg,#2b4766 0 5px,#1e3550 5px 10px);color:transparent}
+.rc.k{background:var(--teal);color:#06231f}
+.rc.w{background:var(--red);color:#2b0000}
+.vote{position:absolute;top:22px;width:62px;height:34px;border-radius:17px;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:scale(.3);transition:opacity .3s,transform .4s cubic-bezier(.3,1.6,.5,1)}
+.vote.r{left:118px}.vote.l{left:-30px}
+.vote.on{opacity:1;transform:none}
+.vote.Y{background:var(--teal);color:#05221e}.vote.N{background:var(--red);color:#2b0000}
+.vote.A{background:#f3e3b5;color:#3a2a00}
+#ring.night .seat:not(.wr){filter:brightness(.35) saturate(.4)}
+#ring.night .seat.wr .av{border-color:var(--red);box-shadow:0 0 0 5px rgba(239,91,82,.3),0 0 28px rgba(239,91,82,.8)}
+.seat.out .av{border-color:var(--red);box-shadow:0 0 0 5px rgba(239,91,82,.3),0 0 28px rgba(239,91,82,.8)}
+.seat.safe .av{border-color:var(--teal)}
+
+/* side panel */
+#side{position:absolute;left:640px;top:140px;width:600px;height:545px;z-index:5}
+.box{background:linear-gradient(180deg,var(--panel2),var(--panel));border:2px solid var(--line);border-radius:20px;padding:22px 26px;
+  box-shadow:0 14px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06)}
+.box h3{margin:0 0 12px;font-size:26px;font-family:"Fredoka",sans-serif;font-weight:600}
+.box p{margin:8px 0;font-size:21px;line-height:1.35}
+.note{font-size:19px!important;color:var(--muted)}
+.gold{color:var(--gold)}.red{color:var(--red)}.teal{color:var(--teal)}
+.cards{display:flex;gap:18px;justify-content:center;margin:12px 0}
+.card{width:120px;height:166px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  font-weight:900;font-size:22px;letter-spacing:1px;border:3px solid rgba(0,0,0,.35);box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.card .ic{font-size:50px;line-height:1}
+.card.light{background:linear-gradient(160deg,#fff1b8,var(--gold));color:#3a2600}
+.card.douse{background:linear-gradient(160deg,#4a5b70,#1d2836);color:#dbe5f0}
+.card.keep{background:linear-gradient(160deg,#7fe3d6,var(--teal));color:#05221e}
+.card.wreck{background:linear-gradient(160deg,#ff9a92,var(--red));color:#2b0000}
+.card.sm{width:84px;height:112px;font-size:15px;letter-spacing:0}.card.sm .ic{font-size:32px}
+.flip{animation:flip .7s cubic-bezier(.3,1.3,.5,1) both}
+@keyframes flip{0%{transform:rotateY(90deg) translateY(-30px);opacity:0}100%{transform:none;opacity:1}}
+.shake{animation:shake .5s 2.2s both}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.steps{margin:4px 0 0;padding:0;list-style:none}
+.steps li{font-size:21px;margin:10px 0;display:flex;gap:12px;align-items:baseline;line-height:1.3}
+.steps b.n{flex:none;width:32px;height:32px;border-radius:50%;background:var(--gold);color:#2a1c00;display:inline-flex;align-items:center;justify-content:center;font-size:19px}
+.kb{display:grid;grid-template-columns:80px 1fr 70px;gap:8px 12px;align-items:center;font-size:21px;margin-top:6px}
+.kb .bar{height:24px;border-radius:12px;background:#0f1d2d;overflow:hidden}
+.kb .bar i{display:block;height:100%;border-radius:12px;animation:grow .9s ease both}
+@keyframes grow{from{width:0!important}}
+.tally{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:10px 0}
+.tally div{border-radius:12px;background:#0f1d2d;padding:8px 0;text-align:center;font-size:20px;font-weight:800}
+.tally span{display:block;font-size:22px;margin-top:2px}
+.sus{display:grid;grid-template-columns:70px 1fr 64px;gap:10px 12px;align-items:center;margin:6px 0}
+.sus .who{font-weight:900;font-size:21px}
+.sus .why{font-size:20px;line-height:1.3}
+.sus .cnt{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;text-align:right}
+
+/* insight */
+#insight{left:40px;right:40px;top:140px;height:545px;display:flex;gap:26px;z-index:8}
+#insight .tbl{flex:0 0 700px}
+.row{display:grid;grid-template-columns:90px repeat(3,1fr);gap:10px;align-items:center;height:62px}
+.row.hd{height:36px;font-size:19px;color:var(--muted);font-weight:800}
+.row .who{font-size:22px;font-weight:900}
+.cell{display:flex;align-items:center;gap:8px}
+.cell .bar{flex:1;height:26px;border-radius:13px;background:#0f1d2d;overflow:hidden}
+.cell .bar i{display:block;height:100%;width:0;border-radius:13px;transition:width 1s ease}
+.cell b{width:34px;text-align:right;font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600}
+#insight .big{font-family:"Fredoka",sans-serif;font-size:58px;font-weight:600;color:var(--gold);margin:4px 0 6px;letter-spacing:1px}
+
+/* end */
+#end{inset:0;background:rgba(6,12,20,.86);display:flex;align-items:center;justify-content:center;z-index:20}
+#end .box{width:940px;padding:34px 48px}
+#end h2{margin:0 0 14px;font-size:40px;font-family:"Cinzel",serif}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .seen{font-size:21px;color:var(--muted);margin-top:18px}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#2b4766;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <svg viewBox="0 0 180 200">
+      <polygon class="beam" points="90,52 180,20 180,84" fill="rgba(255,201,74,.35)"/>
+      <polygon class="beam" points="90,52 0,20 0,84" fill="rgba(255,201,74,.2)" style="animation-direction:reverse"/>
+      <rect x="74" y="36" width="32" height="26" rx="4" fill="#ffc94a"/>
+      <polygon points="68,36 112,36 90,16" fill="#ef5b52"/>
+      <polygon points="70,62 110,62 120,180 60,180" fill="#eef4fb"/>
+      <rect x="64" y="96" width="52" height="16" fill="#ef5b52"/><rect x="62" y="140" width="56" height="16" fill="#ef5b52"/>
+      <path d="M0 186 Q45 172 90 186 T180 186 V200 H0Z" fill="#2b6a9a"/>
+    </svg>
+    <div class="big">Hidden Roles</div>
+    <h2>The Lamp Keepers</h2>
+    <div class="press">Press SPACE to light the lamp</div>
+  </div>
+
+  <div id="ring" class="panel">
+    <svg id="lines"></svg>
+    <div id="lamp">
+      <svg viewBox="0 0 120 120">
+        <circle class="glow" cx="60" cy="28" r="30" fill="rgba(255,201,74,.35)"/>
+        <rect x="48" y="18" width="24" height="18" rx="3" fill="#ffc94a" class="glow"/>
+        <polygon points="44,18 76,18 60,4" fill="#ef5b52"/>
+        <polygon points="46,36 74,36 82,112 38,112" fill="#eef4fb"/>
+        <rect x="42" y="62" width="36" height="10" fill="#ef5b52"/><rect x="40" y="90" width="40" height="10" fill="#ef5b52"/>
+      </svg>
+      <div class="st" id="lampSt"></div>
+    </div>
+  </div>
+
+  <div id="side"></div>
+
+  <div id="insight" class="panel">
+    <div class="tbl box">
+      <h3>Possible Wrecker pairs, from each seat</h3>
+      <div class="row hd"><div></div><div>Start</div><div>After round 1</div><div>After round 2</div></div>
+      <div id="rows"></div>
+    </div>
+    <div class="box" style="flex:1">
+      <h3>Honest keeper's view</h3>
+      <div class="big">10 → 6 → 2</div>
+      <p><b>Start:</b> any 2 of the other 5. C(5,2) = <b class="gold">10</b> pairs.</p>
+      <p><b>Crash:</b> one Wrecker was on that crew. <b class="gold">6</b> pairs fit.</p>
+      <p><b>Clean round:</b> 3 keepers cleared. <b class="gold">2</b> pairs fit. Bram knows he played Light in the crash, so he gets to <b class="gold">1</b>.</p>
+      <p class="note">Wreckers: 1 pair from the first second.</p>
+    </div>
+  </div>
+
+  <div id="end" class="panel">
+    <div class="box">
+      <h2>What designers take from this</h2>
+      <ul>
+        <li><b>An informed minority vs an uninformed majority.</b> The Wreckers know every role. The keepers know only their own. That gap is the whole game.</li>
+        <li><b>Public actions are evidence.</b> Votes, team picks and lamp results are how the majority closes the gap.</li>
+        <li><b>Tune what each round reveals.</b> Team size, vote rules and how cards are revealed decide how fast suspicion narrows.</li>
+      </ul>
+      <div class="seen">You'll see this in: Werewolf, The Resistance, Secret Hitler, Among Us.</div>
+    </div>
+  </div>
+
+  <div id="dots"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), dotsEl=$('dots');
+const P=[{n:'Ada',c:'#8aa6ff'},{n:'Bram',c:'#5cc7b9'},{n:'Cora',c:'#c99cf2'},{n:'Dell',c:'#86cf74'},{n:'Esme',c:'#f2a0c2'},{n:'Finn',c:'#ebb46c'}];
+const WR=[2,5];                       // Cora and Finn are the Wreckers
+const CX=330,CY=400,R=185;
+const pos=i=>{const a=(-90+60*i)*Math.PI/180;return[CX+R*Math.cos(a),CY+R*Math.sin(a)]};
+let cur=0, st;
+
+// build seats
+const seats=P.map((p,i)=>{
+  const [x,y]=pos(i), el=document.createElement('div');
+  el.className='seat'+(WR.includes(i)?' wr':''); el.style.left=x+'px'; el.style.top=y+'px';
+  const side=(i===4||i===5)?'l':'r';
+  el.innerHTML=`<div class="cap">CAPTAIN</div><div class="av" style="background:${p.c}">${p.n[0]}</div>
+    <div class="rc back"></div><div class="vote ${side}"></div><div class="nm">${p.n}</div><div class="tag"></div>`;
+  $('ring').appendChild(el); return el;
+});
+
+// insight rows: [start, after R1, after R2]
+const KNOW=[[10,6,2],[10,6,1],[1,1,1],[10,6,2],[10,6,2],[1,1,1]];
+$('rows').innerHTML=P.map((p,i)=>`<div class="row"><div class="who" style="color:${p.c}">${p.n}</div>`+
+  KNOW[i].map(v=>`<div class="cell"><div class="bar"><i data-w="${v*10}" style="background:${WR.includes(i)?'var(--red)':'var(--gold)'}"></i></div><b>${v}</b></div>`).join('')+'</div>').join('');
+
+function fresh(){return{title:false,ring:false,seats:false,dealt:false,peek:false,night:false,cap:-1,team:[],votes:null,
+  lines:[],lamp:'',reveal:false,wide:false,end:false,side:'',h:['',''],tags:null}}
+function setHeader(t,c){st.h=[t,c]}
+
+function render(){
+  const h=$('header');h.querySelector('h1').textContent=st.h[0];h.querySelector('p').textContent=st.h[1];
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+  $('title').classList.toggle('on',st.title);
+  $('ring').classList.toggle('on',st.ring&&!st.wide);
+  $('ring').classList.toggle('night',st.night);
+  seats.forEach((el,i)=>{
+    const w=WR.includes(i);
+    el.classList.toggle('show',st.seats);
+    el.classList.toggle('team',st.team.includes(i));
+    el.classList.toggle('captain',st.cap===i);
+    el.classList.toggle('out',st.reveal&&w);
+    el.classList.toggle('safe',st.reveal&&!w);
+    const rc=el.querySelector('.rc'), face=st.reveal||(st.peek&&w);
+    rc.className='rc '+(face?(w?'w':'k'):'back')+(st.dealt?' on':'');
+    rc.textContent=face?(w?'✕':'★'):'';
+    rc.style.transitionDelay=st.dealt&&!st.peek?(i*120)+'ms':'0ms';
+    const v=el.querySelector('.vote'), vv=st.votes&&st.votes[i];
+    v.className='vote '+v.className.split(' ')[1]+(vv?' on '+vv[0]:'');
+    v.textContent=vv?vv.slice(1):''; v.style.transitionDelay=vv?(i*150)+'ms':'0ms';
+    const t=el.querySelector('.tag'), tt=st.reveal?(w?['Wrecker','var(--red)']:['Keeper','var(--teal)']):(st.tags&&st.tags[i]);
+    t.className='tag'+(tt?' on':''); t.textContent=tt?tt[0]:''; t.style.color=tt?tt[1]:'';
+  });
+  $('lines').innerHTML=st.lines.map(([a,b,sure,col])=>{
+    const [x1,y1]=pos(a),[x2,y2]=pos(b),dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy),k=50/L;
+    return `<line x1="${x1+dx*k}" y1="${y1+dy*k}" x2="${x2-dx*k}" y2="${y2-dy*k}" stroke="${col||'#ff9f43'}" stroke-width="${sure?6:3}" ${sure?'':'stroke-dasharray="8 8"'} opacity="${sure?.95:.7}"/>`}).join('');
+  $('lamp').className=st.lamp; $('lampSt').textContent=st.lamp==='crash'?'WRECKED':st.lamp==='safe'?'SAFE':'';
+  const sd=$('side'); sd.innerHTML=st.side; sd.classList.remove('anim'); void sd.offsetWidth; if(st.side)sd.classList.add('anim');
+  $('insight').classList.toggle('on',st.wide);
+  document.querySelectorAll('#rows .bar i').forEach((b,j)=>{b.style.transitionDelay=st.wide?((j%3)*500)+'ms':'0ms';b.style.width=st.wide?b.dataset.w+'%':'0'});
+  $('end').classList.toggle('on',st.end);
+}
+function reset(){st=fresh()}
+
+const nm=i=>`<b style="color:${P[i].c}">${P[i].n}</b>`;
+const card=(cls,ic,txt,d,sm)=>`<div class="card ${cls}${sm?' sm':''} flip" style="animation-delay:${d||0}ms"><div class="ic">${ic}</div>${txt}</div>`;
+const sus=rows=>rows.map(([i,why,n])=>`<div class="sus"><div class="who" style="color:${P[i].c}">${P[i].n}</div><div class="why">${why}</div><div class="cnt gold">${n}</div></div>`).join('');
+const tally=(votes,label)=>`<div class="tally">${P.map((p,i)=>`<div style="color:${p.c}">${p.n}<span class="${votes[i][0]==='Y'?'teal':'red'}">${votes[i].slice(1)}</span></div>`).join('')}</div>`;
+const V1=['YYES','YYES','YYES','NNO','YYES','YYES'];
+const V2=['YYES','YYES','NNO','YYES','YYES','NNO'];
+
+const steps=[
+ ()=>{st.title=true;setHeader('Hidden Roles','Six lighthouse keepers share one lamp. Two of them secretly want the ship to crash.')},
+ ()=>{st.title=false;st.ring=true;st.seats=true;
+   st.side=`<div class="box"><h3>The crew of six</h3><p>Ada, Bram, Cora, Dell, Esme and Finn keep the lamp lit so ships pass the rocks.</p>
+   <p>Each round, three of them tend the lamp. The rest watch, argue and vote.</p><p class="note">No board, no dice. The whole game is talk, votes and a few secret cards.</p></div>`;
+   setHeader('Meet the crew','Six keepers sit in a circle around the lamp. Everyone talks, everyone votes, everyone looks innocent.')},
+ ()=>{st.dealt=true;
+   st.side=`<div class="box"><h3>The role deck</h3><div class="cards">${card('keep','★','KEEPER',0,1)}${card('keep','★','KEEPER',100,1)}${card('keep','★','KEEPER',200,1)}${card('keep','★','KEEPER',300,1)}${card('wreck','✕','WRECKER',400,1)}${card('wreck','✕','WRECKER',500,1)}</div>
+   <p><b class="teal">4 Keepers</b> want every ship safe.</p><p><b class="red">2 Wreckers</b> want one ship on the rocks.</p>
+   <p class="note">Each keeper looks at their own card only, then keeps it face down.</p></div>`;
+   setHeader('Roles are dealt face down','Each keeper secretly looks at one card. Four are loyal Keepers. Two are Wreckers.')},
+ ()=>{st.side=`<div class="box"><h3>One round</h3><ul class="steps">
+   <li><b class="n">1</b><span>The <b class="gold">captain</b> picks 3 keepers to tend the lamp.</span></li>
+   <li><b class="n">2</b><span>Everyone votes <b class="teal">yes</b> or <b class="red">no</b> on that team, in the open.</span></li>
+   <li><b class="n">3</b><span>If approved, each chosen keeper secretly plays one lamp card.</span></li></ul>
+   <div class="cards">${card('light','☀','LIGHT',200)}${card('douse','☁','DOUSE',400)}</div>
+   <p>Keepers must play Light. A Wrecker may play either. <b class="red">One Douse and the ship crashes.</b></p></div>`;
+   setHeader('How a round works','A captain proposes a team, the table votes, then the team plays secret lamp cards.')},
+ ()=>{st.night=true;st.peek=true;st.lines=[[2,5,1,'#ef5b52']];
+   st.tags=P.map((p,i)=>WR.includes(i)?['eyes open','var(--red)']:['eyes closed','var(--muted)']);
+   const kb=P.map((p,i)=>{const w=WR.includes(i);return `<div style="color:${p.c};font-weight:900">${p.n}</div><div class="bar"><i style="width:${w?100:16.7}%;background:${w?'var(--red)':'var(--teal)'};animation-delay:${i*120}ms"></i></div><div><b>${w?6:1}</b> / 6</div>`}).join('');
+   st.side=`<div class="box"><h3>Roles each keeper knows</h3><div class="kb">${kb}</div>
+   <p style="margin-top:16px">The Wreckers know their partner, so they know <b class="red">all 6 roles</b>. Each honest keeper knows <b class="teal">only their own</b>.</p></div>`;
+   setHeader('Eyes closed: the Wreckers find each other','Everyone shuts their eyes. Only Cora and Finn open theirs and look up. Now the information gap is set.')},
+ ()=>{st.night=false;st.tags=null;st.lines=[];st.cap=0;st.team=[0,1,2];
+   st.side=`<div class="box"><h3>Round 1 proposal</h3><p>Captain ${nm(0)} picks ${nm(0)}, ${nm(1)} and ${nm(2)}.</p>
+   <p>To the honest keepers, this is just a team. To ${nm(5)}, it is a team with his partner on it.</p>
+   <p class="note">You can see the red ✕ cards. The keepers at the table cannot.</p></div>`;
+   setHeader('Round 1: Captain Ada proposes a team','Ada picks herself, Bram and Cora to tend the lamp tonight.')},
+ ()=>{st.votes=V1;
+   st.side=`<div class="box"><h3>The vote: 5 yes, 1 no</h3>${tally(V1)}<p>Approved. Every vote is now on the record.</p>
+   <p>${nm(5)} voted yes: his partner is on the team. ${nm(3)} voted no. Both facts may matter later.</p></div>`;
+   setHeader('Everyone votes in the open','Five yes, one no. The team is approved, and the table remembers who voted how.')},
+ ()=>{st.votes=null;st.lamp='crash';
+   st.side=`<div class="box"><h3>Shuffled, then revealed</h3><div class="cards shake">${card('light','☀','LIGHT',300)}${card('light','☀','LIGHT',900)}${card('douse','☁','DOUSE',1500)}</div>
+   <p>2 Light, 1 Douse. <b class="red">The ship hits the rocks.</b></p><p>The cards were shuffled, so nobody knows <i>who</i> doused. Only that someone on this team did.</p></div>`;
+   setHeader('The lamp cards come back shuffled','Two Light, one Douse. One Douse is enough: the ship crashes.')},
+ ()=>{st.lamp='crash';st.team=[];st.cap=-1;
+   st.lines=[[0,1],[0,2],[1,0],[1,2],[3,0],[3,1],[3,2],[4,0],[4,1],[4,2]].map(([a,b])=>[a,b,0]);
+   st.side=`<div class="box"><h3>Each honest keeper's suspect list</h3>
+   ${sus([[0,'I played Light, so Bram or Cora doused. Partner: Dell, Esme or Finn.','6'],
+          [1,'I played Light, so Ada or Cora doused. Partner: Dell, Esme or Finn.','6'],
+          [3,'One of Ada, Bram, Cora. Partner: Esme or Finn.','6'],
+          [4,'One of Ada, Bram, Cora. Partner: Dell or Finn.','6']])}
+   <p class="note">Pairs left out of 10. Read at face value: a Wrecker on the lamp douses, so exactly one was on that team.</p></div>`;
+   setHeader('Suspicion: who doused?','Each honest keeper narrows their own list. Dashed lines show who suspects whom.')},
+ ()=>{st.lines=[];st.lamp='';st.cap=3;st.team=[0,3,4];st.votes=V2;
+   st.side=`<div class="box"><h3>Round 2: 4 yes, 2 no</h3><p>Captain ${nm(3)} picks ${nm(0)}, ${nm(3)} and ${nm(4)}. Nobody from the crashed team except Ada.</p>${tally(V2)}
+   <p>Approved. ${nm(2)} and ${nm(5)} voted no. They gain nothing from a clean team that clears three keepers.</p></div>`;
+   setHeader('Round 2: a different team','Captain Dell picks Ada, Dell and Esme. Cora and Finn vote no. The team still passes, 4 to 2.')},
+ ()=>{st.votes=null;st.lamp='safe';
+   st.lines=[[0,1,0],[0,2,0],[0,5,1],[1,2,1],[1,5,1],[3,1,0],[3,2,0],[3,5,1],[4,1,0],[4,2,0],[4,5,1]];
+   st.side=`<div class="box"><h3>3 Light: what the table learns</h3><div class="cards">${card('light','☀','LIGHT',200,1)}${card('light','☀','LIGHT',500,1)}${card('light','☀','LIGHT',800,1)}</div>
+   ${sus([[0,'Finn, plus Bram or Cora.','2'],[1,'Cora and Finn. I know I played Light.','1'],[3,'Finn, plus Bram or Cora.','2'],[4,'Finn, plus Bram or Cora.','2']])}
+   <p class="note">Ada, Dell and Esme look clean, so Finn is the other Wrecker. Unless a Wrecker played Light to hide. That doubt keeps the game alive.</p></div>`;
+   setHeader('Three Lights: the ship sails safe','A clean round is evidence too. Solid lines are sure; dashed lines are still a coin flip.')},
+ ()=>{st.lamp='';st.team=[];st.cap=-1;st.lines=[];
+   const acc=[[2,5],[2,5],[1,3],[2,5],[2,5],[1,4]];
+   st.votes=acc.map(([a,b])=>'A'+P[a].n[0]+'+'+P[b].n[0]);
+   st.side=`<div class="box"><h3>Each keeper names two</h3>
+   <p>Bram says he knows it was Cora. He could be lying, but the round 2 votes back him up: ${nm(2)} and ${nm(5)} both tried to stop the clean team.</p>
+   <div class="tally">${P.map((p,i)=>{const n=acc.flat().filter(x=>x===i).length;return `<div style="color:${p.c}">${p.n}<span class="${n>=4?'red':''}">${n}</span></div>`}).join('')}</div>
+   <p>The table accuses <b class="red">Cora and Finn</b>. The Wreckers split their votes to muddy it.</p></div>`;
+   setHeader('The final accusation','Every keeper names two suspects. Cora and Finn get 4 votes each.')},
+ ()=>{st.votes=null;st.reveal=true;
+   st.side=`<div class="box"><h3>Cora and Finn were the Wreckers</h3><div class="cards">${card('wreck','✕','CORA',200)}${card('wreck','✕','FINN',500)}</div>
+   <p><b class="teal">The keepers win.</b> Two rounds, one crash and six votes were enough evidence.</p>
+   <p class="note">Swap one vote and the story changes. If Finn had voted yes in round 2, the table would have had less to go on.</p></div>`;
+   setHeader('Reveal the roles','The honest majority found the informed minority using nothing but public actions.')},
+ ()=>{st.wide=true;st.side='';
+   setHeader('The information gap closes','How many Wrecker pairs each keeper still thinks possible. The Wreckers knew from the start.')},
+ ()=>{st.end=true;setHeader('What designers take from this','Hidden roles turn every public action into evidence.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  render();cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render();updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

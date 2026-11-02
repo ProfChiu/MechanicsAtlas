@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Hand Management</title>
+<style>
+:root{--bg:#110e22;--panel:#1f1a38;--panel2:#2a2348;--line:#3d3563;--ink:#f7f3ff;--muted:#aaa3c9;
+  --red:#e5484d;--red2:#8f1f26;--blue:#3e7bfa;--blue2:#1a3a8a;--green:#30a46c;--green2:#14593a;--gold:#ffc53d;--gold2:#a8740a;
+  --sp:#ff9466;--pl:#8fd0ff;--warn:#ffb224;--bad:#ff4d5e;--glow:rgba(255,197,61,.55)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 50% 0%,#2b2050 0%,#110e22 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+h1,h2,h3,.fred{font-family:"Fredoka","Nunito",sans-serif}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:20px;z-index:10}
+#header h1{margin:0;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes floatUp{0%{transform:translateY(0)}50%{transform:translateY(-14px)}100%{transform:translateY(0)}}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(255,77,94,.0),0 0 24px rgba(255,77,94,.7)}}
+
+/* lantern glyph */
+.lan{position:relative;width:30px;height:40px;border-radius:46% 46% 42% 42%;
+  background:radial-gradient(circle at 50% 42%,#fff8 0,var(--c) 38%,var(--c2) 100%);
+  box-shadow:0 0 16px var(--c),inset 0 -3px 0 rgba(0,0,0,.25)}
+.lan::before{content:"";position:absolute;left:25%;right:25%;top:-5px;height:6px;border-radius:2px;background:#3b2a12}
+.lan::after{content:"";position:absolute;left:50%;bottom:-9px;width:2px;height:9px;margin-left:-1px;background:var(--c)}
+.lan.off{--c:#4a4466;--c2:#2a2540;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.R{--c:var(--red);--c2:var(--red2)}.B{--c:var(--blue);--c2:var(--blue2)}
+.G{--c:var(--green);--c2:var(--green2)}.Au{--c:var(--gold);--c2:var(--gold2)}
+
+/* cards */
+.card{position:absolute;width:84px;height:124px;border-radius:12px;
+  background:linear-gradient(160deg,var(--c) 0%,var(--c2) 100%);border:3px solid rgba(255,255,255,.35);
+  box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 0 0 2px rgba(0,0,0,.15);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  transition:left .6s cubic-bezier(.3,1.3,.5,1),top .6s,transform .6s cubic-bezier(.3,1.3,.5,1),opacity .5s,filter .4s}
+.card .lan{--c:#fff7d6;--c2:#ffd76a;width:30px;height:38px;box-shadow:0 0 14px #fff3c4}
+.card span{font-family:"Fredoka",sans-serif;font-size:18px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.card.Au span{color:#3a2600;text-shadow:none}
+.card.disc{filter:grayscale(.7) brightness(.6)}
+.card.disc::after{content:"✕";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:70px;color:var(--bad);font-weight:900;text-shadow:0 0 8px #000}
+.card.big{position:relative;width:120px;height:176px;border-radius:16px}
+.card.big .lan{width:44px;height:56px}
+.card.big span{font-size:24px}
+
+/* panels */
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+#title .big{font-family:"Fredoka",sans-serif;font-size:104px;font-weight:600;line-height:1;margin:0;
+  background:linear-gradient(90deg,var(--red),var(--gold),var(--green),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:34px;font-weight:500}
+#title .string{display:flex;gap:46px;margin:28px 0 18px;padding-top:12px;border-top:2px solid #6b5a3a}
+#title .string .lan{width:54px;height:72px;transform-origin:50% -12px;animation:sway 2.4s ease-in-out infinite}
+#title .string .lan:nth-child(even){animation-delay:-1.2s}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* rules */
+#rules{left:40px;right:40px;top:140px;bottom:40px}
+#rules .top{display:flex;gap:40px;align-items:center}
+#rules .four{display:flex;gap:16px}
+#rules ul{margin:0;padding:0;list-style:none;font-size:24px;line-height:1.35}
+#rules li{margin:10px 0;padding:12px 18px;background:var(--panel);border:2px solid var(--line);border-radius:14px}
+#rules li b{color:var(--gold)}
+#score{display:flex;gap:22px;margin-top:26px;opacity:0;transform:translateY(16px);transition:opacity .6s,transform .6s}
+#score.on{opacity:1;transform:none}
+#score .g{flex:1;background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:14px 10px;text-align:center}
+#score .g .row{display:flex;justify-content:center;gap:8px;height:56px;align-items:center}
+#score .g .n{font-size:21px;color:var(--muted);margin-top:8px}
+#score .g .pts{font-family:"Fredoka",sans-serif;font-size:46px;font-weight:600;color:var(--gold);line-height:1.1}
+#score .g .per{font-size:19px;color:var(--muted)}
+#score .g:last-child{border-color:var(--gold);box-shadow:0 0 22px rgba(255,197,61,.3)}
+
+/* duel columns */
+.col{position:absolute;top:136px;width:580px;height:540px;background:linear-gradient(180deg,var(--panel) 0%,#171330 100%);
+  border:2px solid var(--line);border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.4)}
+#colS{left:40px}#colP{left:660px}
+.col .who{position:absolute;left:22px;top:14px}
+.col .who h3{margin:0;font-size:32px;font-weight:600}
+.col .who div{font-size:19px;color:var(--muted)}
+#colS .who h3{color:var(--sp)}#colP .who h3{color:var(--pl)}
+.col .sc{position:absolute;right:22px;top:10px;text-align:right}
+.col .sc b{display:block;font-family:"Fredoka",sans-serif;font-size:54px;font-weight:600;line-height:1}
+.col .sc small{font-size:18px;color:var(--muted)}
+.col .sc b.pop{animation:pop .6s ease}
+.col .lit{position:absolute;left:22px;right:22px;top:88px;height:104px;display:flex;gap:14px;align-items:flex-start;
+  border-top:2px solid #6b5a3a;padding-top:14px}
+.col .lit .empty{font-size:19px;color:#6f6893;margin-top:20px}
+.grp{display:flex;flex-direction:column;align-items:center;gap:12px;animation:fadeUp .6s ease both}
+.grp .row{display:flex;gap:6px}
+.grp .lan{transform-origin:50% -10px;animation:sway 2.6s ease-in-out infinite}
+.grp b{font-family:"Fredoka",sans-serif;font-size:22px;color:var(--gold)}
+.col .act{position:absolute;left:22px;right:22px;top:200px;min-height:46px;padding:9px 16px;border-radius:12px;
+  background:var(--panel2);font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px}
+.chip{display:inline-block;width:20px;height:28px;border-radius:5px;background:linear-gradient(160deg,var(--c),var(--c2));border:2px solid rgba(255,255,255,.4);vertical-align:middle}
+.col .hand{position:absolute;left:0;right:0;top:270px;height:160px}
+.col .meter{position:absolute;left:22px;right:22px;top:448px;display:flex;align-items:center;gap:8px;font-size:20px;font-weight:700}
+.col .meter .slots{display:flex;gap:6px;margin-left:8px}
+.col .meter i{width:22px;height:22px;border-radius:6px;border:2px solid #5a5280;background:transparent;transition:background .4s,border-color .4s}
+.col .meter i.f{background:#7d76a6;border-color:#7d76a6}
+.col .meter i.limit{border-style:dashed;border-color:#ff4d5e88}
+.col .meter i.x{opacity:0}
+.col .meter.warn i.f{background:var(--warn);border-color:var(--warn)}
+.col .meter.over i.f{background:var(--bad);border-color:var(--bad)}
+.col .meter.over i.x{opacity:1;animation:pulse 1s infinite}
+.col .meter .lbl{min-width:136px}
+.col .warnmsg{position:absolute;left:22px;right:22px;top:484px;font-size:19px;font-weight:700;opacity:0;transition:opacity .4s}
+.col .warnmsg.on{opacity:1}
+.col .warnmsg.warn{color:var(--warn)}.col .warnmsg.over{color:var(--bad)}.col .warnmsg.ok{color:var(--muted)}
+
+/* final */
+#final{left:40px;right:40px;top:150px;display:flex;gap:40px;justify-content:center}
+#final .box{width:520px;background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:24px 30px;box-shadow:0 14px 40px rgba(0,0,0,.4)}
+#final .box h3{margin:0;font-size:34px;font-weight:600}
+#final .box .tot{font-family:"Fredoka",sans-serif;font-size:110px;font-weight:600;line-height:1.05}
+#final .box .ln{font-size:22px;margin:8px 0;display:flex;justify-content:space-between}
+#final .box .ln b{color:var(--gold)}
+#final .box .ppc{margin-top:14px;padding-top:12px;border-top:2px solid var(--line);font-size:20px;color:var(--muted)}
+#final .s h3,#final .s .tot{color:var(--sp)}#final .p h3,#final .p .tot{color:var(--pl)}
+#final .p{border-color:var(--pl);box-shadow:0 0 30px rgba(143,208,255,.3)}
+#final .crown{font-size:22px;font-weight:800;color:var(--gold)}
+#finalNote{position:absolute;left:0;right:0;top:600px;text-align:center;font-size:24px;font-weight:700}
+
+/* timeline */
+#tl{left:40px;top:136px;width:1200px;height:540px}
+#tl .legend{position:absolute;left:60px;top:0;display:flex;gap:30px;font-size:21px;font-weight:700}
+#tl .legend i{display:inline-block;width:20px;height:20px;border-radius:5px;vertical-align:-3px;margin-right:8px}
+#tl .base{position:absolute;left:40px;width:820px;top:470px;height:3px;background:#5d5680}
+#tl .tn{position:absolute;top:480px;width:180px;text-align:center;font-size:21px;font-weight:800;color:var(--muted)}
+.bar{position:absolute;width:66px;height:0;bottom:70px;border-radius:10px 10px 0 0;transition:height .9s cubic-bezier(.3,1.3,.5,1),opacity .5s}
+.bar.s{background:linear-gradient(var(--sp),#a8482a)}.bar.p{background:linear-gradient(var(--pl),#2f6f9e)}
+.bar .v{position:absolute;left:-10px;right:-10px;top:-32px;text-align:center;font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600}
+.bar .d{position:absolute;left:0;right:0;top:8px;text-align:center;font-size:19px;font-weight:900;color:#1a1030}
+.dimmed{opacity:.22}
+#cut{position:absolute;left:640px;top:40px;height:432px;border-left:3px dashed var(--gold);opacity:0;transition:opacity .5s}
+#cut span{position:absolute;left:-90px;top:-6px;width:180px;text-align:center;font-size:19px;font-weight:800;color:var(--gold);background:var(--bg);padding:2px 4px;border-radius:6px}
+#cut.on{opacity:1}
+#tl .side{position:absolute;left:900px;top:40px;width:300px;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:18px 20px;font-size:20px;line-height:1.4}
+#tl .side p{margin:0 0 12px}
+#tl .side b.s{color:var(--sp)}#tl .side b.p{color:var(--pl)}#tl .side b.g{color:var(--gold)}
+#side2{display:none}
+#tl.flip #side1{display:none}#tl.flip #side2{display:block}
+#tl.flip .side{border-color:var(--gold)}
+
+/* recap */
+#end{inset:0;background:rgba(10,8,20,.86);display:flex;align-items:center;justify-content:center;z-index:20}
+#end .card2{background:#221c3d;border:2px solid #4b4178;border-radius:24px;padding:34px 48px;width:980px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 14px;font-size:40px;font-weight:600}
+#end li{font-size:24px;margin:14px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .see{margin-top:20px;padding-top:16px;border-top:2px solid #4b4178;font-size:22px;color:var(--muted)}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#3d3658;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;left:20px;font-size:13px;color:#6f6893;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="string"><div class="lan R"></div><div class="lan B"></div><div class="lan Au"></div><div class="lan G"></div><div class="lan R"></div></div>
+    <div class="big">Hand Management</div>
+    <h2>When to play a card matters as much as which card.</h2>
+    <div class="press">Press SPACE to light the way</div>
+  </div>
+
+  <div id="rules" class="panel">
+    <div class="top">
+      <div class="four" id="four"></div>
+      <ul>
+        <li>Hold up to <b>7 cards</b> in your hand.</li>
+        <li>Each turn, do one: <b>draw 2 cards</b>, or <b>play one group</b> of the same colour.</li>
+        <li>A played group lights a row of lanterns and scores.</li>
+      </ul>
+    </div>
+    <div id="score"></div>
+  </div>
+
+  <div id="colS" class="col panel"></div>
+  <div id="colP" class="col panel"></div>
+
+  <div id="final" class="panel">
+    <div class="box s">
+      <h3>Spender</h3>
+      <div class="tot">9</div>
+      <div class="ln"><span>Turn 1: Red ×2</span><b>+3</b></div>
+      <div class="ln"><span>Turn 3: Blue ×3</span><b>+6</b></div>
+      <div class="ppc">5 cards played · 1.8 points per card</div>
+    </div>
+    <div class="box p">
+      <h3>Planner <span class="crown">★ wins</span></h3>
+      <div class="tot">16</div>
+      <div class="ln"><span>Turn 3: Blue ×3</span><b>+6</b></div>
+      <div class="ln"><span>Turn 4: Red ×4</span><b>+10</b></div>
+      <div class="ppc">7 cards played · 2.3 points per card</div>
+    </div>
+  </div>
+  <div id="finalNote" class="panel">Same 4 starting cards. Same draws. 7 points apart.</div>
+
+  <div id="tl" class="panel">
+    <div class="legend"><span><i style="background:var(--sp)"></i>Spender total</span><span><i style="background:var(--pl)"></i>Planner total</span></div>
+    <div id="bars"></div>
+    <div class="base"></div>
+    <div id="cut"><span>Game ends here?</span></div>
+    <div class="side" id="side1">
+      <p><b class="s">Spender</b> scores on turn 1 and turn 3. Points arrive early.</p>
+      <p><b class="p">Planner</b> scores nothing for two turns, then +6 and +10.</p>
+      <p>Planner passes Spender only on the <b class="g">last turn</b>.</p>
+    </div>
+    <div class="side" id="side2">
+      <p>End after turn 3: <b class="s">Spender 9</b>, <b class="p">Planner 6</b>. Spender wins.</p>
+      <p>End after turn 4: <b class="p">Planner 16</b>, <b class="s">Spender 9</b>. Planner wins.</p>
+      <p><b class="g">Holding is a bet on time.</b></p>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card2">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li>A hand is a <b>bank of options</b>. Every card you hold is a choice you have not spent yet.</li>
+      <li><b>Timing beats raw card quality.</b> Both players had the same cards. When they played them decided the score.</li>
+      <li><b>Hand limits and game length are the designer's dials.</b> A tighter limit or a shorter game rewards spending. A looser limit or a longer game rewards planning.</li>
+    </ul>
+    <div class="see">You'll see this in: Ticket to Ride, Lost Cities, Uno, Gin Rummy.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">SPACE / click ▸ next &nbsp;·&nbsp; ← back &nbsp;·&nbsp; R restart</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), dotsEl=$('dots');
+const px=n=>n+'px';
+const NAME={R:'Red',B:'Blue',G:'Green',Au:'Gold'}, ORDER={R:0,B:1,G:2,Au:3};
+const PTS=[0,1,3,6,10], LIMIT=7;
+let cur=0, token=0, uid=0;
+
+function setHeader(t,c){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=c;
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+const lan=(c,off)=>`<div class="lan ${off?'off':c}"></div>`;
+const cardHTML=(c,cls='')=>`<div class="card ${c} ${cls}">${lan(c)}<span>${NAME[c].toUpperCase()}</span></div>`;
+const chip=c=>`<i class="chip ${c}"></i>`;
+
+// static pieces
+$('four').innerHTML=['R','B','G','Au'].map(c=>cardHTML(c,'big')).join('');
+$('score').innerHTML=[1,2,3,4].map(n=>`<div class="g"><div class="row">${Array.from({length:n},()=>lan('Au')).join('')}</div>
+  <div class="n">Group of ${n}</div><div class="pts">${PTS[n]}</div><div class="per">${(PTS[n]/n).toFixed(n===1?0:1)} per card</div></div>`).join('');
+
+function colHTML(name,rule){return `<div class="who"><h3>${name}</h3><div>${rule}</div></div>
+  <div class="sc"><b>0</b><small>points</small></div>
+  <div class="lit"></div><div class="act"></div><div class="hand"></div>
+  <div class="meter"><span class="lbl"></span><span class="slots">${Array.from({length:8},(_,i)=>`<i class="${i===7?'x':i===6?'limit':''}"></i>`).join('')}</span></div>
+  <div class="warnmsg"></div>`}
+$('colS').innerHTML=colHTML('Spender','Plays any pair or better at once.');
+$('colP').innerHTML=colHTML('Planner','Draws and holds for big groups.');
+
+// timeline bars
+const TL={s:[3,3,9,9],p:[0,0,6,16],ds:['+3','','+6',''],dp:['','','+6','+10']}, UNIT=20;
+const bars=[];
+$('bars').innerHTML='';
+for(let t=0;t<4;t++){const gx=60+t*200;
+  ['s','p'].forEach((k,j)=>{const b=document.createElement('div');b.className='bar '+k;b.style.left=px(gx+j*80);
+    b.innerHTML=`<div class="v">${TL[k][t]}</div><div class="d">${(k==='s'?TL.ds:TL.dp)[t]}</div>`;$('bars').appendChild(b);bars.push({el:b,k,t})});
+  const l=document.createElement('div');l.className='tn';l.style.left=px(gx-20);l.textContent='After turn '+(t+1);$('bars').appendChild(l)}
+
+// game state
+const P={S:{col:$('colS')},P:{col:$('colP')}};
+function newPlayer(pl,start){pl.hand=start.map(c=>({id:'c'+(uid++),c}));pl.lit=[];pl.score=0;
+  const q=s=>pl.col.querySelector(s);q('.hand').innerHTML='';q('.lit').innerHTML='<div class="empty">No lanterns lit yet</div>';
+  q('.sc b').textContent='0';q('.act').innerHTML='';setWarn(pl,'','');}
+function deal(pl,cs){cs.forEach(c=>pl.hand.push({id:'c'+(uid++),c,fresh:true}))}
+function play(pl,c,instant){const g=pl.hand.filter(x=>x.c===c);pl.hand=pl.hand.filter(x=>x.c!==c);
+  const pts=PTS[g.length];pl.score+=pts;
+  const lit=pl.col.querySelector('.lit');const e=lit.querySelector('.empty');if(e)e.remove();
+  lit.insertAdjacentHTML('beforeend',`<div class="grp"><div class="row">${g.map(()=>lan(c)).join('')}</div><b>+${pts}</b></div>`);
+  const sb=pl.col.querySelector('.sc b');sb.textContent=pl.score;sb.classList.remove('pop');void sb.offsetWidth;if(!instant)sb.classList.add('pop');
+  return g}
+function setAct(pl,html){pl.col.querySelector('.act').innerHTML=html}
+function setWarn(pl,cls,msg){const w=pl.col.querySelector('.warnmsg');w.className='warnmsg '+(msg?'on ':'')+cls;w.textContent=msg}
+
+function render(pl,instant){
+  const hand=pl.col.querySelector('.hand');
+  const cards=[...pl.hand].sort((a,b)=>ORDER[a.c]-ORDER[b.c]);
+  const n=cards.length, W=580, sp=n>1?Math.min(68,(W-140)/(n-1)):0, x0=W/2-((n-1)*sp)/2-42;
+  const keep=new Set(cards.map(c=>c.id));
+  [...hand.children].forEach(el=>{if(!keep.has(el.dataset.id)){
+    if(instant)el.remove();else{el.style.transform+=' translateY(-190px) scale(.4)';el.style.opacity=0;setTimeout(()=>el.remove(),650)}}});
+  cards.forEach((cd,i)=>{let el=hand.querySelector(`[data-id="${cd.id}"]`);
+    const off=i-(n-1)/2, x=x0+i*sp, y=14+off*off*2.2, rot=`rotate(${off*5}deg)`;
+    if(!el){hand.insertAdjacentHTML('beforeend',cardHTML(cd.c));el=hand.lastElementChild;el.dataset.id=cd.id;
+      if(cd.fresh&&!instant){el.style.left=px(W+40);el.style.top=px(y);el.style.opacity=0;el.style.transform='rotate(30deg)';void el.offsetWidth}}
+    cd.fresh=false;el.classList.toggle('disc',!!cd.disc);el.style.zIndex=i;
+    el.style.left=px(x);el.style.top=px(y);el.style.opacity=1;el.style.transform=rot});
+  const m=pl.col.querySelector('.meter');
+  m.classList.toggle('warn',n===6||n===7);m.classList.toggle('over',n>LIMIT);
+  m.querySelector('.lbl').textContent=`Hand ${n} / ${LIMIT}`;
+  [...m.querySelectorAll('i')].forEach((s,i)=>s.classList.toggle('f',i<n));
+}
+const both=(f,instant)=>{f(P.S,P.P);render(P.S,instant);render(P.P,instant)};
+
+function reset(){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  $('score').classList.remove('on');$('tl').classList.remove('flip');$('cut').classList.remove('on');
+  bars.forEach(b=>{b.el.style.height='0px';b.el.classList.remove('dimmed')});
+  newPlayer(P.S,['R','R','B','Au']);newPlayer(P.P,['R','R','B','Au']);
+}
+
+const steps=[
+ ()=>{$('title').classList.add('on');
+   setHeader('Lantern Festival','A small card game about lighting lanterns. One hand of cards, played two different ways.')},
+ ()=>{$('title').classList.remove('on');$('rules').classList.add('on');
+   setHeader('The cards: coloured lanterns','Four colours. Hold up to 7 cards. Each turn, draw 2 cards or play one group of the same colour.')},
+ ()=>{$('score').classList.add('on');
+   setHeader('Bigger groups are worth far more','A group of 4 scores 10, not 4. Each card in a big group earns more than a card played alone.')},
+ (instant)=>{$('rules').classList.remove('on');$('colS').classList.add('on');$('colP').classList.add('on');
+   const nx=`Next draws: ${['B','B','R','R'].map(chip).join(' ')}`;
+   both((s,p)=>{setAct(s,nx);setAct(p,nx)},instant);
+   setHeader('Two players, identical luck','Same four starting cards. Same draw pile, in the same order. Only their choices differ.')},
+ (instant)=>{both((s,p)=>{play(s,'R',instant);setAct(s,`Turn 1: plays ${chip('R')}${chip('R')} Red ×2 → +3`);
+     deal(p,['B','B']);setAct(p,`Turn 1: draws 2 ${chip('B')}${chip('B')} and holds`);
+     setWarn(p,'warn','6 of 7. One more draw goes over the limit.')},instant);
+   setHeader('Turn 1: spend or save?','Spender cashes the red pair for 3 points now. Planner draws instead and scores nothing yet.')},
+ (instant)=>{both((s,p)=>{deal(s,['B','B']);setAct(s,`Turn 2: no pair, so draws 2 ${chip('B')}${chip('B')}`);
+     deal(p,['R','R']);p.hand.find(x=>x.c==='Au').disc=true;setAct(p,`Turn 2: draws 2 ${chip('R')}${chip('R')} again`);
+     setWarn(p,'over','8 of 7: over the limit! Must discard Gold.')},instant);
+   setHeader('Turn 2: the cost of holding','Planner draws again and goes over the hand limit of 7. The Gold card is lost. Holding has a price.')},
+ (instant)=>{both((s,p)=>{p.hand=p.hand.filter(x=>!x.disc);
+     play(s,'B',instant);setAct(s,`Turn 3: plays ${chip('B')}${chip('B')}${chip('B')} Blue ×3 → +6`);setWarn(s,'ok','Holding 1 Gold. No pair to play.');
+     play(p,'B',instant);setAct(p,`Turn 3: plays ${chip('B')}${chip('B')}${chip('B')} Blue ×3 → +6`);setWarn(p,'ok','Four Reds held, ready for the big play.')},instant);
+   setHeader('Turn 3: both light a row of three','Both play three Blues for 6. Spender still leads, 9 to 6, with one turn left.')},
+ (instant)=>{both((s,p)=>{deal(s,['R','R']);setAct(s,`Turn 4: no pair, so draws 2 ${chip('R')}${chip('R')}`);setWarn(s,'ok','Game over. The Reds arrived too late.');
+     play(p,'R',instant);setAct(p,`Turn 4: plays ${chip('R')}${chip('R')}${chip('R')}${chip('R')} Red ×4 → +10`);setWarn(p,'ok','Hand empty. Every card paid off.')},instant);
+   setHeader('Turn 4: the payoff','Planner plays four Reds for 10. Spender has nothing matching, so draws. Final score: 16 to 9.')},
+ ()=>{$('colS').classList.remove('on');$('colP').classList.remove('on');$('final').classList.add('on');$('finalNote').classList.add('on');
+   setHeader('Same cards, different score','Identical hands and identical draws. Planner scored 16, Spender 9. The difference was timing.')},
+ ()=>{$('final').classList.remove('on');$('finalNote').classList.remove('on');$('tl').classList.add('on');
+   bars.forEach(b=>{b.el.style.transitionDelay=(b.t*220+(b.k==='p'?110:0))+'ms';b.el.style.height=px(TL[b.k][b.t]*UNIT)});
+   setHeader('When each player scored','Spender scores early. Planner scores nothing for two turns, then scores big at the end.')},
+ ()=>{$('tl').classList.add('flip');$('cut').classList.add('on');
+   bars.forEach(b=>{b.el.style.transitionDelay='0ms';b.el.classList.toggle('dimmed',b.t===3)});
+   setHeader('The flip side: holding is a bet on time',"If the game had ended after turn 3, Spender would win 9 to 6. Planner's plan only pays if the game lasts.")},
+ ()=>{$('end').classList.add('on');
+   setHeader('What designers take from this','A hand is a bank of options. When you spend it is the real decision.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

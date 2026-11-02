@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Cooperative Play</title>
+<style>
+:root{--bg:#1a1210;--panel:#2a1d18;--panel2:#33241d;--line:#5a3f33;--ink:#fff4ea;--muted:#d0b9a8;
+  --fire:#ff7a1a;--fire2:#ffd23f;--ash:#4a4240;--ff:#e5484d;--sc:#3fbf6f;--bd:#3e8bfa;--gold:#ffc53d;--grass:#3b4a2a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 10%,#3a2117 0%,#1a1210 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+h1,h2,h3,.fred{font-family:"Fredoka","Nunito",sans-serif}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:20px;z-index:10}
+#header h1{margin:0;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+#title .big{font-family:"Fredoka",sans-serif;font-size:120px;font-weight:700;line-height:1;margin:0;
+  background:linear-gradient(90deg,var(--fire2),var(--fire),#e5484d);-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:38px;font-weight:500}
+#title .flames{display:flex;gap:26px;margin:18px 0}
+#title .flames svg{width:70px;height:84px;animation:flick 1.2s ease-in-out infinite}
+#title .flames svg:nth-child(2){animation-delay:.3s}#title .flames svg:nth-child(3){animation-delay:.6s}
+@keyframes flick{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.12) rotate(3deg)}}
+#title .team{display:flex;gap:18px}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite;margin-top:10px}
+@keyframes blink{50%{opacity:.35}}
+
+/* map */
+#mapWrap{left:40px;top:138px;width:660px;height:500px}
+#map{width:660px;height:500px;overflow:visible}
+.zrect{fill:var(--grass);stroke:#6b7a4a;stroke-width:3;transition:fill .5s,stroke .5s}
+.zone.hot .zrect{fill:#4a3a22}
+.zone.fb .zrect{stroke:var(--bd);stroke-width:5;stroke-dasharray:12 6}
+.zone.flare .zrect{animation:flare 1s ease 2}
+@keyframes flare{0%,100%{stroke:#6b7a4a}40%{stroke:#ff3b1a;stroke-width:9;fill:#7a2a12}}
+.zname{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;fill:var(--ink);text-anchor:middle}
+.slot{fill:none;stroke:#7d6a55;stroke-width:2.5;stroke-dasharray:4 4}
+.lit{transform-box:fill-box;transform-origin:50% 100%;transition:opacity .45s,transform .45s cubic-bezier(.3,1.6,.5,1);opacity:0;transform:scale(.2)}
+.lit.on{opacity:1;transform:none}
+.burn{opacity:0;transition:opacity .6s}
+.zone.burned .burn{opacity:1}
+.burn rect{fill:#231d1c;opacity:.88}
+.burn text{font-family:"Fredoka",sans-serif;font-size:22px;font-weight:700;fill:#b9aca6;text-anchor:middle;letter-spacing:1px}
+.fbicon{opacity:0;transition:opacity .5s}
+.zone.fb .fbicon{opacity:1}
+.link{stroke:#8a7a5a;stroke-width:6;stroke-linecap:round;opacity:.55}
+.hero{transition:transform .9s cubic-bezier(.5,0,.3,1),opacity .5s;opacity:0}
+.hero.on{opacity:1}
+.hero circle{stroke:#fff;stroke-width:3}
+.hero text{font-family:"Fredoka",sans-serif;font-size:22px;font-weight:700;fill:#fff;text-anchor:middle;dominant-baseline:central}
+.mk{opacity:0;animation:pop .45s ease both}
+@keyframes pop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}
+#stage.instant .mk{opacity:1}
+.mk{transform-box:fill-box;transform-origin:center}
+#plan{opacity:0;transition:opacity .6s}
+#plan.on{opacity:1}
+#plan path.arr{fill:none;stroke-width:6;stroke-dasharray:14 9;stroke-linecap:round}
+#plan text{font-family:"Fredoka",sans-serif;font-size:20px;font-weight:600}
+#tag{left:40px;top:648px;height:36px;padding:4px 16px;border-radius:18px;font-family:"Fredoka",sans-serif;font-size:20px;font-weight:600;line-height:28px}
+#tag.whatif{background:#5a2a1a;color:#ffd9c2;border:2px dashed #ff8a5a}
+#tag.team{background:#1f3a2a;color:#c9ffd9;border:2px solid var(--sc)}
+#tag.won{background:#4a3a10;color:#fff1c2;border:2px solid var(--gold)}
+
+/* meter */
+#meter{left:730px;top:138px;width:510px;height:166px;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:12px 20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.05)}
+.mrow{display:flex;align-items:center;gap:14px;height:46px}
+.mrow .ml{width:150px;font-size:20px;font-weight:700;color:var(--muted)}
+.bslot{width:38px;height:38px;border-radius:50%;border:3px dashed #7d6a55;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;transition:background .4s,border-color .4s}
+.bslot.on{background:#3a2420;border:3px solid #ff5a3a;color:#ff7a5a}
+.mrow .of{font-size:20px;color:var(--muted)}
+#fireNum{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:700;width:44px;text-align:right;color:var(--fire2)}
+#fireBar{flex:1;height:18px;border-radius:9px;background:#1a1210;overflow:hidden;border:1px solid var(--line)}
+#fireBar div{height:100%;width:0;background:linear-gradient(90deg,var(--fire2),var(--fire),#e5484d);transition:width .8s}
+.deck{position:relative;width:34px;height:42px}
+.deck i{position:absolute;width:30px;height:40px;border-radius:5px;background:linear-gradient(135deg,#5b8fd0,#2e5a94);border:2px solid #cfe2ff}
+#deckNum{font-size:22px;font-weight:800}
+
+/* info panels */
+.info{left:730px;top:322px;width:510px;height:318px;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:16px 22px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.info h3{margin:0 0 10px;font-size:26px;font-weight:600;color:var(--fire2)}
+.info p,.info li{font-size:21px;line-height:1.35;margin:0 0 8px}
+.info ul,.info ol{margin:0;padding-left:26px}
+.info b{color:var(--gold)}
+.hrow{display:flex;align-items:center;gap:14px;margin:0 0 12px;background:var(--panel2);border-radius:12px;padding:8px 12px}
+.tok{flex:none;width:44px;height:44px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-family:"Fredoka",sans-serif;font-size:22px;font-weight:700}
+.hrow .hn{font-family:"Fredoka",sans-serif;font-size:22px;font-weight:600}
+.hrow .ha{font-size:20px;color:var(--muted)}
+.math{display:grid;grid-template-columns:1fr auto;gap:6px 14px;font-size:22px;margin:4px 0 12px}
+.math .v{font-family:"Fredoka",sans-serif;font-weight:700;text-align:right}
+.math .tot{border-top:2px solid var(--line);padding-top:6px}
+.red{color:#ff7a5a}.grn{color:#6be39a}
+
+/* turn panel with wind card */
+#turn{display:flex;gap:20px;align-items:flex-start}
+.wcard{flex:none;width:150px;height:210px;perspective:800px;margin-top:4px}
+.wcard .inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.4,1.4,.5,1)}
+.wcard.up .inner{transform:rotateY(180deg)}
+.wcard .face{position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 8px 20px rgba(0,0,0,.45)}
+.wcard .back{background:repeating-linear-gradient(45deg,#2e5a94 0 12px,#3a6aa8 12px 24px);border:4px solid #cfe2ff;font-family:"Fredoka",sans-serif;font-size:26px;font-weight:700;color:#e6f0ff}
+.wcard .front{transform:rotateY(180deg);background:linear-gradient(#f4ecdf,#e3d4bd);border:4px solid #fff;color:#3a2a1f;text-align:center;padding:8px}
+.wcard .front .wl{font-size:18px;font-weight:800;letter-spacing:2px;color:#2e5a94}
+.wcard .front .wz{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:700;margin:6px 0}
+.wcard .front .wp{font-family:"Fredoka",sans-serif;font-size:40px;font-weight:700;color:#d2481a}
+#turnText{flex:1}
+#turnText p{font-size:21px}
+
+/* win banner */
+#win{left:120px;top:300px;width:500px;padding:20px;border-radius:20px;text-align:center;background:rgba(40,30,8,.92);border:3px solid var(--gold);
+  box-shadow:0 0 40px rgba(255,197,61,.45);transform:scale(.6);transition:opacity .5s,transform .6s cubic-bezier(.3,1.6,.5,1);z-index:6}
+#win.on{transform:none}
+#win h2{margin:0;font-size:44px;color:var(--gold)}
+#win p{margin:6px 0 0;font-size:22px}
+
+/* insight chart */
+#insight{left:40px;right:40px;top:138px;height:520px;background:var(--panel);border:2px solid var(--line);border-radius:20px;z-index:8;
+  box-shadow:0 14px 40px rgba(0,0,0,.5);display:flex;gap:20px;padding:18px 26px}
+#chart{width:760px;height:480px}
+#chart text{font-family:"Nunito",sans-serif;fill:var(--ink)}
+.bar{transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(0);transition:transform .9s cubic-bezier(.3,1.3,.5,1)}
+#insight.on .bar{transform:none}
+#insight .side{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px}
+#insight .side div{background:var(--panel2);border-radius:14px;padding:14px 16px;font-size:21px;line-height:1.35}
+#insight .side b{font-family:"Fredoka",sans-serif;font-size:24px}
+
+/* recap */
+#end{inset:0;background:rgba(14,9,7,.86);display:flex;align-items:center;justify-content:center;z-index:20}
+#end .card{background:#2a1d18;border:2px solid #6a4a3a;border-radius:24px;padding:28px 44px;width:1000px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 12px;font-size:38px;font-weight:600}
+#end li{font-size:22px;margin:10px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .warn{margin-top:14px;padding:12px 16px;border-radius:12px;background:#3a2018;border:2px dashed #ff8a5a;font-size:21px;line-height:1.35}
+#end .seen{margin-top:14px;font-size:21px;color:var(--muted)}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#4a3730;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;right:20px;font-size:13px;color:#8a7365;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="flames" id="titleFlames"></div>
+    <div class="big">Hold the Line</div>
+    <h2>Cooperative play: everyone against the game</h2>
+    <div class="team" style="margin-top:16px">
+      <div class="tok" style="background:var(--ff)">F</div><div class="tok" style="background:var(--sc)">S</div><div class="tok" style="background:var(--bd)">B</div>
+    </div>
+    <div class="press">Press SPACE to begin</div>
+  </div>
+
+  <div id="mapWrap" class="panel">
+    <svg id="map" viewBox="0 0 660 500">
+      <defs>
+        <linearGradient id="fg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e5484d"/><stop offset=".55" stop-color="#ff7a1a"/><stop offset="1" stop-color="#ffd23f"/></linearGradient>
+        <path id="flame" d="M0,-24 C9,-12 17,-4 15,9 C13,19 6,24 0,24 C-6,24 -13,19 -15,9 C-17,-2 -7,-9 -5,-17 C-3,-9 2,-8 0,-24Z"/>
+        <marker id="ahR" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#ff8a7a"/></marker>
+        <marker id="ahG" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7cf0aa"/></marker>
+        <marker id="ahB" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#8ab8ff"/></marker>
+      </defs>
+      <g id="links"></g>
+      <g id="zones"></g>
+      <g id="heroes"></g>
+      <g id="marks"></g>
+      <g id="plan">
+        <path class="arr" d="M280,410 L280,222" stroke="#ff8a7a" marker-end="url(#ahR)"/>
+        <path class="arr" d="M550,160 Q330,-100 112,160" stroke="#7cf0aa" marker-end="url(#ahG)"/>
+        <path class="arr" d="M574,440 L410,440" stroke="#8ab8ff" marker-end="url(#ahB)"/>
+        <line x1="220" y1="282" x2="220" y2="468" stroke="#8ab8ff" stroke-width="9" stroke-linecap="round"/>
+        <text x="292" y="257" fill="#ff8a7a">1</text>
+        <text x="330" y="12" fill="#7cf0aa" text-anchor="middle">2 · free move</text>
+        <text x="492" y="428" fill="#8ab8ff" text-anchor="middle">3</text>
+        <text x="300" y="470" font-size="30" style="font-size:30px">☝</text>
+        <text x="560" y="230" style="font-size:30px">☝</text>
+        <text x="610" y="480" style="font-size:30px">☝</text>
+      </g>
+    </svg>
+  </div>
+  <div id="tag" class="panel"></div>
+
+  <div id="meter" class="panel">
+    <div class="mrow"><span class="ml">Burned out</span><span class="bslot" id="b0"></span><span class="bslot" id="b1"></span><span class="bslot" id="b2"></span><span class="of">3 = you all lose</span></div>
+    <div class="mrow"><span class="ml">Fire on map</span><span id="fireNum">0</span><div id="fireBar"><div></div></div></div>
+    <div class="mrow"><span class="ml">Wind deck</span><div class="deck"><i style="left:4px;top:2px"></i><i></i></div><span id="deckNum">6 left</span><span class="of">empty = you all win</span></div>
+  </div>
+
+  <div id="setup" class="panel info">
+    <h3>The village</h3>
+    <p>Six zones. Each burns at <b>0 to 3</b> flames. Lines show which zones are neighbours.</p>
+    <p><b>Lose:</b> 3 zones burned out.</p>
+    <p><b>Win:</b> survive until the wind deck (6 cards) is empty.</p>
+    <p>Everyone wins, or everyone loses.</p>
+  </div>
+
+  <div id="gameturn" class="panel info">
+    <h3>The game's turn</h3>
+    <ol>
+      <li>Flip a <b>wind card</b>. Add 1 fire to the zone it names.</li>
+      <li>A zone pushed <b>past 3</b> flares: it burns out and adds 1 fire to every neighbour.</li>
+      <li>A neighbour pushed past 3 flares too. That is a <b>chain</b>.</li>
+    </ol>
+  </div>
+
+  <div id="heroesInfo" class="panel info">
+    <div class="hrow"><div class="tok" style="background:var(--ff)">F</div><div><div class="hn">Firefighter</div><div class="ha">Puts out <b>2</b> fire per action, not 1</div></div></div>
+    <div class="hrow"><div class="tok" style="background:var(--sc)">S</div><div><div class="hn">Scout</div><div class="ha">Moves to <b>any</b> zone, free</div></div></div>
+    <div class="hrow"><div class="tok" style="background:var(--bd)">B</div><div><div class="hn">Builder</div><div class="ha">Builds a <b>firebreak</b>: no spread gets in</div></div></div>
+    <p style="font-size:20px;color:var(--muted)">Turn order: Firefighter, Scout, Builder.</p>
+  </div>
+
+  <div id="mathInfo" class="panel info">
+    <h3>One round, one hero</h3>
+    <div class="math">
+      <span>Wind cards per round</span><span class="v red">+3 fire</span>
+      <span>Firefighter alone</span><span class="v grn">−2 fire</span>
+      <span class="tot">Every round</span><span class="v red tot">+1 fire</span>
+    </div>
+    <p>Three zones sit at 3. He can reach only one. The fire is winning before the wind even blows.</p>
+  </div>
+
+  <div id="turn" class="panel info">
+    <div class="wcard" id="wcard"><div class="inner"><div class="face back">WIND</div>
+      <div class="face front"><div class="wl">WIND</div><div class="wz" id="wz">Mill</div><div class="wp">+1</div></div></div></div>
+    <div id="turnText"></div>
+  </div>
+
+  <div id="planInfo" class="panel info">
+    <h3>The plan, out loud</h3>
+    <ol>
+      <li><b style="color:#ff8a7a">Firefighter</b> to the Mill: 3 down to 1 in one action.</li>
+      <li><b style="color:#7cf0aa">Scout</b> jumps to the Orchard, the zone nobody else can reach, and puts out 2.</li>
+      <li><b style="color:#8ab8ff">Builder</b> can't reach the Chapel. He walls off the Market so a Chapel flare stops there.</li>
+    </ol>
+  </div>
+
+  <div id="r2Info" class="panel info">
+    <h3>Round 2</h3>
+    <ul>
+      <li><b style="color:#ff8a7a">F</b> to Market, 3 → 1. Wind: Farm +1</li>
+      <li><b style="color:#7cf0aa">S</b> Orchard 2 → 1, free move, Mill 2 → 1. Wind: Well +1</li>
+      <li><b style="color:#8ab8ff">B</b> to Well, 1 → 0. Wind: Orchard +1</li>
+    </ul>
+    <p style="margin-top:10px">Team <span class="grn"><b style="color:#6be39a">−5</b></span>, wind <span class="red"><b style="color:#ff7a5a">+3</b></span>. Fire: <b>11 → 9</b>.</p>
+  </div>
+
+  <div id="win" class="panel"><h2>The village holds</h2><p>Wind deck empty. Everyone wins.</p></div>
+
+  <div id="insight" class="panel">
+    <svg id="chart" viewBox="0 0 760 480"></svg>
+    <div class="side">
+      <div><b class="red">One hero alone</b><br>Removes 2, wind adds 3. <b class="red">+1 fire</b> every round, plus every flare.</div>
+      <div><b class="grn">The team</b><br>Removes 4 (+1 blocked), then 5. Fire falls <b class="grn">12 → 11 → 9</b>.</div>
+      <div>The gap between 2 and 3 is the design. It is <b style="color:var(--gold)">why</b> players must work together.</div>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li><b>The game is the opponent.</b> It needs its own turn that makes things worse, every time.</li>
+      <li><b>The threat must outpace any single player.</b> Here the wind adds 3 and one hero removes 2.</li>
+      <li><b>Unique abilities make players need each other.</b> Reach, power and protection live in different hands.</li>
+    </ul>
+    <div class="warn"><b>Designer warning: the quarterback problem.</b> If one player can see everything and decide everything, they start directing the others, who stop playing. Hidden hands, time pressure or private information keep every seat a real decision.</div>
+    <div class="seen">You'll see this in: Pandemic, Forbidden Island, Hanabi, Spirit Island.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">SPACE / click ▸ next &nbsp;·&nbsp; ← back &nbsp;·&nbsp; R restart</div>
+</div>
+
+<script>
+const S=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+
+// geometry: 3 x 2 village, zones 190 x 210
+const ZW=190,ZH=210;
+const ZDEF={A:{n:'Orchard',x:15,y:20},B:{n:'Mill',x:235,y:20},C:{n:'Farm',x:455,y:20},
+            D:{n:'Chapel',x:15,y:270},E:{n:'Market',x:235,y:270},F:{n:'Well',x:455,y:270}};
+const NB={A:['B','D'],B:['A','C','E'],C:['B','F'],D:['A','E'],E:['B','D','F'],F:['C','E']};
+const START={A:3,B:3,C:1,D:3,E:2,F:0};
+const HSLOT={ff:45,sc:95,bd:145};
+const HCOL={ff:'#e5484d',sc:'#3fbf6f',bd:'#3e8bfa'};
+const HLET={ff:'F',sc:'S',bd:'B'};
+const ctr=z=>[ZDEF[z].x+ZW/2,ZDEF[z].y+ZH/2];
+
+// build map
+const links=$('links'),zonesG=$('zones'),heroesG=$('heroes'),marks=$('marks');
+[['A','B'],['B','C'],['D','E'],['E','F'],['A','D'],['B','E'],['C','F']].forEach(([a,b])=>{
+  const [x1,y1]=ctr(a),[x2,y2]=ctr(b);el('line',{class:'link',x1,y1,x2,y2},links)});
+const ZEL={};
+for(const z in ZDEF){
+  const d=ZDEF[z],g=el('g',{class:'zone',transform:`translate(${d.x},${d.y})`},zonesG);
+  el('rect',{class:'zrect',width:ZW,height:ZH,rx:18},g);
+  const t=el('text',{class:'zname',x:ZW/2,y:36},g);t.textContent=d.n;
+  const lits=[];
+  [40,95,150].forEach(cx=>{
+    el('use',{href:'#flame',class:'slot',x:cx,y:98},g);
+    const u=el('use',{href:'#flame',class:'lit',x:cx,y:98,fill:'url(#fg)'},g);lits.push(u)});
+  const fb=el('g',{class:'fbicon',transform:'translate(150,10)'},g);
+  [[0,0],[16,0],[8,10],[-8,10],[24,10],[0,20],[16,20]].forEach(([x,y])=>el('rect',{x,y,width:15,height:9,rx:1.5,fill:'#8ab8ff',stroke:'#1d3d6e','stroke-width':1.5},fb));
+  const bn=el('g',{class:'burn'},g);el('rect',{width:ZW,height:ZH,rx:18},bn);
+  const bt=el('text',{x:ZW/2,y:112},bn);bt.textContent='BURNED OUT';
+  ZEL[z]={g,lits};
+}
+const HEL={};
+for(const h in HSLOT){const g=el('g',{class:'hero'},heroesG);el('circle',{r:21,fill:HCOL[h]},g);el('text',{y:1},g).textContent=HLET[h];HEL[h]=g}
+
+// title flames
+$('titleFlames').innerHTML=[0,1,2].map(()=>`<svg viewBox="-20 -28 40 56"><path d="M0,-24 C9,-12 17,-4 15,9 C13,19 6,24 0,24 C-6,24 -13,19 -15,9 C-17,-2 -7,-9 -5,-17 C-3,-9 2,-8 0,-24Z" fill="#ff7a1a"/></svg>`).join('');
+
+// chart
+(function(){
+  const c=$('chart'),base=410,top=60,max=6,sc=(base-top)/max,X0=80;
+  for(let v=0;v<=max;v++){const y=base-v*sc;el('line',{x1:X0,x2:740,y1:y,y2:y,stroke:'#4a362c','stroke-width':1},c);
+    el('text',{x:X0-14,y:y+7,'text-anchor':'end','font-size':20,style:'font-size:20px;fill:#d0b9a8'},c).textContent=v}
+  el('text',{x:20,y:40,style:'font-size:20px;font-weight:700;fill:#d0b9a8'},c).textContent='Fire per round';
+  const groups=[{l:'Round 1',x:130,v:[3,2,4],blk:1},{l:'Round 2',x:450,v:[3,2,5],blk:0}];
+  const cols=['#e5484d','#e0a030','#3fbf6f'],names=['Wind','Alone','Team'];
+  groups.forEach(g=>{g.v.forEach((v,i)=>{const x=g.x+i*84,h=v*sc;
+      el('rect',{class:'bar',x,y:base-h,width:66,height:h,rx:6,fill:cols[i],style:`transition-delay:${(i*250+(g.x>200?600:0))}ms`},c);
+      if(i===2&&g.blk){el('rect',{class:'bar',x,y:base-h-g.blk*sc,width:66,height:g.blk*sc,rx:6,fill:'none',stroke:'#3fbf6f','stroke-width':3,'stroke-dasharray':'6 5',style:'transition-delay:500ms'},c);
+        el('text',{x:x+33,y:base-h-g.blk*sc/2+7,'text-anchor':'middle',style:'font-size:18px;font-weight:700;fill:#9be8b8'},c).textContent='+1'}
+      el('text',{x:x+33,y:base-h-(i===2&&g.blk?g.blk*sc:0)-10,'text-anchor':'middle',style:'font-size:24px;font-weight:800'},c).textContent=(i===0?'+':'−')+v;
+      el('text',{x:x+33,y:base+28,'text-anchor':'middle',style:'font-size:18px;fill:#d0b9a8'},c).textContent=names[i];});
+    el('text',{x:g.x+117,y:base+58,'text-anchor':'middle',style:'font-size:22px;font-weight:700'},c).textContent=g.l});
+  const ty=base-3*sc;el('line',{x1:X0,x2:740,y1:ty,y2:ty,stroke:'#ffd23f','stroke-width':3,'stroke-dasharray':'10 7'},c);
+  el('line',{x1:440,x2:480,y1:34,y2:34,stroke:'#ffd23f','stroke-width':3,'stroke-dasharray':'10 7'},c);el('text',{x:490,y:41,style:'font-size:20px;font-weight:700;fill:#ffd23f'},c).textContent='the threat: 3 a round';
+})();
+
+// state
+let Z,H,deck,token=0,cur=0;
+const later=(fn,ms,instant)=>{if(instant){fn();return}const t=token;setTimeout(()=>{if(t===token)fn()},ms)};
+function render(){
+  let fire=0,burned=0;
+  for(const z in Z){const s=Z[z],e=ZEL[z];
+    e.lits.forEach((u,i)=>u.classList.toggle('on',i<s.l));
+    e.g.classList.toggle('burned',s.b);e.g.classList.toggle('fb',s.fb);e.g.classList.toggle('hot',s.l>=3&&!s.b);
+    fire+=s.l;if(s.b)burned++}
+  for(const h in H){const p=H[h],g=HEL[h];g.classList.toggle('on',p.on);
+    if(p.z){const d=ZDEF[p.z];g.style.transform=`translate(${d.x+HSLOT[h]}px,${d.y+172}px)`}}
+  for(let i=0;i<3;i++){$('b'+i).classList.toggle('on',i<burned);$('b'+i).textContent=i<burned?'✕':''}
+  $('fireNum').textContent=fire;$('fireBar').firstElementChild.style.width=(fire/18*100)+'%';
+  $('deckNum').textContent=deck+' left';
+}
+function flare(z){const g=ZEL[z].g;g.classList.remove('flare');void g.getBBox();g.classList.add('flare')}
+function mark(a,b,blocked){
+  const [x1,y1]=ctr(a),[x2,y2]=ctr(b),mx=(x1+x2)/2,my=(y1+y2)/2,ang=Math.atan2(y2-y1,x2-x1)*180/Math.PI;
+  const g=el('g',{transform:`translate(${mx},${my})`},marks),i=el('g',{class:'mk'},g);
+  el('circle',{r:15,fill:blocked?'#1d3d6e':'#ff5a1a',stroke:'#fff','stroke-width':2.5},i);
+  if(blocked){el('path',{d:'M-6,-6L6,6M6,-6L-6,6',stroke:'#fff','stroke-width':3.5,'stroke-linecap':'round'},i)}
+  else el('path',{d:'M-6,-6 L7,0 L-6,6Z',fill:'#fff',transform:`rotate(${ang})`},i);
+}
+function drawWind(name,instant){
+  const c=$('wcard');c.classList.remove('up');$('wz').textContent=name;
+  if(instant)c.classList.add('up');else{void c.offsetWidth;setTimeout(()=>c.classList.add('up'),60)}
+  deck--;
+}
+function show(id,on=true){$(id).classList.toggle('on',on)}
+function tag(txt,cls){const t=$('tag');t.textContent=txt;t.className='panel on '+cls}
+function setHeader(t,p){const h=$('header');h.innerHTML=`<h1 class="anim">${t}</h1><p class="anim" style="animation-delay:.12s">${p}</p>`}
+function startState(){Z={};for(const z in START)Z[z]={l:START[z],b:false,fb:false};
+  H={ff:{z:'E',on:false},sc:{z:'C',on:false},bd:{z:'F',on:false}};deck=6}
+const INFOS=['setup','gameturn','heroesInfo','mathInfo','turn','planInfo','r2Info'];
+function info(id){INFOS.forEach(i=>show(i,i===id))}
+function reset(){
+  startState();marks.innerHTML='';
+  ['title','mapWrap','meter','win','insight','end','tag','plan'].concat(INFOS).forEach(i=>show(i,false));
+  for(const z in ZEL)ZEL[z].g.classList.remove('flare');
+  $('wcard').classList.remove('up');render();
+}
+
+const steps=[
+ ()=>{show('title');
+   setHeader('Cooperative Play','Everyone against the game. Today: a village, a spreading wildfire, and three heroes.')},
+ ()=>{show('title',false);show('mapWrap');info('setup');render();
+   setHeader('The setup: six zones and a fire','Each zone burns at 0 to 3 flames. Lose if 3 zones burn out. Win if you outlast the wind deck.')},
+ ()=>{show('meter');info('gameturn');
+   setHeader('The game takes turns too','The threat track: after every hero, the game flips a wind card and the fire grows. Past 3, a zone flares.')},
+ ()=>{for(const h in H)H[h].on=true;info('heroesInfo');render();
+   setHeader('Three heroes, three different tools','Each hero gets 2 actions: move next door, or put out 1 fire. Each also breaks one rule.')},
+ (instant)=>{tag('WHAT IF: one hero alone','whatif');info('mathInfo');H.ff.z='D';render();
+   later(()=>{Z.D.l=1;render()},900,instant);
+   setHeader('What if one hero tries to carry it?','The Firefighter walks to the Chapel and drops it from 3 to 1. A good turn. Now do the math for a whole round.')},
+ (instant)=>{info('turn');drawWind('Mill',instant);
+   $('turnText').innerHTML='<p><b>Mill</b> 3 → flares!</p><p>Spreads to Orchard, Farm, Market.</p><p><b>Orchard</b> 3 → flares too: Chapel +1.</p><p class="red"><b style="color:#ff7a5a">Burned out: 2 of 3.</b> Fire: 13.</p>';
+   later(()=>{Z.B.b=true;flare('B');mark('B','A');mark('B','C');mark('B','E');Z.C.l=2;Z.E.l=3;render()},900,instant);
+   later(()=>{Z.A.b=true;flare('A');mark('A','D');Z.D.l=2;render()},1700,instant);render();
+   setHeader("The game's turn: one card, two zones lost","Wind hits the Mill at 3. It flares into the Orchard, also at 3, which flares too. One card, and the village is one step from losing.")},
+ ()=>{startState();for(const h in H)H[h].on=true;marks.innerHTML='';for(const z in ZEL)ZEL[z].g.classList.remove('flare');
+   $('wcard').classList.remove('up');render();tag('REWIND · TEAM PLAN','team');info('planInfo');show('plan');
+   setHeader('Rewind. Same fire, same deck. Now plan together.','Everyone points at the map before anyone moves. Three hot zones, three heroes, one job each.')},
+ (instant)=>{show('plan',false);info('turn');H.ff.z='B';render();
+   $('turnText').innerHTML='<p><b style="color:#ff8a7a">Firefighter</b>: move to Mill, put out 2. Mill 3 → 1.</p><p>Wind: Mill +1, now 2. No flare.</p><p>Fire: 12 → 11.</p>';
+   later(()=>{Z.B.l=1;render()},900,instant);
+   later(()=>{drawWind('Mill',instant);render()},1300,instant);
+   later(()=>{Z.B.l=2;render()},2100,instant);
+   setHeader('Turn 1: Firefighter, then the wind','He walks to the Mill and drops it from 3 to 1. The wind adds 1, so the Mill sits at 2, safely under the line.')},
+ (instant)=>{H.sc.z='A';render();
+   $('turnText').innerHTML='<p><b style="color:#7cf0aa">Scout</b>: free move to Orchard, put out 1, put out 1. Orchard 3 → 1.</p><p>Wind: Market +1, now 3.</p><p>Fire: 11 → 10.</p>';
+   later(()=>{Z.A.l=1;render()},900,instant);
+   later(()=>{drawWind('Market',instant);render()},1300,instant);
+   later(()=>{Z.E.l=3;render()},2100,instant);
+   setHeader('Turn 2: Scout, then the wind','A free jump across the map, then two actions on the Orchard: 3 down to 1. The wind pushes the Market up to 3.')},
+ (instant)=>{H.bd.z='E';render();
+   $('turnText').innerHTML='<p><b style="color:#8ab8ff">Builder</b>: move to Market, build a firebreak.</p><p>Wind: Chapel 3 → flares! Orchard +1. Market: <b>blocked</b>.</p><p>Burned out: 1 of 3. Fire: 11.</p>';
+   later(()=>{Z.E.fb=true;render()},900,instant);
+   later(()=>{drawWind('Chapel',instant);render()},1200,instant);
+   later(()=>{Z.D.b=true;flare('D');mark('D','A');mark('D','E',true);Z.A.l=2;render()},1900,instant);
+   setHeader('Turn 3: Builder, then the flare they planned for','Nobody could reach the Chapel, so it flares. The firebreak stops it at the Market. One zone lost, not a chain.')},
+ (instant)=>{info('r2Info');marks.innerHTML='';
+   later(()=>{H.ff.z='E';Z.E.l=1;Z.C.l=2;deck-=1;render()},200,instant);
+   later(()=>{H.sc.z='B';Z.A.l=1;Z.B.l=1;Z.F.l=1;deck-=1;render()},900,instant);
+   later(()=>{H.bd.z='F';Z.F.l=0;Z.A.l=2;deck-=1;render()},1600,instant);
+   setHeader('Round 2: the fire is held','The team removes 5 and the wind adds 3. Fire on the map drops from 11 to 9, and nothing new burns out.')},
+ ()=>{show('win');tag('THE VILLAGE HOLDS','won');
+   setHeader('The wind deck is empty. Everyone wins.','One zone lost out of three allowed. A shared win, and a near miss the whole table felt.')},
+ ()=>{show('insight');show('tag',false);
+   setHeader('The insight: the gap forces teamwork','The wind adds 3 fire a round. One hero removes 2. Only the combined team gets above the line.')},
+ ()=>{show('end');
+   setHeader('What designers take from this','Build the opponent into the rules, then make sure nobody can beat it alone.')}
+];
+
+const dotsEl=$('dots');
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

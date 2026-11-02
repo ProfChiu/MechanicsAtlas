@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Trick-Taking</title>
+<style>
+:root{--bg:#0f1a17;--felt:#1d5b45;--felt2:#123d2f;--rim:#5a3a22;--panel:#1c2a26;--line:#355247;--ink:#f4f1e8;--muted:#b3c2b9;
+  --gold:#ffcf5a;--red:#ff5d5d;--leaf:#3fa34d;--wave:#2f80ed;--flame:#e8542f;--stone:#7d8391;--cream:#fbf6ea}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 20%,#1d302a 0%,#0b1411 65%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+#header{position:absolute;left:40px;right:40px;top:16px;z-index:40}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:36px;font-weight:600;letter-spacing:.3px}
+#header p{margin:5px 0 0;font-size:20px;line-height:1.3;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* table */
+#felt{left:24px;top:124px;width:792px;height:584px;border-radius:120px;
+  background:radial-gradient(ellipse at 50% 45%,var(--felt) 0%,var(--felt2) 80%);
+  border:10px solid var(--rim);box-shadow:inset 0 0 60px rgba(0,0,0,.55),0 14px 40px rgba(0,0,0,.6),0 0 0 3px #2b1b10}
+#chip{left:358px;top:360px;width:124px;height:30px;border-radius:15px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.25);
+  font-size:18px;font-weight:800;text-align:center;line-height:28px;z-index:3}
+
+.seat{position:absolute;width:0;height:0;z-index:20}
+.av{position:absolute;left:-30px;top:-30px;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:#fff;border:3px solid rgba(255,255,255,.85);
+  box-shadow:0 4px 10px rgba(0,0,0,.5);transition:box-shadow .4s,transform .4s}
+.seat.lead .av{box-shadow:0 0 0 5px var(--gold),0 0 22px var(--gold);transform:scale(1.08)}
+.nm{position:absolute;white-space:nowrap;font-size:18px;font-weight:800;text-shadow:0 2px 4px #000}
+.tk{position:absolute;left:18px;top:-40px;white-space:nowrap;background:var(--gold);color:#2a1d00;font-size:16px;font-weight:900;
+  border-radius:12px;padding:1px 8px;opacity:0;transform:scale(.4);transition:opacity .4s,transform .4s cubic-bezier(.3,1.7,.5,1)}
+.tk.on{opacity:1;transform:none}
+.void{position:absolute;white-space:nowrap;background:#3a1416;border:2px solid var(--red);color:#ffd2d2;font-size:16px;font-weight:900;
+  border-radius:12px;padding:0 8px;opacity:0;transform:scale(.4);transition:opacity .4s,transform .5s cubic-bezier(.3,1.7,.5,1)}
+.void.on{opacity:1;transform:none}
+
+/* cards */
+.card{position:absolute;width:66px;height:92px;left:420px;top:375px;opacity:0;
+  transition:left .7s cubic-bezier(.5,0,.3,1),top .7s cubic-bezier(.5,0,.3,1),transform .7s cubic-bezier(.5,0,.3,1),opacity .5s,box-shadow .4s}
+.card .face,.card .back{position:absolute;inset:0;border-radius:9px;transition:opacity .35s}
+.card .face{background:linear-gradient(160deg,#fffdf6,var(--cream));border:2px solid #d9cfb6;box-shadow:0 3px 8px rgba(0,0,0,.45)}
+.card .back{opacity:0;border:2px solid #f2e6c9;box-shadow:0 2px 6px rgba(0,0,0,.5);
+  background:repeating-linear-gradient(45deg,#7a2333 0 6px,#8f2c3e 6px 12px)}
+.card .back::after{content:"";position:absolute;inset:7px;border:2px solid rgba(255,220,170,.55);border-radius:5px}
+.card.down .face{opacity:0}.card.down .back{opacity:1}
+.card .r{position:absolute;font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;line-height:1}
+.card .r.tl{left:6px;top:4px}.card .r.br{right:6px;bottom:4px}
+.card svg.pic{position:absolute;left:15px;top:25px;width:36px;height:36px}
+.card.L{color:var(--leaf)}.card.W{color:var(--wave)}.card.F{color:var(--flame)}.card.S{color:var(--stone)}
+.card.F .face{background:linear-gradient(160deg,#fff8ec,#ffe9d2);border-color:#f0b48f}
+.card.win .face{box-shadow:0 0 0 4px var(--gold),0 0 30px var(--gold)}
+.card.disc .face{filter:saturate(.35) brightness(.8)}
+.tag{position:absolute;left:50%;top:-30px;transform:translateX(-50%);white-space:nowrap;font-size:16px;font-weight:900;
+  padding:1px 8px;border-radius:10px;opacity:0;transition:opacity .4s}
+.card.disc .tag.d{opacity:1;background:#2c2c2c;color:#ddd;border:1px solid #888}
+.card.win .tag.w{opacity:1;background:var(--gold);color:#2a1d00}
+.card.trumped .tag.t{opacity:1;background:var(--flame);color:#fff}
+
+#burst{left:560px;top:250px;z-index:30;font-family:"Fredoka",sans-serif;font-size:46px;font-weight:700;color:#fff;
+  background:radial-gradient(circle,#ff8a3d,#d8361a);padding:4px 22px;border-radius:40px;transform:rotate(-8deg);
+  box-shadow:0 0 0 4px #ffd27a,0 0 40px #ff7a2f}
+#burst.on{animation:pop .7s cubic-bezier(.3,1.8,.5,1) .5s both}
+@keyframes pop{from{opacity:0;transform:rotate(-8deg) scale(.2)}to{opacity:1;transform:rotate(-8deg) scale(1)}}
+
+/* right column */
+.box{background:var(--panel);border:2px solid var(--line);border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+#suits{left:836px;top:124px;width:420px;height:132px;padding:12px 16px}
+#suits h3,#rules h3{margin:0 0 8px;font-family:"Fredoka",sans-serif;font-size:22px;font-weight:600;color:var(--gold)}
+#suits .row{display:flex;justify-content:space-between}
+.sx{display:flex;flex-direction:column;align-items:center;font-size:18px;font-weight:800;width:92px;border-radius:12px;padding:4px 0}
+.sx svg{width:38px;height:38px}
+.sx.trump{background:rgba(232,84,47,.18);box-shadow:0 0 0 2px var(--flame)}
+.sx.L{color:var(--leaf)}.sx.W{color:#5d9df5}.sx.F{color:#ff7a52}.sx.S{color:#a3a9b6}
+#rules{left:836px;top:268px;width:420px;height:318px;padding:12px 16px}
+.rule{display:flex;gap:10px;align-items:flex-start;font-size:19px;line-height:1.28;padding:6px 8px;border-radius:10px;margin-bottom:4px;
+  transition:background .4s,box-shadow .4s}
+.rule b.n{flex:none;width:28px;height:28px;border-radius:50%;background:#2f463e;text-align:center;line-height:28px;font-size:17px}
+.rule.hot{background:rgba(255,207,90,.16);box-shadow:inset 0 0 0 2px var(--gold)}
+.rule.hot b.n{background:var(--gold);color:#2a1d00}
+#status{left:836px;top:598px;width:420px;height:110px;padding:12px 18px}
+#status .t{font-family:"Fredoka",sans-serif;font-size:22px;color:var(--gold)}
+#status .s{font-size:20px;margin-top:4px;line-height:1.3}
+
+/* title */
+#title{inset:0;z-index:35;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:radial-gradient(circle at 50% 55%,#1d5b45 0%,#0b1411 70%)}
+#title .big{font-family:"Cinzel",serif;font-size:110px;font-weight:700;margin:0;color:var(--cream);text-shadow:0 6px 24px rgba(0,0,0,.6)}
+#title h2{margin:0;font-size:32px;font-weight:700;color:var(--gold)}
+#title .fan{position:relative;width:360px;height:170px;margin-top:20px}
+#title .fan .card{opacity:1;transform:translate(-50%,-50%) scale(1.5)}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite;margin-top:14px}
+@keyframes blink{50%{opacity:.35}}
+@keyframes sway{0%,100%{margin-top:0}50%{margin-top:-12px}}
+
+/* insight */
+#know{left:24px;top:124px;width:1232px;height:584px;z-index:36;padding:18px 22px;background:#15211d;border:2px solid var(--gold);border-radius:22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#know h2{margin:0;font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--gold)}
+.kcol{position:absolute;top:66px}
+.who{display:flex;align-items:center;gap:12px;font-size:21px;font-weight:800}
+.who .av{position:relative;left:auto;top:auto;width:48px;height:48px;font-size:22px;flex:none}
+.sil{display:flex;gap:8px;margin:12px 0 10px}
+.sil i{width:44px;height:62px;border:2px dashed #7f9a8f;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  font-style:normal;font-size:22px;color:#7f9a8f;font-weight:800}
+.suitline{display:flex;gap:10px}
+.sv{position:relative;width:60px;height:52px;border-radius:10px;background:#22322d;display:flex;align-items:center;justify-content:center}
+.sv svg{width:34px;height:34px}
+.sv.L{color:var(--leaf)}.sv.W{color:#5d9df5}.sv.F{color:#ff7a52}.sv.S{color:#a3a9b6}
+.sv em{position:absolute;right:3px;bottom:0;font-style:normal;font-size:16px;color:#9bb0a7;font-weight:900}
+.sv.no{background:#3a1416;box-shadow:0 0 0 2px var(--red)}
+.sv.no::before,.sv.no::after{content:"";position:absolute;left:6px;right:6px;top:24px;height:5px;background:var(--red);border-radius:3px;transform:rotate(40deg)}
+.sv.no::after{transform:rotate(-40deg)}
+.knote{font-size:20px;line-height:1.3;margin-top:10px;color:var(--ink)}
+.knote b{color:var(--gold)}
+#track{left:620px;width:590px}
+#track h3{margin:0 0 10px;font-size:22px;font-weight:800}
+.trow{display:flex;gap:5px;margin-bottom:6px;align-items:center}
+.trow .lab{width:46px;height:46px;display:flex;align-items:center;justify-content:center}
+.trow .lab svg{width:32px;height:32px}
+.tc{position:relative;width:52px;height:46px;border-radius:8px;background:#22322d;border:2px solid #3a5249;display:flex;align-items:center;justify-content:center;
+  font-family:"Fredoka",sans-serif;font-size:22px;font-weight:600;color:#e8efe9}
+.tc.gone{background:#0d1512;color:#5a6b64;border-style:dashed}
+.tc.gone::after{content:"";position:absolute;left:8px;right:8px;top:21px;height:3px;background:#6c7d76;transform:rotate(-30deg)}
+.tc.hi{border:3px solid var(--red);border-style:solid;color:#d98b8b}
+.tc.mine{border:3px solid var(--gold);background:#3a3216;color:var(--gold)}
+.legend{display:flex;gap:18px;font-size:18px;color:var(--muted);margin-top:8px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:18px;height:18px;border-radius:4px}
+#kfoot{position:absolute;left:22px;right:22px;bottom:16px;font-size:22px;font-weight:800;text-align:center;padding:10px;border-radius:14px;background:rgba(255,207,90,.12);color:var(--cream)}
+
+/* end */
+#end{inset:0;background:rgba(6,12,10,.86);display:flex;align-items:center;justify-content:center;z-index:45}
+#end .card2{background:#1a2a24;border:2px solid #3f6153;border-radius:24px;padding:34px 48px;width:960px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 14px;font-family:"Fredoka",sans-serif;font-size:38px;font-weight:600}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted)}
+
+#dots{position:absolute;bottom:3px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:50}
+#dots i{width:9px;height:9px;border-radius:50%;background:#2f463e;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="felt" class="panel"></div>
+  <div id="chip" class="panel"></div>
+  <div id="seats"></div>
+  <div id="burst" class="panel">TRUMP!</div>
+  <div id="dyn"></div>
+
+  <div id="suits" class="panel box">
+    <h3>Four suits, ranks 1 to 9</h3>
+    <div class="row" id="suitrow"></div>
+  </div>
+  <div id="rules" class="panel box">
+    <h3>The rules of a trick</h3>
+    <div class="rule" data-r="1"><b class="n">1</b><span><b>Lead.</b> The leader plays any card. Its suit is the <i>led suit</i>.</span></div>
+    <div class="rule" data-r="2"><b class="n">2</b><span><b>Follow suit</b> if you can. If you cannot, play any card.</span></div>
+    <div class="rule" data-r="3"><b class="n">3</b><span><b>Highest card of the led suit</b> wins the trick. The winner leads next.</span></div>
+    <div class="rule" data-r="4"><b class="n">4</b><span><b>Trump beats everything.</b> If any flames are played, the highest flame wins.</span></div>
+  </div>
+  <div id="status" class="panel box"><div class="t"></div><div class="s"></div></div>
+
+  <div id="title" class="panel">
+    <p class="big">Trick-Taking</p>
+    <h2>Follow suit, win the trick, count the cards.</h2>
+    <div class="fan" id="fan"></div>
+    <div class="press">click or press → to begin</div>
+  </div>
+
+  <div id="know" class="panel">
+    <h2>What we now know, after three tricks</h2>
+    <div class="kcol" style="left:22px;width:560px">
+      <div class="who"><div class="av" style="background:var(--avE)">E</div>Eli (East) could not follow waves in trick 2.</div>
+      <div class="sil" id="silE"></div>
+      <div class="suitline" id="svE"></div>
+      <div class="knote">Eli has <b>no waves at all</b>. If anyone leads waves, Eli can trump again.</div>
+      <div class="who" style="margin-top:26px"><div class="av" style="background:var(--avW)">W</div>Wen (West) could not follow stones in trick 3.</div>
+      <div class="suitline" id="svW" style="margin-top:10px"></div>
+    </div>
+    <div class="kcol" id="track">
+      <h3>Played-cards tracker</h3>
+      <div id="tgrid"></div>
+      <div class="legend"><span><i style="background:#0d1512;border:2px dashed #6c7d76"></i>played</span>
+        <span><i style="border:3px solid var(--red)"></i>high card gone</span><span><i style="background:#3a3216;border:3px solid var(--gold)"></i>in your hand</span></div>
+      <div class="knote">The 8 of leaves and the 9 and 8 of stones are gone. Your <b>9 of waves</b> is the top wave, but Eli can still trump it.</div>
+    </div>
+    <div id="kfoot">One card that does not follow suit tells the whole table something true. Good players remember it.</div>
+  </div>
+
+  <div id="end" class="panel"><div class="card2">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li><b>Follow suit is one rule that creates deduction.</b> Every time a player cannot follow, the table learns what is missing from their hand.</li>
+      <li><b>Trump creates surprise.</b> A 2 of flames can beat a 9. Players save trumps for the moment it hurts most.</li>
+      <li><b>Tracking played cards is the skill.</b> Knowing which high cards are gone tells you when your cards are safe.</li>
+    </ul>
+    <div class="see">You'll see this in: Spades, Hearts, Bridge, The Crew, Skull King.</div>
+  </div></div>
+
+  <div id="dots"></div>
+</div>
+
+<script>
+const S=document.getElementById('stage'),DYN=document.getElementById('dyn'),dotsEl=document.getElementById('dots');
+const $=id=>document.getElementById(id);
+let cur=0,token=0;
+
+const ICON={
+ L:'<path fill="currentColor" d="M4 20C4 10 10 4 21 3c0 11-6 17-17 17z"/><path d="M5 19L15 9" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>',
+ W:'<path d="M2 8c3-3 5-3 7 0s4 3 7 0 4-3 6 0M2 13c3-3 5-3 7 0s4 3 7 0 4-3 6 0M2 18c3-3 5-3 7 0s4 3 7 0 4-3 6 0" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round"/>',
+ F:'<path fill="currentColor" d="M12 1c1 4 7 7 7 13a7 7 0 0 1-14 0c0-3 2-6 3-7 0 2 1 4 3 4 0-4-2-6 1-10z"/><path fill="#ffd27a" d="M12 12c1 2 3 3 3 5a3 3 0 0 1-6 0c0-2 2-3 3-5z"/>',
+ S:'<path fill="currentColor" d="M3 15l3-7 6-4 7 4 2 8-6 5H8z"/><path d="M8 10l4-2 3 3" stroke="rgba(255,255,255,.45)" stroke-width="1.6" fill="none"/>'
+};
+const SNAME={L:'leaves',W:'waves',F:'flames',S:'stones'};
+const svg=s=>`<svg viewBox="0 0 24 24">${ICON[s]}</svg>`;
+document.documentElement.style.setProperty('--avN','linear-gradient(135deg,#b46cff,#6b2fb3)');
+document.documentElement.style.setProperty('--avE','linear-gradient(135deg,#ff9f43,#c4561a)');
+document.documentElement.style.setProperty('--avS','linear-gradient(135deg,#4cc3ff,#1f6fb8)');
+document.documentElement.style.setProperty('--avW','linear-gradient(135deg,#ff6fa5,#b02c63)');
+
+/* the full 36-card deal: every play below is legal under these hands */
+const HANDS={
+ s:['L5','L2','W9','W6','W3','S4','S2','F9','F7'],
+ w:['L9','L7','L3','L1','W4','W2','W1','F5','F3'],
+ n:['L8','L4','W8','W7','W5','S9','S7','S6','F1'],
+ e:['L6','S8','S5','S3','S1','F8','F6','F4','F2']};
+const SEAT={
+ n:{name:'Nia (North)',ch:'N',x:300,y:170,slot:[420,262],nm:'left:-170px;top:-12px',vd:'left:-160px;top:14px'},
+ e:{name:'Eli (East)',ch:'E',x:744,y:300,slot:[534,375],nm:'left:-48px;top:34px',vd:'left:-44px;top:60px'},
+ s:{name:'Sam (you)',ch:'S',x:88,y:630,slot:[420,488],nm:'left:-46px;top:34px',vd:'left:40px;top:-14px'},
+ w:{name:'Wen (West)',ch:'W',x:96,y:300,slot:[306,375],nm:'left:-52px;top:34px',vd:'left:-46px;top:60px'}};
+const LAY={
+ s:(i,n)=>[420+(i-(n-1)/2)*62,636,1],
+ n:(i,n)=>[440+(i-(n-1)/2)*17,170,.58],
+ w:(i,n)=>[96+(i-(n-1)/2)*11,425,.58],
+ e:(i,n)=>[744+(i-(n-1)/2)*11,425,.58]};
+const ORD='LWSF';
+const sortIds=a=>a.sort((x,y)=>ORD.indexOf(x[0])-ORD.indexOf(y[0])||y.slice(1)-x.slice(1));
+
+let C={},hand={},trick=[],tricks={};
+
+function place(c){
+  const e=c.el;e.style.transitionDelay=(c.delay||0)+'ms';c.delay=0;
+  e.style.left=c.x+'px';e.style.top=c.y+'px';e.style.zIndex=c.z;e.style.opacity=c.op;
+  e.style.transform=`translate(-50%,-50%) rotate(${c.rot}deg) scale(${c.s})`;
+  e.classList.toggle('down',c.down);
+}
+function relayout(seat,stagger){
+  const ids=hand[seat];ids.forEach((id,i)=>{const c=C[id],[x,y,s]=LAY[seat](i,ids.length);
+    Object.assign(c,{x,y,s,rot:0,z:2+i,op:1});if(stagger)c.delay=stagger(i);place(c)});
+}
+function cardHTML(id){
+  const s=id[0],r=id.slice(1);
+  return `<div class="face"><b class="r tl">${r}</b><svg class="pic" viewBox="0 0 24 24">${ICON[s]}</svg><b class="r br">${r}</b></div><div class="back"></div>
+  <span class="tag d">discard</span><span class="tag w">wins</span><span class="tag t">trumped</span>`;
+}
+function play(seat,id,cls){
+  hand[seat]=hand[seat].filter(x=>x!==id);
+  const c=C[id],[x,y]=SEAT[seat].slot;
+  Object.assign(c,{x,y,s:1,rot:cls==='disc'?22:({n:-3,e:4,s:2,w:-5}[seat]),z:10+trick.length,down:false,op:1});
+  if(cls)c.el.classList.add(cls);
+  trick.push(id);place(c);relayout(seat);
+}
+function win(seat,id){
+  C[id].el.classList.add('win');tricks[seat]++;
+  const t=$('tk-'+seat);t.textContent=tricks[seat]+(tricks[seat]>1?' tricks':' trick');t.classList.add('on');
+}
+function collect(seat){
+  trick.forEach(id=>{const c=C[id];Object.assign(c,{x:SEAT[seat].x,y:SEAT[seat].y,s:.3,op:0,rot:0});c.el.classList.remove('win','disc','trumped');place(c)});
+  trick=[];
+}
+function lead(seat){Object.keys(SEAT).forEach(k=>$('seat-'+k).classList.toggle('lead',k===seat))}
+function rule(n){document.querySelectorAll('.rule').forEach(r=>r.classList.toggle('hot',String(n).includes(r.dataset.r)))}
+function status(t,s){$('status').querySelector('.t').textContent=t;$('status').querySelector('.s').innerHTML=s}
+function chip(t){$('chip').textContent=t;$('chip').classList.toggle('on',!!t)}
+function later(fn,ms,instant){if(instant)return fn();const k=token;setTimeout(()=>{if(k===token)fn()},ms)}
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+
+/* static builds */
+$('suitrow').innerHTML=['L','W','S','F'].map(s=>`<div class="sx ${s}${s==='F'?' trump':''}">${svg(s)}${s==='F'?'flames<br>TRUMP':SNAME[s]}</div>`).join('');
+$('fan').innerHTML=['L','W','S','F'].map((s,i)=>`<div class="card ${s}" style="left:${90+i*60}px;top:90px;transform:translate(-50%,-50%) rotate(${-18+i*12}deg) scale(1.5);animation:sway 2.4s ease-in-out ${i*.2}s infinite">${cardHTML(s+'9')}</div>`).join('');
+$('silE').innerHTML='<i>?</i>'.repeat(6);
+const sv=no=>['L','W','S','F'].map(s=>`<div class="sv ${s}${s===no?' no':''}">${svg(s)}<em>${s===no?'':'?'}</em></div>`).join('');
+$('svE').innerHTML=sv('W');$('svW').innerHTML=sv('S');
+const PLAYED=['L5','L3','L8','L6','W7','F2','W3','W4','S8','S2','L1','S9'];
+$('tgrid').innerHTML=['L','W','S','F'].map(s=>`<div class="trow"><div class="lab sx ${s}" style="width:46px;padding:0">${svg(s)}</div>`+
+  [1,2,3,4,5,6,7,8,9].map(r=>{const id=s+r,g=PLAYED.includes(id);
+    return `<div class="tc${g?' gone':''}${g&&r>=8?' hi':''}${id==='W9'?' mine':''}">${r}</div>`}).join('')+'</div>').join('');
+$('seats').innerHTML=Object.entries(SEAT).map(([k,v])=>`<div class="seat panel" id="seat-${k}" style="left:${v.x}px;top:${v.y}px">
+  <div class="av" style="background:var(--av${v.ch})">${v.ch}</div><div class="nm" style="${v.nm}">${v.name}</div>
+  <div class="tk" id="tk-${k}"></div><div class="void" id="vd-${k}" style="${v.vd}"></div></div>`).join('');
+
+function reset(){
+  DYN.innerHTML='';C={};trick=[];tricks={n:0,e:0,s:0,w:0};
+  for(const k in HANDS){hand[k]=sortIds(HANDS[k].slice());
+    hand[k].forEach(id=>{const el=document.createElement('div');el.className='card '+id[0];el.innerHTML=cardHTML(id);DYN.appendChild(el);
+      C[id]={el,x:420,y:375,s:.5,rot:0,z:1,op:0,down:k!=='s'};place(C[id])})}
+  ['title','felt','chip','burst','suits','rules','status','know','end'].forEach(id=>$(id).classList.remove('on'));
+  document.querySelectorAll('.seat,.tk,.void').forEach(e=>e.classList.remove('on','lead'));
+  rule('');setHeader('','');
+}
+
+const steps=[
+ ()=>{$('title').classList.add('on');
+   setHeader('A card game built on one rule','Four players, four suits, and a question every round: who wins this trick?')},
+ ()=>{$('title').classList.remove('on');$('felt').classList.add('on');$('suits').classList.add('on');
+   document.querySelectorAll('.seat').forEach(e=>e.classList.add('on'));
+   Object.keys(hand).forEach((k,j)=>relayout(k,i=>300+i*70+j*18));
+   setHeader('The table','Four players sit North, East, South and West. We are Sam: our hand is face up, the others stay hidden.')},
+ ()=>{$('rules').classList.add('on');$('status').classList.add('on');rule('1234');
+   status('This hand','Flames are trump. Each player holds 9 cards.');
+   setHeader('The rules','Four rules decide every trick. Flames are the trump suit for this hand.')},
+ // trick 1
+ ()=>{rule('1');lead('s');play('s','L5');chip('Led: leaves');
+   status('Trick 1','Sam leads. Led suit: <b>leaves</b>.');
+   setHeader('Trick 1: Sam leads','The leader may play any card. Sam plays the 5 of leaves, so leaves is the led suit.')},
+ (instant)=>{rule('2');play('w','L3');later(()=>play('n','L8'),600,instant);later(()=>play('e','L6'),1200,instant);
+   status('Trick 1','West, North and East all hold leaves.');
+   setHeader('Everyone follows suit','Play goes clockwise. West, North and East all have leaves, so each of them must play a leaf.')},
+ ()=>{rule('3');win('n','L8');
+   status('Trick 1: North wins','8 of leaves is the highest leaf.');
+   setHeader('Highest card of the led suit wins','The 8 of leaves beats the 6, 5 and 3. Nia (North) takes the trick and leads next.')},
+ // trick 2
+ (instant)=>{rule('1');collect('n');lead('n');chip('');
+   later(()=>{play('n','W7');chip('Led: waves')},700,instant);
+   status('Trick 2','Nia leads. Led suit: <b>waves</b>.');
+   setHeader('Trick 2: Nia leads waves','Nia plays the 7 of waves. Eli (East) is next and must follow with a wave if he can.')},
+ ()=>{rule('24');play('e','F2','trumped');$('burst').classList.add('on');
+   status('Trick 2','Eli has no waves. He plays a <b>trump</b>.');
+   setHeader('Eli has no waves, so he trumps!','A player who cannot follow may play any card. Eli plays the 2 of flames, and flames are trump.')},
+ (instant)=>{rule('4');$('burst').classList.remove('on');play('s','W3');later(()=>play('w','W4'),600,instant);
+   later(()=>{win('e','F2');C.F2.el.classList.remove('trumped');$('vd-e').textContent='✕ no waves';$('vd-e').classList.add('on')},1300,instant);
+   status('Trick 2: East wins','A 2 of trump beats every wave.');
+   setHeader('A tiny trump beats the big cards','Sam and Wen must still follow waves. The 2 of flames beats them all. And now everyone knows: Eli has no waves.')},
+ // trick 3
+ (instant)=>{rule('1');collect('e');lead('e');chip('');
+   later(()=>{play('e','S8');chip('Led: stones')},700,instant);later(()=>play('s','S2'),1300,instant);
+   status('Trick 3','Eli leads. Led suit: <b>stones</b>.');
+   setHeader('Trick 3: Eli leads stones','Eli plays the 8 of stones. Sam holds stones, so Sam must follow. He plays his low 2.')},
+ (instant)=>{rule('2');play('w','L1','disc');$('vd-w').textContent='✕ no stones';$('vd-w').classList.add('on');
+   later(()=>play('n','S9'),900,instant);
+   status('Trick 3','Wen cannot follow: a <b>discard</b>.');
+   setHeader('Wen cannot follow: a discard','Wen has no stones. She could trump, but she saves her flames and throws off the 1 of leaves. A discard can never win.')},
+ ()=>{rule('3');win('n','S9');
+   status('Trick 3: North wins','9 of stones is the highest stone.');
+   setHeader('Nia wins trick 3','No trump was played, so the highest stone wins. Nia\'s 9 of stones takes it.')},
+ ()=>{collect('n');lead('n');chip('');rule('');$('know').classList.add('on');
+   setHeader('The insight: every card tells a story','Watch for the moment a player cannot follow suit. From then on, everyone knows something about that hand.')},
+ ()=>{$('end').classList.add('on');
+   setHeader('Recap','One rule, follow suit, turns a card game into a game of memory and deduction.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Engine Building</title>
+<style>
+:root{--bg:#17110c;--panel:#2a1f16;--panel2:#352719;--line:#5a4430;--ink:#f6ead0;--muted:#c4ae8c;
+  --brass:#d9a648;--brassD:#8a6424;--copper:#d0683a;--rust:#e47a45;--teal:#56c2b2;--gold:#ffd25a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 10%,#3a2717 0%,#17110c 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#stage::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(255,220,160,.025) 0 2px,transparent 2px 64px),repeating-linear-gradient(0deg,rgba(255,220,160,.025) 0 2px,transparent 2px 64px)}
+
+/* header */
+#header{position:absolute;left:40px;right:260px;top:20px;z-index:10}
+#header h1{margin:0;font-family:"Cinzel",serif;font-size:36px;letter-spacing:.5px;color:var(--brass);text-shadow:0 2px 0 #000}
+#header p{margin:6px 0 0;font-size:21px;color:var(--muted);line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#turn{position:absolute;right:40px;top:26px;z-index:10;padding:8px 18px;border-radius:14px;font-family:"Cinzel",serif;font-size:24px;font-weight:700;
+  background:linear-gradient(#4a3520,#2c1f13);border:2px solid var(--brass);box-shadow:0 4px 12px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,230,170,.3);
+  opacity:0;transition:opacity .4s}
+#turn.on{opacity:1}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* spinning */
+.spin{transform-box:fill-box;transform-origin:center;animation:spin 7s linear infinite}
+.spin.rev{animation-direction:reverse}
+.fast .spin{animation-duration:2.6s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gearFill{fill:url(#brassG);stroke:#5b3f14;stroke-width:2}
+.gearHub{fill:#3a2814;stroke:#c99a45;stroke-width:3}
+
+/* title */
+#title{left:0;right:0;top:150px;bottom:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+#title .big{font-family:"Cinzel",serif;font-size:96px;font-weight:700;margin:0;line-height:1;
+  background:linear-gradient(180deg,#ffe3a0,var(--brass) 55%,#8a5a1c);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 #000)}
+#title h2{margin:0;font-family:"IM Fell English",serif;font-size:34px;font-weight:400;color:var(--ink)}
+#title svg{margin-top:6px}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* shop */
+#shop{left:0;right:0;top:140px;display:flex;flex-direction:column;align-items:center}
+#shop .row{display:flex;gap:36px}
+.card{width:340px;height:380px;border-radius:20px;padding:20px;display:flex;flex-direction:column;align-items:center;text-align:center;
+  background:linear-gradient(170deg,#3f2d1b,#241910);border:3px solid var(--brassD);
+  box-shadow:0 14px 30px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,220,150,.25);opacity:0;transform:translateY(30px) rotate(-3deg);
+  transition:opacity .5s,transform .6s cubic-bezier(.3,1.5,.5,1)}
+#shop.on .card{opacity:1;transform:none}
+#shop.on .card:nth-child(2){transition-delay:.25s}
+#shop.on .card:nth-child(3){transition-delay:.5s}
+.card h3{margin:6px 0 0;font-family:"Cinzel",serif;font-size:32px;color:var(--brass)}
+.card .cost{margin:8px 0;font-size:24px;font-weight:900;color:var(--gold)}
+.card .eff{font-size:22px;line-height:1.3}
+.card.combo{border-color:var(--teal);box-shadow:0 0 26px rgba(86,194,178,.35),0 14px 30px rgba(0,0,0,.55)}
+.card .tag{margin-top:auto;font-size:18px;color:var(--muted);font-style:italic}
+#shop .rule{margin-top:22px;font-size:22px;color:var(--ink);background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:10px 22px}
+
+/* boards */
+.board{top:134px;width:592px;height:484px;border-radius:20px;padding:12px 16px;
+  background:linear-gradient(170deg,var(--panel2),var(--panel) 60%,#201710);border:3px solid var(--line);
+  box-shadow:0 16px 40px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,220,150,.18)}
+#bR{left:40px}#bB{left:648px}
+#bR{--me:var(--rust)}#bB{--me:var(--teal)}
+.bhead{display:flex;align-items:baseline;gap:12px;height:40px}
+.bhead h2{margin:0;font-family:"Cinzel",serif;font-size:30px;color:var(--me)}
+.bhead span{font-size:20px;color:var(--muted)}
+.stats{display:flex;gap:10px;margin-top:6px}
+.stat{position:relative;flex:1;height:84px;border-radius:12px;background:rgba(0,0,0,.32);border:2px solid #4a3826;padding:4px 12px}
+.stat label{display:block;font-size:18px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.stat .v{font-family:"Fredoka",sans-serif;font-size:40px;font-weight:600;line-height:1.1;transition:color .4s}
+.stat.flash{border-color:var(--gold);box-shadow:0 0 18px rgba(255,210,90,.5)}
+.stat.flash .v{color:var(--gold)}
+.stat .next{position:absolute;right:10px;bottom:8px;font-size:18px;font-weight:800;color:var(--teal);opacity:0;transition:opacity .4s}
+.stat .next.on{opacity:1}
+.cdots{position:absolute;left:62px;top:36px;width:110px;display:flex;flex-wrap:wrap;gap:4px}
+.cdots i{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b8,var(--gold) 45%,#b07d12);box-shadow:0 1px 2px rgba(0,0,0,.6);
+  animation:drop .4s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes drop{from{opacity:0;transform:translateY(-14px) scale(.4)}to{opacity:1;transform:none}}
+.pop{position:absolute;left:50%;top:-6px;font-family:"Fredoka",sans-serif;font-size:30px;font-weight:700;color:var(--gold);pointer-events:none;
+  animation:popUp 1.1s ease-out both;text-shadow:0 2px 0 #000}
+.pop.neg{color:#ff8a6a}
+@keyframes popUp{0%{opacity:0;transform:translate(-50%,10px)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-28px)}}
+.machine{position:relative;height:178px;margin-top:8px;border-radius:12px;background:linear-gradient(#20160e,#2b1e13);border:2px solid #3e2e1e;overflow:hidden}
+.machine svg{position:absolute;left:0;top:0}
+.part{opacity:0;transition:opacity .5s}
+.part.on{opacity:1;animation:pin .6s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes pin{from{transform:scale(.3)}to{transform:none}}
+.part.on{transform-box:fill-box;transform-origin:center}
+.slot{fill:none;stroke:#6a5236;stroke-width:2;stroke-dasharray:6 6;transition:opacity .4s}
+.slot.off{opacity:0}
+.slotTxt{fill:#7d6545;font-size:15px;font-family:Nunito,sans-serif;text-anchor:middle}
+.belt{fill:none;stroke:var(--teal);stroke-width:5;stroke-dasharray:10 8;opacity:0;transition:opacity .5s;animation:belt 1s linear infinite}
+.belt.on{opacity:.9}
+@keyframes belt{to{stroke-dashoffset:-36}}
+.mlabel{font-family:Nunito,sans-serif;font-size:16px;font-weight:800;fill:var(--ink);text-anchor:middle}
+.boost .gearFill{filter:drop-shadow(0 0 6px rgba(86,194,178,.9))}
+.comboTag{position:absolute;left:50%;top:8px;transform:translateX(-50%);white-space:nowrap;padding:4px 14px;border-radius:10px;font-size:20px;font-weight:900;
+  color:#1a120a;background:var(--gold);box-shadow:0 0 20px rgba(255,210,90,.6);opacity:0;transition:opacity .5s}
+.comboTag.on{opacity:1}
+.shelf{position:relative;height:62px;margin-top:8px;border-radius:10px;display:flex;align-items:flex-end;gap:6px;padding:0 10px 6px;
+  background:linear-gradient(transparent 82%,#5a3e22 82%,#3a2815);border:2px solid #3e2e1e}
+.shelf .lbl{position:absolute;right:10px;top:4px;font-size:18px;color:var(--muted)}
+.troph{width:42px;height:50px;animation:pin .6s cubic-bezier(.3,1.6,.5,1) both}
+.act{margin-top:8px;height:40px;display:flex;align-items:center;padding:0 12px;border-radius:10px;font-size:20px;font-weight:700;
+  background:rgba(0,0,0,.3);border-left:5px solid var(--me);white-space:nowrap;overflow:hidden}
+
+/* price strip */
+#prices{left:0;right:0;top:630px;display:flex;justify-content:center;gap:18px}
+#prices span{font-size:19px;padding:5px 14px;border-radius:10px;background:rgba(0,0,0,.4);border:1px solid var(--line);color:var(--muted)}
+#prices b{color:var(--ink)}
+
+/* chart */
+#chart{left:0;top:0;width:1280px;height:720px}
+#chart svg{position:absolute;left:0;top:0}
+.ax{stroke:#7a6040;stroke-width:2}
+.grid{stroke:#3a2b1c;stroke-width:1}
+.tick{fill:var(--muted);font-size:19px;font-family:Nunito,sans-serif;text-anchor:middle}
+.ln{fill:none;stroke-width:6;stroke-linejoin:round;stroke-linecap:round;transition:stroke-dashoffset 2s ease}
+.side{position:absolute;left:930px;top:150px;width:310px;display:flex;flex-direction:column;gap:14px}
+.side .box{background:rgba(0,0,0,.35);border:2px solid var(--line);border-radius:14px;padding:12px 16px;font-size:20px;line-height:1.3}
+.side .box b{font-family:"Cinzel",serif}
+.side .warn{border-color:var(--gold)}
+.ann{opacity:0;transition:opacity .6s 1.6s}
+#chart.on .ann{opacity:1}
+
+/* end */
+#end{inset:0;background:rgba(12,8,4,.84);display:flex;align-items:center;justify-content:center;z-index:20}
+#end .card2{background:linear-gradient(170deg,#3a2919,#211710);border:3px solid var(--brass);border-radius:24px;padding:32px 46px;width:960px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#end h2{margin:0 0 14px;font-family:"Cinzel",serif;font-size:38px;color:var(--brass)}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .see{margin-top:18px;font-size:21px;color:var(--muted);font-style:italic}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#4a3826;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;left:20px;font-size:13px;color:#8a7356;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <svg width="0" height="0" style="position:absolute"><defs>
+    <linearGradient id="brassG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe09a"/><stop offset=".5" stop-color="#d9a648"/><stop offset="1" stop-color="#8a5f1e"/></linearGradient>
+    <linearGradient id="copperG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3a77a"/><stop offset=".5" stop-color="#c4612f"/><stop offset="1" stop-color="#6e2f12"/></linearGradient>
+    <linearGradient id="goldG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset=".5" stop-color="#ffcc40"/><stop offset="1" stop-color="#a8740c"/></linearGradient>
+  </defs></svg>
+
+  <div id="header"><h1></h1><p></p></div>
+  <div id="turn"></div>
+
+  <div id="title" class="panel">
+    <div class="big">Engine Building</div>
+    <h2>Spend now on things that pay you every turn after.</h2>
+    <svg id="titleGears" width="420" height="190" viewBox="0 0 420 190"></svg>
+    <div class="press">Press SPACE to start the workshop</div>
+  </div>
+
+  <div id="shop" class="panel">
+    <div class="row">
+      <div class="card"><svg width="130" height="130" viewBox="-65 -65 130 130" id="icG"></svg><h3>Gear</h3><div class="cost">Cost 3 coins</div>
+        <div class="eff">+1 income every turn, forever.</div><div class="tag">An engine piece</div></div>
+      <div class="card combo"><svg width="150" height="130" viewBox="0 0 150 130" id="icW"></svg><h3>Workshop</h3><div class="cost">Cost 5 coins</div>
+        <div class="eff">+1 income for <b>every Gear</b> you own.</div><div class="tag">A combo piece</div></div>
+      <div class="card"><svg width="130" height="130" viewBox="0 0 42 50" id="icT"></svg><h3>Trophy</h3><div class="cost">Cost 4 coins</div>
+        <div class="eff">2 points. Pays nothing.</div><div class="tag">Points, right now</div></div>
+    </div>
+    <div class="rule">Each turn: collect coins equal to your income, then buy as many things as you can afford.</div>
+  </div>
+
+  <div id="bR" class="panel board"></div>
+  <div id="bB" class="panel board"></div>
+
+  <div id="prices" class="panel">
+    <span><b>Gear 3</b> · +1 income</span><span><b>Workshop 5</b> · +1 income per Gear</span><span><b>Trophy 4</b> · 2 points</span>
+  </div>
+
+  <div id="chart" class="panel">
+    <svg id="chartSvg" width="1280" height="720"></svg>
+    <div class="side">
+      <div class="box"><b style="color:var(--rust)">Rusher</b>: about 1 point a turn. Income stays 2.</div>
+      <div class="box"><b style="color:var(--teal)">Builder</b>: 0 points for 4 turns, then 3 a turn. Income 2 → 6.</div>
+      <div class="box warn ann">If the game ended at <b>turn 5</b>, Rusher would win <b>4 to 2</b>.</div>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card2">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li><b>Early investment pays later.</b> Builder's four scoreless turns bought income that paid out every turn after.</li>
+      <li><b>Combos make engines snowball.</b> The Workshop paid for each Gear, so one purchase lifted income from 4 to 6.</li>
+      <li><b>Game length decides whether building is worth it.</b> End at turn 5 and Rusher wins. End at turn 10 and Builder wins 18 to 10.</li>
+    </ul>
+    <div class="see">You'll see this in: Splendor, Wingspan, Race for the Galaxy, Terraforming Mars.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">SPACE / click ▸ next &nbsp;·&nbsp; ← back &nbsp;·&nbsp; R restart</div>
+</div>
+
+<script>
+const S=document.getElementById('stage'),$=id=>document.getElementById(id);
+const dotsEl=$('dots');
+let cur=0,token=0;
+
+/* ---------- the simulation (all numbers on screen come from here) ---------- */
+const COST={G:3,W:5,T:4};
+function simulate(strategy){
+  let gears=0,ws=0,coins=0,pts=0;const hist=[{t:0,inc:0,pre:0,buys:[],coins:0,pts:0,gears:0,ws:0,rate:2}];
+  for(let t=1;t<=10;t++){
+    const inc=2+gears+ws*gears;coins+=inc;const pre=coins,buys=[];
+    let item;
+    while((item=strategy(gears,ws))&&coins>=COST[item]){
+      coins-=COST[item];buys.push(item);
+      if(item==='G')gears++;else if(item==='W')ws++;else pts+=2;
+    }
+    hist.push({t,inc,pre,buys,coins,pts,gears,ws,rate:2+gears+ws*gears});
+  }
+  return hist;
+}
+const rusher=()=> 'T';
+const builder=(g,w)=> g<2?'G':(w<1?'W':'T');   // two Gears, then the Workshop, then Trophies
+const H={R:simulate(rusher),B:simulate(builder)};
+// double-check against the hand-worked table
+const EXPECT={R:{pts:[0,0,2,2,4,4,6,6,8,8,10],inc:[0,2,2,2,2,2,2,2,2,2,2]},
+              B:{pts:[0,0,0,0,0,2,6,8,12,14,18],inc:[0,2,2,3,4,6,6,6,6,6,6]}};
+for(const k of ['R','B'])H[k].forEach((h,i)=>{if(h.pts!==EXPECT[k].pts[i]||h.inc!==EXPECT[k].inc[i])console.error('sim mismatch',k,i)});
+
+/* ---------- art ---------- */
+function gearPath(r,teeth){
+  const ri=r-9,pts=[];
+  for(let i=0;i<teeth;i++){
+    const a=i*2*Math.PI/teeth,w=Math.PI/teeth;
+    [[ri,a-w*.55],[r,a-w*.32],[r,a+w*.32],[ri,a+w*.55]].forEach(([rr,aa])=>pts.push((rr*Math.cos(aa)).toFixed(1)+','+(rr*Math.sin(aa)).toFixed(1)));
+  }
+  return 'M'+pts.join('L')+'Z';
+}
+const gearSVG=(cx,cy,r,teeth,rev,fill='gearFill')=>`<g transform="translate(${cx},${cy})"><g class="spin${rev?' rev':''}">
+  <path class="${fill}" d="${gearPath(r,teeth)}"/><circle r="${(r*.42).toFixed(1)}" fill="#2a1c0e" opacity=".55"/><circle class="gearHub" r="${(r*.22).toFixed(1)}"/>
+  <rect x="-2" y="${-r+12}" width="4" height="${r*.5}" fill="#5b3f14"/></g></g>`;
+const boilerSVG=(x,y)=>`<g transform="translate(${x},${y})">
+  <rect x="34" y="-20" width="14" height="30" rx="2" fill="#4a3624" stroke="#8a6424" stroke-width="2"/>
+  <rect x="0" y="6" width="86" height="104" rx="22" fill="url(#copperG)" stroke="#5a2a10" stroke-width="3"/>
+  <circle cx="43" cy="50" r="20" fill="#f6ead0" stroke="#5b3f14" stroke-width="4"/><line x1="43" y1="50" x2="54" y2="40" stroke="#a11" stroke-width="3"/>
+  <rect x="6" y="88" width="74" height="6" fill="#5a2a10" opacity=".6"/></g>`;
+const workshopSVG=(x,y,s=1)=>`<g transform="translate(${x},${y}) scale(${s})">
+  <rect x="88" y="0" width="16" height="34" fill="#4a3624" stroke="#8a6424" stroke-width="2"/>
+  <path d="M0 50 L30 22 L30 50 L60 22 L60 50 L90 22 L90 50 L120 22 L120 120 L0 120 Z" fill="#6b4a2b" stroke="#c99a45" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="14" y="66" width="24" height="22" fill="#ffd25a" opacity=".85"/><rect x="48" y="66" width="24" height="22" fill="#ffd25a" opacity=".85"/><rect x="82" y="66" width="24" height="22" fill="#ffd25a" opacity=".85"/>
+  <rect x="44" y="94" width="32" height="26" fill="#2a1c0e"/></g>`;
+const trophySVG=()=>`<svg class="troph" viewBox="0 0 42 50"><path d="M9 4h24v10c0 9-5 15-12 15S9 23 9 14z" fill="url(#goldG)" stroke="#7a5208" stroke-width="1.5"/>
+  <path d="M9 8H3c0 7 3 10 7 10M33 8h6c0 7-3 10-7 10" fill="none" stroke="#c9961e" stroke-width="2.5"/>
+  <rect x="18" y="29" width="6" height="8" fill="#c9961e"/><rect x="11" y="37" width="20" height="8" rx="2" fill="#6b4a2b" stroke="#c99a45"/></svg>`;
+
+$('titleGears').innerHTML=gearSVG(110,100,70,14,false)+gearSVG(222,72,48,10,true)+gearSVG(300,130,40,9,false)+gearSVG(368,74,32,8,true);
+$('icG').innerHTML=gearSVG(0,0,58,12,false);
+$('icW').innerHTML=workshopSVG(15,5,1);
+$('icT').innerHTML=trophySVG().replace(/<svg[^>]*>|<\/svg>/g,'');
+
+// machine layout inside each board (560 x 174)
+const G1={x:226,y:92,r:46},G2={x:310,y:116,r:38},WS={x:410,y:14};
+function boardHTML(name,plan){
+  return `<div class="bhead"><h2>${name}</h2><span>${plan}</span></div>
+  <div class="stats">
+    <div class="stat s-inc"><label>Income</label><div class="v">2</div><div class="next"></div></div>
+    <div class="stat s-coin"><label>Coins</label><div class="v">0</div><div class="cdots"></div></div>
+    <div class="stat s-pts"><label>Points</label><div class="v">0</div></div>
+  </div>
+  <div class="machine"><svg width="556" height="174" viewBox="0 0 556 174">
+    <path class="belt" d="M${G1.x} ${G1.y} C 300 20, 380 20, ${WS.x+30} 100"/>
+    <path class="belt" d="M${G2.x} ${G2.y} C 360 160, 400 160, ${WS.x+60} 128"/>
+    <g class="bo">${boilerSVG(30,40)}<text class="mlabel" x="73" y="168">Boiler +2</text></g>
+    <circle class="slot sl1" cx="${G1.x}" cy="${G1.y}" r="${G1.r}"/><text class="slotTxt sl1" x="${G1.x}" y="${G1.y+5}">empty</text>
+    <circle class="slot sl2" cx="${G2.x}" cy="${G2.y}" r="${G2.r}"/><text class="slotTxt sl2" x="${G2.x}" y="${G2.y+5}">empty</text>
+    <rect class="slot slw" x="${WS.x}" y="${WS.y+22}" width="120" height="98" rx="8"/><text class="slotTxt slw" x="${WS.x+60}" y="${WS.y+76}">empty</text>
+    <g class="part g1">${gearSVG(G1.x,G1.y,G1.r,11,false)}</g>
+    <g class="part g2">${gearSVG(G2.x,G2.y,G2.r,9,true)}</g>
+    <g class="part ws">${workshopSVG(WS.x,WS.y,1)}<text class="mlabel" x="${WS.x+60}" y="${WS.y+142}">+1 per Gear</text></g>
+  </svg><div class="comboTag">Boiler 2 + Gears 2 + Workshop 2 = 6</div></div>
+  <div class="shelf"><div class="lbl">Trophies</div></div>
+  <div class="act">Ready.</div>`;
+}
+$('bR').innerHTML=boardHTML('Rusher','buys a Trophy whenever it can');
+$('bB').innerHTML=boardHTML('Builder','Gears, then a Workshop, then Trophies');
+
+const NAMES={G:'Gear',W:'Workshop',T:'Trophy'};
+function buyText(buys){
+  if(!buys.length)return 'saves';
+  const c={};buys.forEach(b=>c[b]=(c[b]||0)+1);
+  const spent=buys.reduce((s,b)=>s+COST[b],0);
+  return 'buys '+Object.entries(c).map(([k,n])=>n>1?`${n} ${NAMES[k]==='Trophy'?'Trophies':NAMES[k]+'s'}`:`a ${NAMES[k]}`).join(' + ')+` (−${spent})`;
+}
+function setCoins(el,n,anim){
+  el.querySelector('.s-coin .v').textContent=n;
+  const d=el.querySelector('.cdots');
+  d.innerHTML=Array.from({length:n},(_,i)=>`<i style="animation-delay:${anim?i*60:0}ms"></i>`).join('');
+}
+function pop(el,sel,txt,neg){
+  const p=document.createElement('div');p.className='pop'+(neg?' neg':'');p.textContent=txt;
+  el.querySelector(sel).appendChild(p);setTimeout(()=>p.remove(),1200);
+}
+// draw a board in its state after turn t (phase 'pre' = income collected, nothing bought yet)
+function drawBoard(k,t,phase,anim){
+  const el=$(k==='R'?'bR':'bB'),h=H[k][t],prev=H[k][Math.max(t-1,0)];
+  const own=phase==='pre'?prev:h;                 // what is owned on the board
+  el.querySelector('.s-inc .v').textContent=t===0?2:h.inc;
+  const nx=el.querySelector('.next');
+  const showNext=phase!=='pre'&&t>0&&h.rate!==h.inc;
+  nx.textContent=showNext?`→ ${h.rate} next turn`:'';nx.classList.toggle('on',showNext);
+  setCoins(el,phase==='pre'?h.pre:h.coins,anim);
+  el.querySelector('.s-pts .v').textContent=own.pts;
+  const parts=[['g1','sl1',own.gears>=1],['g2','sl2',own.gears>=2],['ws','slw',own.ws>=1]];
+  parts.forEach(([p,s,on])=>{el.querySelector('.'+p).classList.toggle('on',on);el.querySelectorAll('.'+s).forEach(x=>x.classList.toggle('off',on))});
+  el.querySelectorAll('.belt').forEach(b=>b.classList.toggle('on',own.ws>=1&&own.gears>0));
+  el.querySelector('.machine').classList.toggle('boost',own.ws>=1);
+  el.querySelector('.machine').classList.toggle('fast',own.ws>=1);
+  const shelf=el.querySelector('.shelf'),n=own.pts/2,have=shelf.querySelectorAll('.troph').length;
+  if(have!==n){shelf.querySelectorAll('.troph').forEach(x=>x.remove());shelf.insertAdjacentHTML('beforeend',trophySVG().repeat(n));
+    if(!anim)shelf.querySelectorAll('.troph').forEach(x=>x.style.animation='none');
+    else [...shelf.querySelectorAll('.troph')].forEach((x,i)=>{if(i<have)x.style.animation='none'})}
+  const act=el.querySelector('.act');
+  if(t===0)act.textContent='Starts with 0 coins. Boiler pays 2 a turn.';
+  else act.textContent=`Collects ${h.inc} → ${h.pre} coins`+(phase==='pre'?'':` · ${buyText(h.buys)}`);
+}
+// play one turn for both boards
+function playTurn(t,instant,delay=1000){
+  const my=token;
+  for(const k of ['R','B']){
+    if(instant){drawBoard(k,t,'post',false);continue}
+    drawBoard(k,t,'pre',true);pop($(k==='R'?'bR':'bB'),'.s-coin','+'+H[k][t].inc);
+    setTimeout(()=>{if(my!==token)return;drawBoard(k,t,'post',true);
+      const sp=H[k][t].buys.reduce((s,b)=>s+COST[b],0);if(sp)pop($(k==='R'?'bR':'bB'),'.s-coin','−'+sp,true)},delay);
+  }
+  $('turn').textContent=`Turn ${t} of 10`;$('turn').classList.add('on');
+}
+function flash(k,sel,on){$(k==='R'?'bR':'bB').querySelector(sel).classList.toggle('flash',on)}
+function boards(on){['bR','bB','prices'].forEach(id=>$(id).classList.toggle('on',on))}
+
+/* ---------- chart ---------- */
+const CX=t=>130+(t-1)*82,CY=p=>560-p*20.5;
+(function buildChart(){
+  let s='';
+  for(let p=0;p<=20;p+=4)s+=`<line class="grid" x1="110" x2="880" y1="${CY(p)}" y2="${CY(p)}"/><text class="tick" x="88" y="${CY(p)+7}">${p}</text>`;
+  for(let t=1;t<=10;t++)s+=`<text class="tick" x="${CX(t)}" y="592">${t}</text>`;
+  s+=`<line class="ax" x1="110" x2="880" y1="560" y2="560"/><line class="ax" x1="110" x2="110" y1="140" y2="560"/>
+     <text class="tick" x="495" y="626" style="font-size:20px">turn</text><text class="tick" x="60" y="130" style="font-size:20px">points</text>`;
+  // turn 5 cut-off
+  s+=`<g class="ann"><line x1="${CX(5)}" x2="${CX(5)}" y1="150" y2="560" stroke="#ffd25a" stroke-width="3" stroke-dasharray="8 8"/>
+      <text x="${CX(5)-10}" y="168" fill="#ffd25a" font-size="20" font-weight="800" text-anchor="end" font-family="Nunito">End at turn 5?</text>
+      <text x="${CX(5)-10}" y="194" fill="#ffd25a" font-size="20" text-anchor="end" font-family="Nunito">Rusher 4, Builder 2</text></g>`;
+  const line=(k,col)=>{const pts=H[k].slice(1).map(h=>`${CX(h.t)},${CY(h.pts)}`).join(' ');
+    return `<polyline class="ln" id="ln${k}" points="${pts}" stroke="${col}" stroke-dasharray="1400" stroke-dashoffset="1400"/>`+
+      H[k].slice(1).map(h=>`<circle class="ann" cx="${CX(h.t)}" cy="${CY(h.pts)}" r="5" fill="${col}"/>`).join('')};
+  s+=line('R','#e47a45')+line('B','#56c2b2');
+  // crossover
+  s+=`<g class="ann"><circle cx="${CX(6)}" cy="${CY(6)}" r="22" fill="none" stroke="#ffd25a" stroke-width="4"/>
+      <text x="${CX(6)+30}" y="${CY(6)+52}" fill="#f6ead0" font-size="20" font-weight="800" font-family="Nunito">The lines cross:</text>
+      <text x="${CX(6)+30}" y="${CY(6)+76}" fill="#f6ead0" font-size="20" font-family="Nunito">tied 6–6 at turn 6</text>
+      <text x="${CX(10)+12}" y="${CY(18)+7}" fill="#56c2b2" font-size="22" font-weight="900" font-family="Nunito">18</text>
+      <text x="${CX(10)+12}" y="${CY(10)+7}" fill="#e47a45" font-size="22" font-weight="900" font-family="Nunito">10</text></g>`;
+  $('chartSvg').innerHTML=s;
+})();
+
+/* ---------- beats ---------- */
+function setHeader(h,p){const hd=$('header');hd.querySelector('h1').textContent=h;hd.querySelector('p').textContent=p;
+  hd.classList.remove('anim');void hd.offsetWidth;hd.classList.add('anim')}
+function reset(){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  $('turn').classList.remove('on');
+  document.querySelectorAll('.flash').forEach(x=>x.classList.remove('flash'));
+  document.querySelectorAll('.comboTag').forEach(x=>x.classList.remove('on'));
+  ['R','B'].forEach(k=>{$('ln'+k).style.strokeDashoffset=1400;drawBoard(k,0,'post',false)});
+}
+
+const steps=[
+ ()=>{$('title').classList.add('on');
+   setHeader('The Clockwork Workshop','Two inventors, ten turns, one question: score now, or build first?')},
+ ()=>{$('title').classList.remove('on');$('shop').classList.add('on');
+   setHeader('Three things to buy','Two pieces pay you every turn. One pays you once, in points. That choice is the whole game.')},
+ ()=>{$('shop').classList.remove('on');boards(true);
+   setHeader('Meet the two inventors','Both start with a Boiler that pays 2 coins a turn and 0 coins in hand. Same start, different plans.')},
+ (i)=>{playTurn(1,i);
+   setHeader('Turn 1: nobody can buy','Both collect 2 coins. The cheapest piece costs 3, so both save.')},
+ (i)=>{playTurn(2,i);
+   setHeader('Turn 2: points versus a Gear','Rusher spends 4 on a Trophy: 2 points now. Builder spends 3 on a Gear: 0 points, but +1 income forever.')},
+ (i)=>{playTurn(3,i);flash('B','.s-inc',true);
+   setHeader('Turn 3: the Gear pays its first coin','Builder now collects 3 a turn. Rusher saves for the next Trophy and leads 2 to 0.')},
+ (i)=>{flash('B','.s-inc',false);playTurn(4,i);
+   setHeader('Turn 4: Builder buys the Workshop','Rusher scores again: 4 to 0. Builder spends all 5 coins on a Workshop, which pays +1 for every Gear.')},
+ (i)=>{playTurn(5,i);flash('B','.s-inc',true);$('bB').querySelector('.comboTag').classList.add('on');
+   setHeader('Turn 5: the combo kicks in','Builder\'s income jumps from 4 to 6 in one turn. Rusher still leads, 4 to 2.')},
+ (i)=>{flash('B','.s-inc',false);$('bB').querySelector('.comboTag').classList.remove('on');playTurn(6,i);
+   setHeader('Turn 6: two Trophies in one turn','Builder holds 8 coins and buys two Trophies at once. The score is tied, 6 to 6.')},
+ (i)=>{playTurn(7,i);flash('B','.s-pts',true);
+   setHeader('Turn 7: Builder takes the lead','Builder 8, Rusher 6. From here Builder scores 3 points a turn on average. Rusher scores 1.')},
+ (i)=>{flash('B','.s-pts',false);
+   if(i){playTurn(10,true);}
+   else{const my=token;[8,9,10].forEach((t,j)=>setTimeout(()=>{if(my===token)playTurn(t,false,300)},j*550))}
+   flash('B','.s-pts',true);flash('R','.s-pts',true);
+   setHeader('Turns 8 to 10: the engine runs','Builder adds 10 more points, Rusher adds 4. Final score: Builder 18, Rusher 10.')},
+ ()=>{boards(false);$('turn').classList.remove('on');$('chart').classList.add('on');
+   ['R','B'].forEach(k=>$('ln'+k).style.strokeDashoffset=0);
+   setHeader('When the lines cross is the design','Points after every turn. Rusher leads early, Builder wins late. The game\'s length picks the winner.')},
+ ()=>{$('end').classList.add('on')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>
