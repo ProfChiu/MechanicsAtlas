@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Pattern Building</title>
+<style>
+:root{--bg:#0e1d18;--panel:#17302a;--panel2:#1f3d35;--line:#2f5a4e;--ink:#f7f3e6;--muted:#a8c4b8;
+  --amber:#ffc24a;--amber2:#e07a1f;--row:#4fd6c4;--sq:#ff7aa2;--cor:#b49cff;--gold:#ffd166;--bad:#ff6b5e}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 75% 10%,#24463b 0%,#0e1d18 55%,#08130f 100%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#stage::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,255,255,.05) 1px,transparent 1.5px) 0 0/34px 34px}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:21px;color:var(--muted);max-width:1180px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* panels */
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* lantern token */
+.lan{position:absolute;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%,#fff7d6 0 12%,var(--amber) 42%,var(--amber2) 82%,#a8501a 100%);
+  box-shadow:0 0 18px rgba(255,190,80,.75),0 0 40px rgba(255,170,60,.3),inset 0 -4px 0 rgba(0,0,0,.2)}
+.lan::before{content:"";position:absolute;left:34%;right:34%;top:-9%;height:16%;border-radius:3px;background:#3a2a1a}
+.lan::after{content:"";position:absolute;left:22%;right:22%;top:46%;height:3px;border-radius:2px;background:rgba(160,70,20,.45)}
+.lan.drop{animation:drop .7s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes drop{from{opacity:0;transform:translateY(-90px) scale(1.4)}to{opacity:1;transform:none}}
+.lan.ghost{background:none;border:3px dashed rgba(255,194,74,.5);box-shadow:none}
+.lan.ghost::before,.lan.ghost::after{display:none}
+.lan.used{filter:grayscale(.9) brightness(.45);box-shadow:none}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+#title .big{font-family:"Fredoka","Nunito",sans-serif;font-size:116px;font-weight:700;line-height:1;margin:0;
+  background:linear-gradient(90deg,var(--row),var(--amber),var(--sq));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:34px;color:#f3e2b0;font-weight:700}
+#title .mini{position:relative;width:236px;height:236px;margin:0 0 18px;border-radius:18px;background:var(--panel);
+  border:3px solid var(--line);box-shadow:0 14px 34px rgba(0,0,0,.45)}
+#title .mini .tc{position:absolute;width:64px;height:64px;border-radius:12px;background:#22443a;box-shadow:inset 0 3px 6px rgba(0,0,0,.4)}
+#title .mini .lan{width:46px;height:46px;animation:glow 2s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 30px rgba(255,200,90,1),0 0 60px rgba(255,170,60,.5)}}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* courtyard grid */
+#court{left:60px;top:150px;width:488px;height:488px;border-radius:22px;
+  background:linear-gradient(160deg,#1d3a31,#132a23);border:3px solid var(--line);
+  box-shadow:0 2px 0 rgba(255,255,255,.06) inset,0 18px 40px rgba(0,0,0,.45)}
+.cell{position:absolute;width:84px;height:84px;border-radius:14px;
+  background:linear-gradient(160deg,#28493f,#1e3a32);box-shadow:inset 0 4px 8px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.05);
+  transition:box-shadow .4s}
+.cell.corner::after{content:"";position:absolute;inset:8px;border-radius:10px;border:2px dashed rgba(180,156,255,.35)}
+.cell.hot{animation:hot 1.1s ease-in-out infinite;box-shadow:0 0 0 4px var(--row),0 0 0 9px var(--sq),0 0 30px rgba(255,255,255,.35)}
+@keyframes hot{50%{box-shadow:0 0 0 4px var(--row),0 0 0 9px var(--sq),0 0 6px rgba(255,255,255,.1)}}
+.cell .lan{left:12px;top:12px;width:60px;height:60px}
+.cell .num{position:absolute;right:5px;bottom:2px;font-size:15px;font-weight:900;color:#0e1d18;z-index:2;
+  background:#f7f3e6;border-radius:8px;padding:0 6px;opacity:.85}
+.ol{position:absolute;border-radius:18px;border:5px solid;pointer-events:none;z-index:3;
+  transition:opacity .4s;animation:olin .6s cubic-bezier(.3,1.5,.5,1) both}
+.ol.dash{border-style:dashed;border-width:4px;opacity:.85}
+@keyframes olin{from{opacity:0;transform:scale(1.15)}to{opacity:1;transform:none}}
+.tagc{position:absolute;z-index:4;font-size:19px;font-weight:900;padding:3px 10px;border-radius:10px;background:#0b1712;white-space:nowrap;
+  border:2px solid currentColor;animation:fadeUp .5s ease both}
+
+/* goal cards */
+#goals{left:600px;top:150px;width:640px;height:256px;display:flex;gap:20px}
+.goal{position:relative;width:200px;height:256px;border-radius:18px;padding:12px 14px;
+  background:linear-gradient(170deg,#fbf3dc,#ead9ae);color:#2b2a22;border:4px solid var(--gc);
+  box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 5px 0 rgba(0,0,0,.2),0 14px 26px rgba(0,0,0,.4);
+  display:flex;flex-direction:column;align-items:center;
+  opacity:0;transform:translateY(26px) rotate(-4deg);transition:opacity .5s,transform .6s cubic-bezier(.3,1.5,.5,1),box-shadow .4s}
+#goals.on .goal{opacity:1;transform:none}
+.goal.g-row{--gc:var(--row)}.goal.g-sq{--gc:var(--sq)}.goal.g-cor{--gc:var(--cor)}
+.goal .gn{font-family:"Fredoka","Nunito",sans-serif;font-size:24px;font-weight:600;color:#2b2a22}
+.goal .gd{font-size:16px;font-weight:700;color:#6a5c3c;margin-top:-2px}
+.goal .pat{position:relative;width:96px;height:96px;margin:8px 0 6px}
+.goal .pat i{position:absolute;width:28px;height:28px;border-radius:7px;background:#d8c693}
+.goal .pat i.f{background:var(--gc);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+.goal .pts{font-size:26px;font-weight:900;color:#2b2a22}
+.goal .prog{position:absolute;left:14px;right:14px;bottom:12px;display:flex;align-items:center;gap:8px}
+.goal .bar{flex:1;height:14px;border-radius:7px;background:#d8c693;overflow:hidden}
+.goal .bar b{display:block;height:100%;width:0;background:var(--gc);transition:width .6s cubic-bezier(.3,1.4,.5,1)}
+.goal .pn{font-size:20px;font-weight:900;width:46px;text-align:right}
+.goal.done{box-shadow:0 0 0 4px var(--gc),0 0 34px var(--gc),0 5px 0 rgba(0,0,0,.2)}
+.goal .ck{position:absolute;right:-14px;top:-16px;width:52px;height:52px;border-radius:50%;background:var(--gc);color:#10201a;
+  font-size:28px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,.4);
+  animation:stamp .55s cubic-bezier(.3,1.7,.5,1) both}
+@keyframes stamp{from{opacity:0;transform:scale(2.4) rotate(-30deg)}to{opacity:1;transform:none}}
+.goal .gp{position:absolute;left:50%;top:84px;width:110px;margin-left:-55px;text-align:center;font-size:52px;line-height:1.15;font-weight:900;color:var(--gc);
+  background:#10201a;border-radius:18px;box-shadow:0 6px 16px rgba(0,0,0,.45);animation:pop 1.3s ease both;z-index:2}
+@keyframes pop{0%{opacity:0;transform:translateY(30px) scale(.5)}35%{opacity:1;transform:scale(1.35)}65%{transform:scale(1)}100%{opacity:1}}
+
+/* score / supply */
+#board{left:600px;top:426px;width:640px;height:212px;border-radius:18px;background:var(--panel);border:2px solid var(--line);
+  box-shadow:0 12px 28px rgba(0,0,0,.35)}
+#board .sl{position:absolute;left:24px;top:14px;font-size:18px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+#board .sc{position:absolute;left:24px;top:36px;font-family:"Fredoka","Nunito",sans-serif;font-size:76px;font-weight:700;line-height:1;color:var(--gold)}
+#board .spop{position:absolute;left:120px;top:40px;font-size:40px;font-weight:900;color:var(--gold);animation:pop 1.3s ease both}
+#board .supl{position:absolute;left:250px;top:14px;font-size:18px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+#board .sup{position:absolute;left:250px;top:46px;width:380px;height:56px}
+#board .sup .lan{top:4px;width:46px;height:46px}
+#board .log{position:absolute;left:24px;right:24px;top:128px;height:70px;border-top:1px solid var(--line);padding-top:10px;
+  font-size:21px;line-height:1.3;color:var(--ink)}
+#board .log b.r{color:var(--row)}#board .log b.s{color:var(--sq)}#board .log b.c{color:var(--cor)}#board .log b.g{color:var(--gold)}
+
+/* insight */
+#insight{left:40px;right:40px;top:140px;height:550px;border-radius:22px;background:rgba(9,20,16,.94);border:2px solid var(--line);z-index:12}
+.side{position:absolute;top:18px;width:580px;height:516px}
+#sideA{left:10px}#sideB{left:610px}
+.side h3{margin:0;text-align:center;font-family:"Fredoka","Nunito",sans-serif;font-size:28px;font-weight:600}
+.side .sub{text-align:center;font-size:19px;color:var(--muted);margin-top:2px}
+.mg{position:absolute;left:156px;top:76px;width:268px;height:268px;border-radius:16px;background:#17302a;border:2px solid var(--line)}
+.mg .mc{position:absolute;width:44px;height:44px;border-radius:9px;background:#24453b;box-shadow:inset 0 2px 5px rgba(0,0,0,.45)}
+.mg .lan{left:6px;top:6px;width:32px;height:32px}
+.mg .mc.shared{box-shadow:0 0 0 3px var(--row),0 0 0 6px var(--sq)}
+.mg .ol{border-width:4px;border-radius:12px}
+.side .cnt{position:absolute;left:0;right:0;top:350px;text-align:center;font-size:26px;font-weight:900}
+.side .cnt span{color:var(--gold)}
+.side .budget{position:absolute;left:40px;right:40px;top:424px;height:56px;opacity:0;transition:opacity .6s}
+#insight.budget .budget{opacity:1}
+.budget .lan{top:8px;width:40px;height:40px}
+.budget .lim{position:absolute;top:-6px;width:4px;height:68px;border-radius:2px;background:var(--bad);box-shadow:0 0 10px var(--bad)}
+.budget .liml{position:absolute;top:-28px;font-size:17px;font-weight:900;color:var(--bad);white-space:nowrap}
+.budget .lan.over{filter:saturate(.4);opacity:.55;outline:3px solid var(--bad);outline-offset:3px}
+.side .verdict{position:absolute;left:0;right:0;top:488px;text-align:center;font-size:22px;font-weight:800;opacity:0;transition:opacity .6s .3s}
+#insight.budget .verdict{opacity:1}
+#sideA .verdict{color:var(--bad)}#sideB .verdict{color:var(--gold)}
+#insight .divider{position:absolute;left:599px;top:30px;bottom:30px;width:2px;background:var(--line)}
+
+/* end */
+#end{inset:0;background:rgba(5,14,11,.88);display:flex;align-items:center;justify-content:center;z-index:20}
+#end .card2{background:var(--panel);border:2px solid #3c7464;border-radius:24px;padding:34px 48px;width:960px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 14px;font-family:"Fredoka","Nunito",sans-serif;font-size:40px;font-weight:600;color:#f3e2b0}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .seen{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid #3c7464;padding-top:14px}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#2c5248;transition:background .3s,transform .3s}
+#dots i.on{background:var(--amber);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;left:20px;font-size:13px;color:#5f8a7d;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="mini" id="tmini"></div>
+    <div class="big">Pattern Building</div>
+    <h2>Lighting the moon-garden courtyard</h2>
+    <div class="press">Press → to begin</div>
+  </div>
+
+  <div id="court" class="panel"></div>
+  <div id="goals" class="panel"></div>
+  <div id="board" class="panel"></div>
+
+  <div id="insight" class="panel">
+    <div class="divider"></div>
+    <div class="side" id="sideA">
+      <h3>Built apart</h3>
+      <div class="sub">Lantern Row and Tea Table in different places</div>
+      <div class="mg" id="mgA"></div>
+      <div class="cnt">7 lanterns → <span>7 points</span></div>
+      <div class="budget" id="bdA"></div>
+      <div class="verdict">Needs 7. You only have 6. One goal fails.</div>
+    </div>
+    <div class="side" id="sideB">
+      <h3>Built overlapping</h3>
+      <div class="sub">Two squares count for both goals</div>
+      <div class="mg" id="mgB"></div>
+      <div class="cnt">5 lanterns → <span>7 points</span></div>
+      <div class="budget" id="bdB"></div>
+      <div class="verdict">1 lantern spare: Gatekeepers +2</div>
+    </div>
+  </div>
+
+  <div id="end" class="panel">
+    <div class="card2">
+      <h2>What designers take from this</h2>
+      <ol>
+        <li><b>Goals name shapes, not pieces.</b> Every piece is the same lantern. Its value comes only from where it sits.</li>
+        <li><b>Overlap is the skill.</b> One square that serves two patterns does double work. Strong players look for those shared squares.</li>
+        <li><b>Scarcity makes overlap matter.</b> With fewer pieces than the goals need, players must stack patterns. Goals that pull apart (corners vs. clusters) add tension.</li>
+      </ol>
+      <div class="seen">You'll see this in: Azul, Cascadia, Patchwork, Sagrada.</div>
+    </div>
+  </div>
+
+  <div id="dots"></div>
+  <div id="hint">→ next · ← back · R restart</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const S=$('stage'),dotsEl=$('dots');
+const N=5,CELL=84,GAP=8,PAD=18,STEP=CELL+GAP;
+const SUPPLY=6;
+const GOALS=[
+  {k:'row',cls:'g-row',name:'Lantern Row',desc:'3 in a row or column',pts:3,need:3,pat:[[1,0],[1,1],[1,2]],col:'var(--row)',lc:'r'},
+  {k:'sq', cls:'g-sq', name:'Tea Table',  desc:'a 2×2 block',          pts:4,need:4,pat:[[0,0],[0,1],[1,0],[1,1]],col:'var(--sq)',lc:'s'},
+  {k:'cor',cls:'g-cor',name:'Gatekeepers',desc:'any 2 corners',        pts:2,need:2,pat:[[0,0],[2,2]],col:'var(--cor)',lc:'c'}
+];
+const CORNERS=[[0,0],[0,4],[4,0],[4,4]];
+const isCorner=(r,c)=>(r===0||r===4)&&(c===0||c===4);
+const key=(r,c)=>r+','+c;
+
+/* progress for each goal = best partial count; computed, never hand-written */
+function progress(set){
+  const has=(r,c)=>set.has(key(r,c));
+  let row=0,sq=0;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    if(c+2<N)row=Math.max(row,[0,1,2].filter(d=>has(r,c+d)).length);
+    if(r+2<N)row=Math.max(row,[0,1,2].filter(d=>has(r+d,c)).length);
+    if(r+1<N&&c+1<N)sq=Math.max(sq,[[0,0],[0,1],[1,0],[1,1]].filter(([a,b])=>has(r+a,c+b)).length);
+  }
+  const cor=Math.min(2,CORNERS.filter(([r,c])=>has(r,c)).length);
+  return{row,sq,cor};
+}
+const doneOf=p=>GOALS.filter(g=>p[g.k]>=g.need).map(g=>g.k);
+const scoreOf=p=>GOALS.filter(g=>p[g.k]>=g.need).reduce((s,g)=>s+g.pts,0);
+
+let st,cur=0;
+function fresh(){return{placed:[],newest:null,outlines:[],tags:[],hot:null,gpops:{},spop:'',log:''};}
+
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+function show(...ids){['title','court','goals','board','insight','end'].forEach(id=>$(id).classList.toggle('on',ids.includes(id)))}
+
+/* outline around cells r0..r1, c0..c1 on a grid with given pitch */
+function olBox(r0,c0,r1,c1,col,dash,pad=PAD,step=STEP,cell=CELL){
+  const m=6;
+  return `<div class="ol${dash?' dash':''}" style="border-color:${col};left:${pad+c0*step-m}px;top:${pad+r0*step-m}px;width:${(c1-c0)*step+cell+2*m}px;height:${(r1-r0)*step+cell+2*m}px"></div>`;
+}
+
+function renderCourt(){
+  let h='';
+  const order={};st.placed.forEach(([r,c],i)=>order[key(r,c)]=i+1);
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const k=key(r,c),hot=st.hot===k;
+    h+=`<div class="cell${isCorner(r,c)?' corner':''}${hot?' hot':''}" style="left:${PAD+c*STEP}px;top:${PAD+r*STEP}px">`;
+    if(order[k])h+=`<div class="lan${st.newest===k?' drop':''}"></div><div class="num">${order[k]}</div>`;
+    h+='</div>';
+  }
+  st.outlines.forEach(o=>h+=olBox(...o));
+  st.tags.forEach(t=>h+=`<div class="tagc" style="left:${t.x}px;top:${t.y}px;color:${t.col}">${t.txt}</div>`);
+  $('court').innerHTML=h;
+}
+function renderGoals(){
+  const p=progress(new Set(st.placed.map(([r,c])=>key(r,c))));
+  $('goals').innerHTML=GOALS.map((g,i)=>{
+    const v=p[g.k],done=v>=g.need;
+    const pat=[0,1,2].map(r=>[0,1,2].map(c=>`<i class="${g.pat.some(([a,b])=>a===r&&b===c)?'f':''}" style="left:${c*34}px;top:${r*34}px"></i>`).join('')).join('');
+    return `<div class="goal ${g.cls}${done?' done':''}" style="transition-delay:${i*130}ms">
+      <div class="gn">${g.name}</div><div class="gd">${g.desc}</div>
+      <div class="pat">${pat}</div><div class="pts">${g.pts} pts</div>
+      <div class="prog"><div class="bar"><b style="width:${v/g.need*100}%"></b></div><div class="pn">${v}/${g.need}</div></div>
+      ${done?'<div class="ck">✓</div>':''}${st.gpops[g.k]?`<div class="gp">${st.gpops[g.k]}</div>`:''}</div>`;
+  }).join('');
+}
+function renderBoard(){
+  const p=progress(new Set(st.placed.map(([r,c])=>key(r,c))));
+  let h=`<div class="sl">Score</div><div class="sc">${scoreOf(p)}</div>`;
+  if(st.spop)h+=`<div class="spop">${st.spop}</div>`;
+  h+=`<div class="supl">Lantern supply · ${SUPPLY-st.placed.length} of ${SUPPLY} left</div><div class="sup">`;
+  for(let i=0;i<SUPPLY;i++)h+=`<div class="lan${i<st.placed.length?' used':''}" style="left:${i*62}px"></div>`;
+  h+=`</div><div class="log">${st.log}</div>`;
+  $('board').innerHTML=h;
+}
+function render(){renderCourt();renderGoals();renderBoard();}
+
+/* place one lantern; pops come from the computed score change */
+function place(r,c){
+  const before=progress(new Set(st.placed.map(([a,b])=>key(a,b))));
+  st.placed.push([r,c]);st.newest=key(r,c);
+  const after=progress(new Set(st.placed.map(([a,b])=>key(a,b))));
+  const newly=doneOf(after).filter(k=>!doneOf(before).includes(k));
+  st.gpops={};newly.forEach(k=>st.gpops[k]='+'+GOALS.find(g=>g.k===k).pts);
+  const gain=scoreOf(after)-scoreOf(before);
+  st.spop=gain?'+'+gain:'';
+  st.outlines=[];st.tags=[];st.hot=null;
+}
+
+/* insight mini grids */
+const MP=12,MS=50,MC=44;
+function mini(id,cells,outs,shared){
+  const set=new Set(cells.map(([r,c])=>key(r,c))),sh=new Set(shared.map(([r,c])=>key(r,c)));
+  let h='';
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const k=key(r,c);
+    h+=`<div class="mc${sh.has(k)?' shared':''}" style="left:${MP+c*MS}px;top:${MP+r*MS}px">${set.has(k)?'<div class="lan"></div>':''}</div>`;
+  }
+  outs.forEach(o=>h+=olBox(o[0],o[1],o[2],o[3],o[4],false,MP,MS,MC));
+  $(id).innerHTML=h;
+}
+function budget(id,used){
+  let h='';const W=56;
+  for(let i=0;i<Math.max(used,SUPPLY);i++){
+    const cls=i>=SUPPLY?' over':(i>=used?' ghost':'');
+    h+=`<div class="lan${cls}" style="left:${60+i*W}px"></div>`;
+  }
+  const x=60+SUPPLY*W-10;
+  h+=`<div class="lim" style="left:${x}px"></div><div class="liml" style="left:${x-60}px">6-lantern supply</div>`;
+  $(id).innerHTML=h;
+}
+
+function reset(){
+  st=fresh();show();setHeader('','');
+  // title mini courtyard: a lit 2x2 + column
+  const lit=new Set(['0,0','0,1','1,0','1,1','2,1']);let h='';
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++)
+    h+=`<div class="tc" style="left:${14+c*72}px;top:${14+r*72}px">${lit.has(key(r,c))?`<div class="lan" style="left:9px;top:9px;animation-delay:${(r+c)*.25}s"></div>`:''}</div>`;
+  $('tmini').innerHTML=h;
+  $('insight').classList.remove('budget');
+  mini('mgA',[[0,0],[0,1],[1,0],[1,1],[3,2],[3,3],[3,4]],
+    [[0,0,1,1,'var(--sq)'],[3,2,3,4,'var(--row)']],[]);
+  mini('mgB',[[0,0],[0,1],[1,0],[1,1],[2,1]],
+    [[0,0,1,1,'var(--sq)'],[0,1,2,1,'var(--row)']],[[0,1],[1,1]]);
+  budget('bdA',7);budget('bdB',5);
+}
+
+const G=['court','goals','board'];
+const steps=[
+ ()=>{show('title');setHeader('','')},
+ ()=>{show('court','board');render();
+   setHeader('The courtyard','Each player has a 5×5 courtyard and 6 lanterns. On your turn, place one lantern on any empty square. That is the whole action.')},
+ ()=>{show(...G);render();
+   setHeader('The goal cards name shapes','Lantern Row: 3 in a line (3 pts). Tea Table: a 2×2 block (4 pts). Gatekeepers: any 2 corners (2 pts). Each goal scores once.')},
+ ()=>{show(...G);place(0,0);st.log='Lantern 1 in a corner. It already counts toward <b class="r">Row</b>, <b class="s">Table</b> and <b class="c">Gatekeepers</b>.';render();
+   setHeader('Turn 1 · A corner','One lantern starts all three goals. Every bar moves. Placement is about what a square can join.')},
+ ()=>{show(...G);place(0,1);st.log='Lantern 2 next to it. <b class="r">Row</b> 2/3 and <b class="s">Table</b> 2/4.';render();
+   setHeader('Turn 2 · Build next to it','Two in a row. Row and Table both grow, because the same two lanterns belong to both shapes.')},
+ ()=>{show(...G);place(2,1);st.outlines=[[0,1,2,1,'var(--row)',true]];
+   st.log='Lantern 3 skips a square. The column has a gap waiting to be filled.';render();
+   setHeader('Turn 3 · A gap on purpose','Why leave a gap? The dashed column needs only its middle square. Hold that thought.')},
+ ()=>{show(...G);place(1,0);st.outlines=[[0,1,2,1,'var(--row)',true],[0,0,1,1,'var(--sq)',true]];st.hot='1,1';
+   st.tags=[{x:PAD+2*STEP+4,y:PAD+STEP+24,col:'var(--gold)',txt:'← needed by 2 goals'}];
+   st.log='Lantern 4 makes <b class="s">Table</b> 3/4. Now <b class="r">Row</b> and <b class="s">Table</b> want the <b class="g">same empty square</b>.';render();
+   setHeader('Turn 4 · Two goals, one missing square','The column needs the glowing square. So does the 2×2 block. One lantern there would finish both.')},
+ ()=>{show(...G);place(1,1);st.outlines=[[0,0,1,1,'var(--sq)',false],[0,1,2,1,'var(--row)',false]];
+   st.log='Lantern 5: <b class="r">Row +3</b> and <b class="s">Table +4</b> = <b class="g">+7 from one lantern</b>.';render();
+   setHeader('Turn 5 · One lantern, two patterns','It completes the column and the 2×2 block at the same time: 3 + 4 = 7 points from a single placement.')},
+ ()=>{show(...G);place(0,4);st.log='Lantern 6 in a second corner: <b class="c">Gatekeepers +2</b>. Total 3 + 4 + 2 = <b class="g">9</b>.';render();
+   setHeader('Turn 6 · The spare lantern','Overlap saved a lantern, so the last one can reach a second corner. All three goals done with 6 lanterns.')},
+ ()=>{show('insight');
+   setHeader('The insight: shared squares do double work','Built apart, Row and Table take 7 lanterns. Built overlapping, the 2 ringed squares count twice, so 5 lanterns do it.')},
+ ()=>{show('insight');$('insight').classList.add('budget');
+   setHeader('Why it matters: the supply is short','With only 6 lanterns, the player who builds apart cannot finish both. The overlapper finishes both and has one left over.')},
+ ()=>{show('end');setHeader('','')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>
