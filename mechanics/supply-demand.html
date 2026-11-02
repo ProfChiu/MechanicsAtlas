@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Supply &amp; Demand Markets</title>
+<style>
+:root{--bg:#10151d;--panel:#1c2531;--panel2:#253141;--line:#3a4a5e;--ink:#eef3f8;--muted:#9fb0c3;
+  --ember:#ff8a3d;--ember2:#c9541c;--copper:#e2a868;--good:#7fd17a;--bad:#ef6a5a;
+  --tess:#4fc3f7;--juno:#c39bff;--pip:#8fdc7a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 70% 0%,#2a2220 0%,#10151d 60%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 110%,rgba(255,138,61,.10),transparent 60%)}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:18px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka",sans-serif;font-weight:600;font-size:38px;letter-spacing:.3px;color:var(--ember)}
+#header p{margin:6px 0 0;font-size:21px;color:var(--muted);max-width:1190px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* market track */
+#track{left:42px;top:142px;width:986px;height:246px;border-radius:20px;
+  background:linear-gradient(175deg,var(--panel2),var(--panel));border:2px solid var(--line);
+  box-shadow:0 14px 36px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06)}
+.pcol{position:absolute;top:10px;width:110px;height:222px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.05)}
+.slot{position:absolute;left:27px;width:56px;height:56px;border-radius:50%;border:2px dashed rgba(255,255,255,.16)}
+.price{position:absolute;left:23px;top:152px;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:"Fredoka",sans-serif;font-weight:600;font-size:34px;color:#1a1208;
+  box-shadow:0 4px 8px rgba(0,0,0,.45),inset 0 -5px 0 rgba(0,0,0,.2)}
+
+/* side boxes */
+.side{left:1046px;width:194px;border-radius:18px;background:linear-gradient(175deg,var(--panel2),var(--panel));border:2px solid var(--line);
+  box-shadow:0 12px 30px rgba(0,0,0,.4)}
+#nextBox{top:142px;height:100px;text-align:center}
+#nextBox .l{margin-top:8px;font-size:19px;color:var(--muted)}
+#nextVal{font-family:"Fredoka",sans-serif;font-weight:600;font-size:50px;line-height:1.1;color:var(--ember)}
+#nextVal.pop{animation:pop .45s ease}
+@keyframes pop{50%{transform:scale(1.3)}}
+#supBox{top:252px;height:136px}
+#supBox .l{position:absolute;top:6px;left:0;right:0;text-align:center;font-size:18px;color:var(--muted)}
+
+/* coal tokens */
+.coal{position:absolute;width:52px;height:52px;z-index:5;border-radius:44% 56% 50% 46%/52% 44% 56% 48%;
+  background:radial-gradient(circle at 34% 30%,#6e6a75 0%,#35323b 45%,#16141a 100%);
+  box-shadow:0 4px 7px rgba(0,0,0,.55),inset 0 -4px 6px rgba(255,120,40,.25);
+  transition:left .8s cubic-bezier(.5,-.2,.3,1.2),top .8s cubic-bezier(.5,-.2,.3,1.2),opacity .4s,box-shadow .4s,transform .4s}
+.coal::after{content:"";position:absolute;left:30px;top:30px;width:9px;height:9px;border-radius:50%;background:radial-gradient(#ffcf8a,#ff7a2a 60%,transparent 70%);opacity:.8}
+.coal.next{box-shadow:0 0 0 4px var(--ember),0 0 24px rgba(255,138,61,.9);animation:throb 1.2s ease-in-out infinite}
+@keyframes throb{50%{transform:scale(1.1)}}
+.coal.hide{opacity:0}
+
+/* players */
+.pl{top:410px;width:380px;height:272px;border-radius:20px;background:linear-gradient(175deg,var(--panel2),var(--panel));
+  border:2px solid var(--line);box-shadow:0 14px 36px rgba(0,0,0,.45);transition:opacity .6s,box-shadow .5s,border-color .5s}
+.pl.act{border-color:var(--ember);box-shadow:0 0 0 3px rgba(255,138,61,.35),0 14px 36px rgba(0,0,0,.45)}
+.pl .nm{position:absolute;left:22px;top:12px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:30px}
+.pl .ord{position:absolute;right:16px;top:14px;width:78px;height:38px;border-radius:19px;background:#0d1218;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800}
+.pl .ord.pop{animation:pop .5s ease}
+.pl .tray{position:absolute;left:16px;top:58px;width:346px;height:64px;border-radius:14px;background:rgba(0,0,0,.25)}
+.pl .r{position:absolute;left:22px;font-size:22px;opacity:0;transform:translateY(8px);transition:opacity .45s,transform .45s}
+.pl .r.on{opacity:1;transform:none}
+.pl .r b{color:var(--ember)}
+.pl .r1{top:134px}.pl .r2{top:170px}
+.pl .tot{top:214px;font-size:26px;font-weight:800}
+.pl .tot b{color:var(--copper);font-size:30px}
+.tess{color:var(--tess)}.juno{color:var(--juno)}.pip{color:var(--pip)}
+
+/* chart overlay */
+#chart{left:42px;top:404px;width:1198px;height:282px;border-radius:20px;z-index:8;
+  background:linear-gradient(175deg,#232d3a,#151c25);border:2px solid var(--line);box-shadow:0 14px 40px rgba(0,0,0,.55)}
+#chart h3{position:absolute;margin:0;top:12px;font-size:22px;font-weight:800;color:var(--ink)}
+#curve{position:absolute;left:16px;top:44px}
+#curve .ax{stroke:#5a6b80;stroke-width:2}
+#curve .grid{stroke:#2e3b4c;stroke-width:1}
+#curve text{fill:var(--muted);font-size:17px;font-family:"Nunito",sans-serif;font-weight:700}
+#curve .ln{fill:none;stroke:var(--ember);stroke-width:4;stroke-linejoin:round;transition:stroke-dashoffset 2s ease;filter:drop-shadow(0 0 6px rgba(255,138,61,.6))}
+#curve .pt{transition:opacity .4s}
+#curve .pv{fill:var(--ink);font-size:18px;font-weight:900}
+#bars{position:absolute;left:640px;top:44px;width:530px;opacity:0;transition:opacity .6s}
+#bars.on{opacity:1}
+.brow{position:relative;height:44px;margin-bottom:4px}
+.brow .bn{position:absolute;left:0;top:7px;width:70px;font-size:22px;font-weight:800}
+.brow .bb{position:absolute;left:76px;top:3px;height:38px;width:0;border-radius:8px;transition:width 1s cubic-bezier(.3,1.3,.5,1);
+  display:flex;align-items:center;justify-content:flex-end;padding-right:10px;font-size:22px;font-weight:900;color:#10151d;overflow:hidden;white-space:nowrap}
+#gap{position:absolute;left:0;top:150px;width:520px;font-size:22px;line-height:1.35;padding:8px 16px;border-left:5px solid var(--ember);
+  background:rgba(255,138,61,.09);border-radius:0 12px 12px 0;opacity:0;transition:opacity .6s 1s}
+#gap.on{opacity:1}
+#gap b{color:var(--ember)}
+
+/* banners */
+.banner{left:340px;top:596px;width:600px;height:56px;border-radius:28px;z-index:9;background:var(--ember);color:#1a1006;
+  display:flex;align-items:center;justify-content:center;font-family:"Fredoka",sans-serif;font-weight:600;font-size:26px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);transform:scale(.6);transition:opacity .5s,transform .5s cubic-bezier(.3,1.6,.5,1)}
+.banner.on{transform:none}
+#sold{left:1046px;top:142px;width:194px;height:100px;border-radius:18px;z-index:9;background:#3a1714;border:2px solid var(--bad);
+  display:flex;align-items:center;justify-content:center;font-family:"Fredoka",sans-serif;font-weight:600;font-size:30px;color:var(--bad);
+  transform:rotate(-6deg) scale(.6);transition:opacity .5s 2.4s,transform .5s 2.4s cubic-bezier(.3,1.6,.5,1)}
+#sold.on{transform:rotate(-6deg)}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--bg);z-index:12;
+  background:radial-gradient(circle at 50% 40%,#2a2220 0%,#10151d 65%)}
+#title .big{font-family:"Fredoka",sans-serif;font-weight:600;font-size:104px;line-height:1;margin:0;
+  background:linear-gradient(90deg,#ffd29a,var(--ember),#e2563a);-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:34px;font-weight:700;color:var(--ink)}
+#title .art{position:relative;width:420px;height:170px}
+#title .art .coal{position:absolute;transition:none}
+#title .art .coal:nth-child(odd){animation:bob 2.2s ease-in-out infinite}
+#title .art .coal:nth-child(even){animation:bob 2.2s ease-in-out infinite .5s}
+@keyframes bob{50%{transform:translateY(-10px)}}
+#title .art svg{position:absolute;left:0;top:0}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* recap */
+#end{left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:20;background:rgba(10,13,18,.9)}
+#end .card2{background:linear-gradient(170deg,#243041,#151c25);border:2px solid var(--ember2);border-radius:24px;padding:32px 48px;width:1000px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#end h2{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:38px;color:var(--ember)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:24px;margin:14px 0;line-height:1.35}
+#end b{color:var(--copper)}
+#end .see{margin-top:18px;font-size:21px;color:var(--muted);font-style:italic}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#34404f;transition:background .3s,transform .3s}
+#dots i.on{background:var(--ember);transform:scale(1.4)}
+#hint{position:absolute;bottom:7px;left:20px;font-size:13px;color:#6c7c90;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="art" id="titleArt"></div>
+    <div class="big">Supply &amp; Demand</div>
+    <h2>Every purchase raises the next price</h2>
+    <div class="press">Press SPACE to open the coal market</div>
+  </div>
+
+  <div id="track" class="panel"></div>
+  <div id="nextBox" class="panel side"><div class="l">Next coal costs</div><div id="nextVal">3</div></div>
+  <div id="supBox" class="panel side"><div class="l">Supply: +6 per round</div></div>
+
+  <div id="pTess" class="panel pl"><div class="nm tess">Tess</div><div class="ord">1st</div><div class="tray"></div>
+    <div class="r r1"></div><div class="r r2"></div><div class="r tot"></div></div>
+  <div id="pJuno" class="panel pl"><div class="nm juno">Juno</div><div class="ord">2nd</div><div class="tray"></div>
+    <div class="r r1"></div><div class="r r2"></div><div class="r tot"></div></div>
+  <div id="pPip" class="panel pl"><div class="nm pip">Pip</div><div class="ord">3rd</div><div class="tray"></div>
+    <div class="r r1"></div><div class="r r2"></div><div class="r tot"></div></div>
+
+  <div id="dyn"></div>
+
+  <div id="flip" class="panel banner">Round 2: turn order flips</div>
+  <div id="sold" class="panel">SOLD OUT</div>
+
+  <div id="chart" class="panel">
+    <h3 style="left:30px">Price of each coal, in the order bought</h3>
+    <svg id="curve" width="590" height="230"></svg>
+    <div id="bars">
+      <div class="brow"><div class="bn tess">Tess</div><div class="bb" id="bT" style="background:var(--tess)">10</div></div>
+      <div class="brow"><div class="bn juno">Juno</div><div class="bb" id="bJ" style="background:var(--juno)">14</div></div>
+      <div class="brow"><div class="bn pip">Pip</div><div class="bb" id="bP" style="background:var(--pip)">19</div></div>
+      <div id="gap">Same 3 coal each. Buying last cost Pip <b>19 − 10 = 9</b> more coins than Tess.</div>
+    </div>
+    <h3 id="barsH" style="left:670px;opacity:0;transition:opacity .6s">Coins paid for 3 coal</h3>
+  </div>
+
+  <div id="end" class="panel"><div class="card2">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Each purchase raises the price for the next buyer.</b> Players feel demand directly, and the cheap end of the track goes first.</li>
+      <li><b>Turn order becomes money.</b> The same 3 coal cost 10 or 19. Designers rotate or flip turn order so no one keeps the cheap seat.</li>
+      <li><b>The refill rate is the dial.</b> Refill less than players buy and prices creep up each round. Refill more and they relax.</li>
+    </ol>
+    <div class="see">You'll see this in: Power Grid, Brass, Food Chain Magnate.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">SPACE / click ▸ next &nbsp;·&nbsp; ← back &nbsp;·&nbsp; R restart</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const S=$('stage'),DYN=$('dyn'),dotsEl=$('dots');
+const px=n=>n+'px';
+let cur=0,token=0;
+
+// geometry
+const TX=42,TY=142;                                  // track panel origin
+const colX=p=>TX+12+(p-1)*121;                       // price column left (stage coords)
+const SLOT_Y=[TY+22,TY+86];                          // token tops for slot 0 / slot 1
+const PL={tess:{x:42,el:'pTess'},juno:{x:451,el:'pJuno'},pip:{x:860,el:'pPip'}};
+const PCOL=p=>`hsl(${130-(p-1)*17},70%,${58-(p-1)*1.5}%)`;
+const NAME={tess:'Tess',juno:'Juno',pip:'Pip'};
+
+// static track art
+(function(){
+  const t=$('track');let h='';
+  for(let p=1;p<=8;p++){
+    h+=`<div class="pcol" style="left:${12+(p-1)*121}px"><div class="slot" style="top:12px"></div><div class="slot" style="top:76px"></div>
+      <div class="price" style="background:radial-gradient(circle at 35% 30%,#fff6,transparent 50%),${PCOL(p)}">${p}</div></div>`;
+  }
+  t.insertAdjacentHTML('afterbegin',h);
+  [['pTess',42],['pJuno',451],['pPip',860]].forEach(([id,x])=>$(id).style.left=px(x));
+  // title art: coal climbing a rising price line
+  let a='<svg width="420" height="170"><path d="M20 150 L130 120 L240 80 L360 30" fill="none" stroke="#ff8a3d" stroke-width="5" stroke-dasharray="10 8" stroke-linecap="round"/><path d="M345 22 L372 26 L360 50" fill="none" stroke="#ff8a3d" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  [[0,110],[110,82],[220,44],[330,4]].forEach(([x,y])=>a+=`<div class="coal" style="left:${x}px;top:${y}px"></div>`);
+  $('titleArt').innerHTML=a;
+  // chart axes
+  const c=$('curve');let s='';
+  const X0=60,Y0=200,YS=22;
+  for(let v=0;v<=8;v+=2){const y=Y0-v*YS;s+=`<line class="grid" x1="${X0}" x2="560" y1="${y}" y2="${y}"/><text x="${X0-12}" y="${y+6}" text-anchor="end">${v}</text>`}
+  s+=`<line class="ax" x1="${X0}" x2="${X0}" y1="10" y2="${Y0}"/><line class="ax" x1="${X0}" x2="560" y1="${Y0}" y2="${Y0}"/>`;
+  s+=`<text x="${X0+250}" y="226" text-anchor="middle">coal bought, 1st to 9th</text>`;
+  c.innerHTML=s;
+})();
+
+let tokens,slots,nextP,ptPath;
+const CX=n=>60+(n-.5)*54, CY=v=>200-v*22;
+const R1=[['tess',3,3,4],['juno',4,5,5],['pip',6,6,7]];
+
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+function later(fn,ms,instant){if(instant||!ms)fn();else{const t=token;setTimeout(()=>{if(t===token)fn()},ms)}}
+function mk(cls,st){const d=document.createElement('div');d.className=cls;Object.assign(d.style,st);DYN.appendChild(d);return d}
+
+function reset(){
+  DYN.innerHTML='';
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on','act'));
+  setHeader('','');
+  tokens=[];slots={};
+  // starting market: prices 3..8 full (2 each) = 12 coal
+  for(let p=3;p<=8;p++)for(let s=0;s<2;s++){const t=mk('coal',{left:px(colX(p)+29),top:px(SLOT_Y[s])});slots[p+'-'+s]=t;tokens.push(t)}
+  // supply: 6 waiting coal
+  for(let i=0;i<6;i++){const t=mk('coal hide',{left:px(1056+(i%3)*60),top:px(282+Math.floor(i/3)*52)});t.sup=true;tokens.push(t)}
+  ['tess','juno','pip'].forEach(k=>{const e=$(PL[k].el);e.querySelectorAll('.r').forEach(r=>{r.classList.remove('on');r.innerHTML=''});
+    e.bought=0;e.querySelector('.ord').textContent={tess:'1st',juno:'2nd',pip:'3rd'}[k]});
+  $('nextVal').textContent='3';
+  $('bars').classList.remove('on');$('barsH').style.opacity=0;$('gap').classList.remove('on');
+  ['bT','bJ','bP'].forEach(b=>$(b).style.width='0');
+  // curve points
+  const c=$('curve');c.querySelectorAll('.dynp').forEach(e=>e.remove());
+  const vals=[3,3,4,4,5,5,6,6,7],who=['tess','tess','tess','juno','juno','juno','pip','pip','pip'];
+  const d='M'+vals.map((v,i)=>`${CX(i+1)} ${CY(v)}`).join(' L');
+  c.insertAdjacentHTML('beforeend',`<path class="ln dynp" d="${d}" style="stroke-dasharray:700;stroke-dashoffset:700"/>`+
+    vals.map((v,i)=>`<g class="pt dynp" style="opacity:0;transition-delay:${200+i*200}ms"><circle cx="${CX(i+1)}" cy="${CY(v)}" r="9" fill="var(--${who[i]})" stroke="#10151d" stroke-width="2"/>
+      <text class="pv" x="${CX(i+1)}" y="${CY(v)-16}" text-anchor="middle">${v}</text></g>`).join('')+
+    `<g class="dynp" style="opacity:0;transition:opacity .6s 2s" id="legend"><text x="90" y="40" style="fill:var(--tess)">Tess</text><text x="150" y="40" style="fill:var(--juno)">Juno</text><text x="214" y="40" style="fill:var(--pip)">Pip</text></g>`);
+}
+
+function cheapest(){for(let p=1;p<=8;p++)for(let s=0;s<2;s++)if(slots[p+'-'+s])return p;return null}
+function markNext(){
+  tokens.forEach(t=>t.classList.remove('next'));
+  const p=cheapest();if(p===null)return;
+  for(let s=0;s<2;s++)if(slots[p+'-'+s]){slots[p+'-'+s].classList.add('next');break}
+}
+function showNext(instant){const p=cheapest(),v=$('nextVal');v.textContent=p===null?'–':p;if(!instant){v.classList.remove('pop');void v.offsetWidth;v.classList.add('pop')}}
+
+// a player buys n coal, cheapest first; returns prices. Animated with a stagger starting at t0 ms.
+function buy(who,n,round,t0,instant){
+  const e=$(PL[who].el),prices=[];
+  later(()=>{document.querySelectorAll('.pl').forEach(p=>p.classList.remove('act'));e.classList.add('act')},t0,instant);
+  for(let k=0;k<n;k++){
+    let key=null;
+    for(let p=1;p<=8&&!key;p++)for(let s=0;s<2;s++)if(slots[p+'-'+s]){key=p+'-'+s;break}
+    const t=slots[key];delete slots[key];prices.push(+key.split('-')[0]);
+    const i=e.bought++;
+    t.style.transitionDelay=(t0+k*450)+'ms';
+    t.classList.remove('next');
+    Object.assign(t.style,{left:px(PL[who].x+24+i*58),top:px(468+6)});
+    later(()=>{showNext(instant);markNext()},t0+k*450+800,instant);
+  }
+  const sum=prices.reduce((a,b)=>a+b,0);
+  const r=e.querySelector('.r'+round);
+  r.innerHTML=`Round ${round}: ${prices.join(' + ')} = <b>${sum}</b>`;
+  r.style.transitionDelay=(t0+n*450+400)+'ms';r.classList.add('on');
+  return sum;
+}
+
+function refill(instant){
+  // fill from the expensive end down: price 8..1, slot 1 then 0
+  const sup=tokens.filter(t=>t.sup);let k=0;
+  for(let p=8;p>=1&&k<sup.length;p--)for(let s=1;s>=0&&k<sup.length;s--){
+    if(slots[p+'-'+s])continue;
+    const t=sup[k++];t.sup=false;slots[p+'-'+s]=t;
+    t.style.transitionDelay=(k*250)+'ms';
+    Object.assign(t.style,{left:px(colX(p)+29),top:px(SLOT_Y[s])});
+  }
+  later(()=>{showNext(instant);markNext()},k*250+900,instant);
+}
+
+const steps=[
+ ()=>{$('title').classList.add('on')},
+ ()=>{$('title').classList.remove('on');['track','nextBox','supBox'].forEach(id=>$(id).classList.add('on'));
+   tokens.forEach(t=>{if(t.sup){t.style.transitionDelay='0ms';t.classList.remove('hide')}});
+   setHeader('The market track','Coal sits on a track priced 1 (left) to 8 (right), two coal per price. 12 coal are for sale, from 3 up to 8. The supply bin waits to refill it.')},
+ (instant)=>{markNext();
+   setHeader('Rule: always buy the cheapest coal','You must take the cheapest coal left on the track. Right now that costs 3. Each coal you take makes the next one cost more.')},
+ ()=>{['pTess','pJuno','pPip'].forEach((id,i)=>{$(id).style.transitionDelay=(i*200)+'ms';$(id).classList.add('on')});
+   setHeader('Three factories, three coal each','Tess, Juno and Pip each need 3 coal this round. They buy in turn order: Tess first, Juno second, Pip last.')},
+ (instant)=>{buy('tess',3,1,0,instant);
+   setHeader('Tess buys first: 10 coins','She takes the two 3s and a 4: 3 + 3 + 4 = 10. The cheap end of the track is now empty.')},
+ (instant)=>{buy('juno',3,1,0,instant);
+   setHeader('Juno buys second: 14 coins','The bargains are gone. Juno pays 4 + 5 + 5 = 14 for the same 3 coal.')},
+ (instant)=>{buy('pip',3,1,0,instant);
+   setHeader('Pip buys last: 19 coins','Only the dear coal is left. Pip pays 6 + 6 + 7 = 19. Three coal remain, at 7, 8 and 8.')},
+ ()=>{document.querySelectorAll('.pl').forEach(p=>p.classList.remove('act'));
+   $('chart').classList.add('on');
+   const c=$('curve');c.querySelector('.ln').style.strokeDashoffset=0;c.querySelectorAll('.pt').forEach(g=>g.style.opacity=1);$('legend').style.opacity=1;
+   setHeader('Demand pushes the price up the track','Nine coal bought, one after another: 3, 3, 4, 4, 5, 5, 6, 6, 7. Every purchase made the next one dearer.')},
+ ()=>{$('bars').classList.add('on');$('barsH').style.opacity=1;
+   $('bT').style.width='190px';$('bJ').style.width='266px';$('bP').style.width='361px';$('gap').classList.add('on');
+   setHeader('Turn order is money','Everyone bought exactly 3 coal. The only difference was when they bought. First paid 10, last paid 19.')},
+ (instant)=>{$('chart').classList.remove('on');refill(instant);
+   setHeader('Refill: the supply adds 6 coal','New coal fills the track from the expensive end down, so the price falls back to 4. Players bought 9 but only 6 came back, so 4 is still above the 3 we started at.')},
+ (instant)=>{$('flip').classList.add('on');
+   const o={tess:'3rd',juno:'2nd',pip:'1st'};
+   ['tess','juno','pip'].forEach(k=>{const b=$(PL[k].el).querySelector('.ord');b.textContent=o[k];if(!instant){b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')}});
+   setHeader('Round 2: turn order flips','A common fix: whoever paid most buys first next round. Now Pip goes first and Tess, who got the bargains, goes last.')},
+ (instant)=>{$('flip').classList.remove('on');
+   buy('pip',3,2,0,instant);buy('juno',3,2,1300,instant);buy('tess',3,2,2600,instant);
+   $('sold').style.transitionDelay='4.2s';$('sold').classList.add('on');
+   setHeader('Round 2: same purchase, new prices','Pip pays 4 + 5 + 5 = 14. Juno pays 6 + 6 + 7 = 19. Tess pays 7 + 8 + 8 = 23. The track is sold out.')},
+ ()=>{document.querySelectorAll('.pl').forEach(p=>p.classList.remove('act'));
+   [['tess',10,23],['juno',14,19],['pip',19,14]].forEach(([k,a,b],i)=>{const r=$(PL[k].el).querySelector('.tot');
+     r.innerHTML=`Total: ${a} + ${b} = <b>${a+b}</b>`;r.style.transitionDelay=(i*250)+'ms';r.classList.add('on');$(PL[k].el).classList.add('act')});
+   setHeader('Two rounds later: 33 coins each','Flipping turn order shared out the cheap seat. Each player paid 33 coins for 6 coal.')},
+ ()=>{$('end').classList.add('on')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>
