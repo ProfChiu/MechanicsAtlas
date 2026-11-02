@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Take-That</title>
+<style>
+:root{--bg:#1a1210;--panel:#2a1d19;--panel2:#33241f;--line:#4d3730;--ink:#fbf3ea;--muted:#c4ab9c;
+  --gold:#ffc53d;--red:#ef5b4c;--blue:#4c8dff;--green:#3cc985;--violet:#b48cff;--copper:#d9894a;
+  --ash:#ef7b45;--bram:#4c8dff;--cleo:#3cc985;--dot:#c77dff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 28% 18%,#3a241c 0%,#1a1210 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:20px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka",sans-serif;font-weight:600;font-size:36px;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;line-height:1.3;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+#title .big{font-family:"Fredoka",sans-serif;font-size:150px;font-weight:700;line-height:1;margin:0;
+  background:linear-gradient(90deg,var(--ash),var(--gold),var(--red));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 18px rgba(239,91,76,.35))}
+#title h2{margin:0;font-size:36px;font-weight:800}
+#title .fan{display:flex;gap:-20px;margin:26px 0 10px;height:200px;align-items:flex-end}
+#title .fan .card{position:relative;margin:0 -14px}
+#title .fan .card:nth-child(1){transform:rotate(-14deg) translateY(14px)}
+#title .fan .card:nth-child(2){transform:translateY(-6px);animation:jab 1.8s ease-in-out infinite}
+#title .fan .card:nth-child(3){transform:rotate(14deg) translateY(14px)}
+@keyframes jab{0%,100%{transform:translateY(-6px)}50%{transform:translateY(-26px) rotate(-3deg)}}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* cards */
+.card{width:142px;height:198px;border-radius:14px;padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;
+  background:linear-gradient(170deg,#fff5e3,#ecd6b4);color:#3a2318;border:3px solid #7a4b2e;
+  box-shadow:inset 0 0 0 3px #f6e6c8,0 10px 24px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.4)}
+.card .ct{font-family:"Fredoka",sans-serif;font-weight:600;font-size:19px;text-align:center;line-height:1.1;min-height:42px;display:flex;align-items:center}
+.card .gl{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;margin:4px 0 6px;
+  font-family:"Fredoka",sans-serif;font-weight:700;font-size:34px;color:#fff;box-shadow:inset 0 -4px 0 rgba(0,0,0,.25)}
+.card.hook .gl{background:radial-gradient(circle at 40% 35%,#ff8a70,#c23a2b)}
+.card.dust .gl{background:radial-gradient(circle at 40% 35%,#c9a8ff,#6b45c2)}
+.card .tx{font-size:16px;font-weight:800;text-align:center;line-height:1.2}
+.card.play{box-shadow:inset 0 0 0 3px #f6e6c8,0 0 0 4px var(--gold),0 0 30px rgba(255,197,61,.6),0 10px 24px rgba(0,0,0,.5)}
+
+/* lanes */
+#lanes{position:absolute;inset:0;transition:opacity .6s;opacity:0}
+#lanes.on{opacity:1}
+#lanes.dim{opacity:.12}
+.lane{position:absolute;left:100px;width:790px;height:84px;transition:opacity .5s,filter .5s}
+.lane .av{position:absolute;left:0;top:10px;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;
+  font-family:"Fredoka",sans-serif;font-weight:700;font-size:32px;color:#fff;text-shadow:0 2px 3px rgba(0,0,0,.35);
+  box-shadow:inset 0 -5px 0 rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.45),0 0 0 3px rgba(255,255,255,.14);transition:box-shadow .5s}
+.lane.atk .av{box-shadow:inset 0 -5px 0 rgba(0,0,0,.25),0 0 0 4px var(--gold),0 0 24px rgba(255,197,61,.7)}
+.lane.hurt .av{animation:shake .45s ease 2}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.lane .crown{position:absolute;left:18px;top:-16px;font-size:28px;color:var(--gold);opacity:0;transform:translateY(8px) scale(.5);
+  transition:opacity .4s,transform .5s cubic-bezier(.3,1.6,.5,1);text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.lane.lead .crown{opacity:1;transform:none}
+.lane .hits{position:absolute;left:46px;top:2px;min-width:30px;height:26px;padding:0 6px;border-radius:13px;background:var(--red);
+  font-size:16px;font-weight:900;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.5);opacity:0;transform:scale(.4);
+  transition:opacity .4s,transform .4s cubic-bezier(.3,1.6,.5,1)}
+.lane .hits.on{opacity:1;transform:none}
+.lane .nm{position:absolute;left:76px;top:26px;font-size:24px;font-weight:900}
+.track{position:absolute;left:160px;top:22px;width:420px;height:40px;border-radius:10px;background:
+  repeating-linear-gradient(90deg,transparent 0 27px,rgba(255,255,255,.08) 27px 28px),#140d0b;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.6),0 0 0 2px var(--line)}
+.track .fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:10px;transition:width .9s cubic-bezier(.4,1.3,.5,1);
+  box-shadow:inset 0 -6px 0 rgba(0,0,0,.2),inset 0 3px 0 rgba(255,255,255,.2)}
+.track .goal{position:absolute;right:-4px;top:-8px;bottom:-8px;width:4px;border-radius:2px;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.lane .num{position:absolute;left:592px;top:16px;width:58px;text-align:center;font-family:"Fredoka",sans-serif;font-weight:700;font-size:36px}
+.lane .tag{position:absolute;left:656px;top:22px;width:134px;min-height:40px;padding:4px 8px;border-radius:10px;font-size:18px;font-weight:900;
+  line-height:1.1;display:flex;align-items:center;justify-content:center;text-align:center;opacity:0;transform:translateX(-10px);transition:opacity .4s,transform .4s}
+.lane .tag.on{opacity:1;transform:none}
+.tag.sleep{background:#3d2d66;color:#e2d3ff;box-shadow:0 0 0 2px var(--violet)}
+.tag.win{background:var(--gold);color:#3a2318;box-shadow:0 0 18px rgba(255,197,61,.7)}
+.tag.out{background:#5a1f1a;color:#ffd2cc;box-shadow:0 0 0 2px var(--red)}
+.lane.gone>:not(.tag){filter:grayscale(1);opacity:.45}
+.float{position:absolute;font-family:"Fredoka",sans-serif;font-weight:700;font-size:30px;z-index:8;pointer-events:none;
+  text-shadow:0 2px 6px rgba(0,0,0,.8);animation:rise 1.8s ease-out forwards}
+.float.minus{color:#ff8a7a}.float.plus{color:#7dffb8}
+@keyframes rise{0%{opacity:0;transform:translateY(10px) scale(.6)}15%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-34px)}}
+
+#band{position:absolute;top:160px;height:398px;left:260px;width:0;border-left:3px dashed var(--gold);border-right:3px dashed var(--gold);
+  background:linear-gradient(rgba(255,197,61,.12),rgba(255,197,61,.04));opacity:0;transition:left .9s cubic-bezier(.4,1.3,.5,1),width .9s cubic-bezier(.4,1.3,.5,1),opacity .5s;z-index:1}
+#band.on{opacity:1}
+#band .lb{position:absolute;bottom:-40px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:22px;font-weight:900;color:var(--gold)}
+#arrows{position:absolute;left:0;top:0;width:1280px;height:720px;pointer-events:none;z-index:6;overflow:visible}
+#arrows>path{fill:none;stroke-width:5;stroke-linecap:round}
+#arrows>path.draw{transition:stroke-dashoffset .8s ease}
+#arrows>path.opt{stroke-dasharray:10 9;stroke-width:4;opacity:.95}
+
+/* side panel */
+#side{position:absolute;left:910px;top:160px;width:330px;height:500px;z-index:5}
+#side .box{background:linear-gradient(170deg,var(--panel2),var(--panel));border:2px solid var(--line);border-radius:18px;padding:18px 20px;
+  box-shadow:0 14px 34px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06)}
+#side h3{margin:0 0 10px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:24px;color:var(--gold)}
+#side .ln{font-size:20px;line-height:1.3;margin:8px 0}
+#side .ln b{color:var(--gold)}
+#side .pair{display:flex;gap:16px;justify-content:center}
+#side .opt{border-radius:12px;padding:10px 12px;margin:10px 0;font-size:20px;line-height:1.25;background:rgba(0,0,0,.25);border-left:6px solid var(--muted)}
+#side .opt.good{border-left-color:var(--green)}
+#side .opt.bad{border-left-color:var(--red)}
+#side .who{font-weight:900}
+#side .big{font-family:"Fredoka",sans-serif;font-weight:700;font-size:56px;text-align:center;line-height:1;margin:6px 0}
+#side .row{display:flex;justify-content:space-between;align-items:center;font-size:20px;margin:6px 0}
+#side .row .sc{display:flex;gap:6px}
+#side .row .sc span{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-weight:900;font-size:19px;color:#fff}
+#side .playing{text-align:center;font-size:22px;font-weight:900;margin-top:12px}
+.c-ash{color:var(--ash)}.c-bram{color:var(--bram)}.c-cleo{color:var(--cleo)}.c-dot{color:var(--dot)}
+
+/* toolbox */
+#tools{left:60px;right:60px;top:170px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+#tools .t{background:linear-gradient(170deg,var(--panel2),var(--panel));border:2px solid var(--line);border-radius:18px;padding:18px 22px;
+  box-shadow:0 14px 34px rgba(0,0,0,.45);opacity:0;transform:translateY(16px);transition:opacity .5s,transform .5s}
+#tools.on .t{opacity:1;transform:none}
+#tools .t h4{margin:0 0 6px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:25px;color:var(--gold)}
+#tools .t p{margin:0;font-size:20px;line-height:1.3}
+#tools .t .fx{font-size:17px;color:var(--muted);margin-top:8px;font-weight:800;letter-spacing:.3px}
+
+/* end */
+#end{inset:0;background:rgba(18,10,8,.84);display:flex;align-items:center;justify-content:center;z-index:20}
+#end .cardx{background:#2a1d19;border:2px solid #5d4136;border-radius:24px;padding:34px 48px;width:960px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+#end h2{margin:0 0 14px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:38px;color:var(--gold)}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .see{margin-top:18px;font-size:20px;color:var(--muted)}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#4d3730;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;left:20px;font-size:13px;color:#8a6f62;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Take-That</div>
+    <h2>Cards that hurt someone else</h2>
+    <div class="fan" id="fan"></div>
+    <div class="press">Press SPACE to start</div>
+  </div>
+
+  <div id="lanes">
+    <div id="band"><div class="lb"></div></div>
+    <div id="laneBox"></div>
+  </div>
+  <svg id="arrows" viewBox="0 0 1280 720"></svg>
+  <div id="side"></div>
+
+  <div id="tools" class="panel">
+    <div class="t"><h4>Point the attacks up</h4><p>Cards that say "steal from the leader" or "from anyone ahead of you" aim the catch-up for the players.</p><div class="fx">FIXES: picking on the weak</div></div>
+    <div class="t"><h4>Never knock anyone out</h4><p>A floor (you always keep 1 coin) or a quick way back in. Nobody sits and watches.</p><div class="fx">FIXES: player elimination</div></div>
+    <div class="t"><h4>Hide or blur the score</h4><p>If nobody is sure who leads, it is hard to hand someone the win on purpose.</p><div class="fx">FIXES: kingmaking</div></div>
+    <div class="t"><h4>Make attacks cost you</h4><p>Playing a card uses your turn. Hurting others should slow you down a little too.</p><div class="fx">FIXES: endless pile-ons</div></div>
+  </div>
+
+  <div id="end" class="panel"><div class="cardx">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li>Players aim at the leader, so take-that is a <b>built-in catch-up system</b>. In our game the gap shrank from <b>5 to 2</b> in three cards.</li>
+      <li>The same freedom causes <b>kingmaking</b>: a player who cannot win can still pick who does.</li>
+      <li>Targets matter. Shape them with <b>rules</b> (hit the leader, no elimination, hidden scores) so attacks feel fair.</li>
+    </ul>
+    <div class="see">You'll see this in: Munchkin, Exploding Kittens, Unstable Unicorns, Love Letter.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">SPACE / click ▸ next &nbsp;·&nbsp; ← back &nbsp;·&nbsp; R restart</div>
+</div>
+
+<script>
+const S=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+const P=[{n:'Ash',k:'ash',c:'#ef7b45',d:'#b8501f'},{n:'Bram',k:'bram',c:'#4c8dff',d:'#2a55b8'},
+         {n:'Cleo',k:'cleo',c:'#3cc985',d:'#1f8a57'},{n:'Dot',k:'dot',c:'#c77dff',d:'#7f3fc0'}];
+const LT=[170,268,366,464];             // lane tops
+const TX=260,CW=28;                      // track x on stage, px per coin
+const yc=i=>LT[i]+42;
+const ARROWCOLS=['#ef5b4c','#8a6f62','#b48cff','#ef7b45','#4c8dff'];
+const nm=i=>`<span class="who c-${P[i].k}">${P[i].n}</span>`;
+
+const HOOK=`<div class="card hook"><div class="ct">Grabbing Hook</div><div class="gl">−2</div><div class="tx">Steal 2 coins from any merchant.</div></div>`;
+const DUST=`<div class="card dust"><div class="ct">Sleep Dust</div><div class="gl">Zz</div><div class="tx">Any merchant skips their next turn.</div></div>`;
+const playCard=c=>c.replace('class="card','class="card play');
+$('fan').innerHTML=HOOK+DUST+HOOK;
+
+$('laneBox').innerHTML=P.map((p,i)=>`<div class="lane" id="ln${i}" style="top:${LT[i]}px">
+  <div class="av" style="background:radial-gradient(circle at 38% 32%,${p.c},${p.d})">${p.n[0]}</div>
+  <div class="crown">♛</div><div class="hits"></div>
+  <div class="nm" style="color:${p.c}">${p.n}</div>
+  <div class="track"><div class="fill" style="background:linear-gradient(90deg,${p.d},${p.c})"></div><div class="goal"></div></div>
+  <div class="num">0</div><div class="tag"></div></div>`).join('');
+const lanes=P.map((_,i)=>$('ln'+i));
+const dotsEl=$('dots');
+let cur=0;
+
+function setHeader(t,s){
+  const h=$('header');h.innerHTML=t?`<h1>${t}</h1><p>${s}</p>`:'';
+  h.classList.remove('anim');void h.offsetWidth;if(t)h.classList.add('anim');
+}
+function setSide(html){
+  const d=$('side');d.innerHTML=html?`<div class="box">${html}</div>`:'';
+  d.classList.remove('anim');void d.offsetWidth;if(html)d.classList.add('anim');
+}
+function arc(f,t,col,opt,instant){
+  const b=34+Math.abs(f-t)*16,x=97,y1=yc(f),y2=yc(t)+(t>f?-14:14);
+  const path=`M${x} ${y1} Q${x-b} ${(y1+y2)/2} ${x} ${y2}`;
+  const svg=$('arrows');
+  svg.insertAdjacentHTML('beforeend',`<path d="${path}" stroke="${col}" class="${opt?'opt':'draw'}" marker-end="url(#m${col.slice(1)})"/>`);
+  const p=svg.lastElementChild;
+  if(!opt&&!instant){const L=p.getTotalLength();p.style.strokeDasharray=L;p.style.strokeDashoffset=L;void p.getBoundingClientRect();p.style.strokeDashoffset=0}
+}
+function floatAt(i,txt,score,instant){
+  if(instant)return;
+  const f=document.createElement('div');f.className='float '+(txt[0]==='+'?'plus':'minus');f.textContent=txt;
+  f.style.left=(TX+Math.max(score,1)*CW-24)+'px';f.style.top=(LT[i]+20)+'px';$('lanes').appendChild(f);
+  setTimeout(()=>f.remove(),1900);
+}
+
+/* full scene state for one beat */
+function scene(instant,st){
+  const sc=st.scores||[0,0,0,0];
+  $('lanes').className=st.lanes===false?'':(st.dim?'on dim':'on');
+  const max=Math.max(...sc);
+  lanes.forEach((l,i)=>{
+    l.querySelector('.fill').style.width=(sc[i]*CW)+'px';
+    l.querySelector('.num').textContent=sc[i];
+    l.classList.toggle('lead',st.crown!==false&&max>0&&sc[i]===max&&sc.filter(v=>v===max).length===1);
+    l.classList.toggle('atk',st.atk===i);
+    l.classList.toggle('gone',!!(st.gone&&st.gone[i]));
+    l.classList.remove('hurt');
+    const h=l.querySelector('.hits'),n=st.hits?st.hits[i]:0;h.textContent='hit ×'+n;h.classList.toggle('on',n>0);
+    const tg=l.querySelector('.tag'),t=st.tags&&st.tags[i];
+    tg.className='tag'+(t?' on '+t[0]:'');tg.textContent=t?t[1]:'';
+  });
+  if(st.hurt!==undefined&&!instant){const l=lanes[st.hurt];void l.offsetWidth;l.classList.add('hurt')}
+  (st.deltas||[]).forEach(([i,txt])=>floatAt(i,txt,sc[i],instant));
+  const band=$('band');
+  if(st.band){const mn=Math.min(...sc);band.classList.add('on');band.style.left=(TX+mn*CW-1)+'px';band.style.width=((max-mn)*CW+2)+'px';
+    band.querySelector('.lb').textContent='Gap: '+(max-mn)+' coins'}
+  else band.classList.remove('on');
+  $('arrows').innerHTML='<defs>'+ARROWCOLS.map(c=>`<marker id="m${c.slice(1)}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="3.6" markerHeight="3.6" orient="auto"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`).join('')+'</defs>';
+  (st.arrows||[]).forEach(a=>arc(a[0],a[1],a[2],a[3],instant));
+  setSide(st.side||'');
+}
+function reset(){
+  ['title','tools','end'].forEach(id=>$(id).classList.remove('on'));
+  document.querySelectorAll('.float').forEach(f=>f.remove());
+}
+const scRow=(lab,v)=>`<div class="row"><span>${lab}</span><span class="sc">${v.map((n,i)=>`<span style="background:${P[i].d}">${n}</span>`).join('')}</span></div>`;
+
+const steps=[
+ (I)=>{$('title').classList.add('on');scene(I,{lanes:false});setHeader('','')},
+ (I)=>{$('title').classList.remove('on');
+   scene(I,{scores:[0,0,0,0],side:`<h3>The race</h3>
+     <div class="ln">Four merchants. On your turn, pick one:</div>
+     <div class="opt good">Collect <b>1 to 3</b> coins</div>
+     <div class="opt bad">Play a card from your hand</div>
+     <div class="ln">First to <b>15 coins</b> wins.</div>`});
+   setHeader('Four merchants race to 15 coins','Ash, Bram, Cleo and Dot each have a bar. The gold line at the end is the goal.')},
+ (I)=>{scene(I,{scores:[0,0,0,0],side:`<h3>Take-that cards</h3><div class="pair">${HOOK}${DUST}</div>
+     <div class="ln">Neither card helps you build. Each one works by <b>hurting someone else</b>.</div>`});
+   setHeader('The take-that cards','Every attack needs a target. The player who plays it chooses who gets hurt.')},
+ (I)=>{scene(I,{scores:[9,6,5,4],band:true,deltas:[[0,'+9'],[1,'+6'],[2,'+5'],[3,'+4']],side:`<h3>Rounds 1 to 3</h3>
+     <div class="ln">Everyone collects. Ash rolls well and leads with <b>9</b>.</div>
+     <div class="ln">The dashed band shows the gap between first and last: <b>9 − 4 = 5</b>.</div>`});
+   setHeader('A few rounds in, Ash pulls ahead','Without attacks, a lead like this tends to hold. Now the cards come out.')},
+ (I)=>{scene(I,{scores:[9,6,5,4],band:true,atk:1,arrows:[[1,0,'#ef5b4c',1],[1,2,'#8a6f62',1],[1,3,'#8a6f62',1]],side:`<h3>${nm(1)}'s Grabbing Hook</h3>
+     <div class="opt good">Hit ${nm(0)}: Ash 9 → 7, Bram 6 → 8. Bram takes the lead.</div>
+     <div class="opt bad">Hit ${nm(2)} or ${nm(3)}: Bram gets 8, but Ash keeps 9 and stays in front.</div>
+     <div class="ln">Hitting anyone else <b>helps the leader</b>.</div>`});
+   setHeader('Bram holds a Grabbing Hook. Who should it hit?','Every target is legal. Only one of them slows down the player who is winning.')},
+ (I)=>{scene(I,{scores:[7,8,5,4],band:true,atk:1,hurt:0,hits:[1,0,0,0],deltas:[[0,'−2'],[1,'+2']],arrows:[[1,0,'#ef5b4c']],
+     side:`<div class="pair">${playCard(HOOK)}</div><div class="playing">${nm(1)} hooks ${nm(0)}</div>
+     <div class="ln" style="text-align:center">Ash 9 → <b>7</b> · Bram 6 → <b>8</b></div>`});
+   setHeader('Bram hits the leader','Ash loses 2, Bram gains 2. The crown moves, and so does the target.')},
+ (I)=>{scene(I,{scores:[7,8,5,4],band:true,atk:2,hurt:1,hits:[1,1,0,0],tags:[0,['sleep','Skips next turn']],arrows:[[2,1,'#b48cff']],
+     side:`<div class="pair">${playCard(DUST)}</div><div class="playing">${nm(2)} dusts ${nm(1)}</div>
+     <div class="ln" style="text-align:center">Bram leads with 8, so Bram loses a turn.</div>`});
+   setHeader('Now Bram leads, so Bram is the target','Cleo does not attack Ash anymore. Players aim at whoever is in front right now.')},
+ (I)=>{scene(I,{scores:[7,6,5,6],band:true,atk:3,hurt:1,hits:[1,2,0,0],tags:[0,['sleep','Skips next turn']],deltas:[[1,'−2'],[3,'+2']],arrows:[[3,1,'#ef5b4c']],
+     side:`<div class="pair">${playCard(HOOK)}</div><div class="playing">${nm(3)} hooks ${nm(1)}</div>
+     <div class="ln" style="text-align:center">Bram 8 → <b>6</b> · Dot 4 → <b>6</b></div>`});
+   setHeader('Dot piles on','Bram is still the leader, so Bram takes the hit. Dot, who was last, climbs to 6.')},
+ (I)=>{scene(I,{scores:[7,6,5,6],band:true,hits:[1,2,0,0],tags:[0,['sleep','Skips next turn']],side:`<h3>Before and after</h3>
+     ${scRow('Before',[9,6,5,4])}${scRow('After',[7,6,5,6])}
+     <div class="big">5 → 2</div><div class="ln" style="text-align:center">gap between first and last</div>
+     <div class="ln"><b>3 attacks, 3 hits on the leader.</b> Nobody hit Cleo or Dot.</div>`});
+   setHeader('Take-that is a built-in catch-up system','The players did the balancing themselves. Every card landed on whoever was in front, and the pack closed up.')},
+ (I)=>{scene(I,{scores:[14,14,4,5],crown:false,atk:2,arrows:[[2,0,'#ef7b45',1],[2,1,'#4c8dff',1]],side:`<h3>Cleo cannot win. Cleo holds Sleep Dust.</h3>
+     <div class="opt bad">Dust ${nm(0)}: Ash skips, Bram collects and wins.</div>
+     <div class="opt good">Dust ${nm(1)}, or do nothing: Ash goes first and wins.</div>
+     <div class="ln">The player in <b>last place</b> picks the winner.</div>`});
+   setHeader('Risk 1: kingmaking','Late in a new game. Ash and Bram both have 14. Ash moves next, then Bram. Whoever collects first wins.')},
+ (I)=>{scene(I,{scores:[14,15,4,5],atk:2,hurt:0,tags:[['sleep','Skips turn'],['win','Wins at 15']],deltas:[[1,'+1']],arrows:[[2,0,'#b48cff']],
+     side:`<div class="pair">${playCard(DUST)}</div><div class="playing">${nm(2)} dusts ${nm(0)}</div>
+     <div class="ln">Ash did nothing wrong. Ash lost because Cleo liked Bram more. That <b>feels unfair</b>, and players remember it.</div>`});
+   setHeader('Cleo picked the winner','Bram collects 1 coin and reaches 15. The game was decided by someone who was not playing for the win.')},
+ (I)=>{scene(I,{scores:[8,5,7,0],atk:0,hurt:3,hits:[0,0,0,1],gone:[0,0,0,1],tags:[0,0,0,['out','Out of the game']],deltas:[[0,'+2'],[3,'−2']],arrows:[[0,3,'#ef5b4c']],
+     side:`<h3>Variant: 0 coins = out</h3>
+     <div class="ln">Ash 6 → <b>8</b> · Dot 2 → <b>0</b></div>
+     <div class="ln">Dot was weak and no threat, so Dot was the <b>easy target</b>, not the leader.</div>
+     <div class="ln">Now Dot watches the rest of the game from the side.</div>`});
+   setHeader('Risk 2: picking on the weak, then elimination','A different game. Ash skips the leader and hits Dot, who was already last. The attack knocks Dot out.')},
+ (I)=>{$('tools').classList.add('on');scene(I,{lanes:false});
+   setHeader('How designers manage the risks','Keep the catch-up. Remove the unfair targets.')},
+ (I)=>{$('end').classList.add('on');scene(I,{lanes:false});setHeader('','')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>
