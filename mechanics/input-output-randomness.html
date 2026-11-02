@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Input vs Output Randomness</title>
+<style>
+:root{--bg:#18121a;--panel:#281e2c;--panel2:#322637;--ink:#f8f1fa;--muted:#c8b6cf;--line:rgba(245,225,255,.14);
+  --pink:#e93d82;--gold:#ffcc4d;--ok:#6ee08a;--red:#ff6b6b;--atk:#ff6b6b;--srch:#5ba8ff;--heal:#5fd3a0;--out:#ff9d4a;--in:#5ba8ff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#38223e 0%,#18121a 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+.die{width:52px;height:52px;border-radius:11px;padding:8px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);flex-shrink:0;
+  background:linear-gradient(145deg,#fff,#d9d6de);box-shadow:inset 0 -4px 0 rgba(0,0,0,.16),0 5px 10px rgba(0,0,0,.45)}
+.pip{width:72%;height:72%;border-radius:50%;background:#2a2230;place-self:center}
+
+#acts{left:40px;top:134px;width:720px;height:140px;display:flex;gap:16px}
+.act{flex:1;padding:12px 16px;border-top:6px solid var(--c);display:flex;flex-direction:column;gap:4px;transition:box-shadow .4s}
+.act .nm{font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600;color:var(--c)}
+.act .rq{font-size:20px;font-weight:800}
+.act .rw{font-size:20px;color:var(--muted)}.act .rw b{color:var(--gold)}
+
+#log{left:40px;top:292px;width:720px;height:318px;padding:16px 20px}
+.turn{display:flex;align-items:center;gap:12px;height:80px;margin-top:8px;padding:0 12px;border-radius:14px;background:rgba(0,0,0,.18)}
+.turn .k{width:84px;font-family:"Fredoka",sans-serif;font-size:22px;font-weight:600;color:var(--muted)}
+.chip{padding:8px 14px;border-radius:12px;font-size:20px;font-weight:800;background:rgba(255,255,255,.07);border:2px solid var(--line);display:flex;align-items:center;gap:8px}
+.chip.choose{border-color:var(--c);color:var(--c)}
+.arr{font-size:24px;color:var(--muted)}
+.res{margin-left:auto;font-family:"Fredoka",sans-serif;font-size:26px;font-weight:700}
+.res.ok{color:var(--ok)}.res.bad{color:var(--red)}
+.turn.in{animation:fadeUp .5s ease both;animation-delay:var(--d)}
+.turn.empty{background:transparent;border:2px dashed var(--line)}
+
+#info{left:780px;top:134px;width:460px;height:476px;padding:20px 24px;display:flex;flex-direction:column}
+#mode{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;line-height:1.15}
+#seq{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-size:22px;font-weight:900}
+#seq span{padding:8px 14px;border-radius:12px;background:rgba(255,255,255,.08)}
+.stats{display:flex;gap:12px;margin-top:14px}
+.stats div{flex:1;background:rgba(0,0,0,.22);border-radius:12px;padding:8px;text-align:center;font-size:16px;font-weight:800;color:var(--muted)}
+.stats b{display:block;font-family:"Fredoka",sans-serif;font-size:38px;color:var(--gold);line-height:1.1}
+#infoNote{margin-top:auto;font-size:21px;line-height:1.4;border-top:1px solid var(--line);padding-top:12px}
+#infoNote b{color:var(--gold)}#infoNote .g{color:var(--ok)}#infoNote .r{color:#ff9d9d}
+#note{left:40px;right:40px;top:626px;height:40px;font-size:21px;text-align:center;color:var(--muted)}
+
+#cmp{left:40px;right:40px;top:134px;height:492px;padding:24px 32px;display:flex;gap:36px}
+#cmp .c1,#cmp .c2{flex:1}
+#cmp h3{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--gold)}
+#cmp table{width:100%;border-collapse:collapse;font-size:21px}
+#cmp th{text-align:left;font-size:17px;color:var(--muted);padding:6px 8px;border-bottom:2px solid var(--line)}
+#cmp td{padding:10px 8px;border-bottom:1px solid var(--line)}
+#cmp td.n{font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;text-align:center}
+#cmp .side{padding:14px 18px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--line);margin-bottom:14px}
+#cmp .side b{display:block;font-family:"Fredoka",sans-serif;font-size:24px;margin-bottom:4px}
+#cmp .side span{font-size:20px;line-height:1.4}
+#cmp .c2>*{opacity:0;transition:opacity .5s}
+#cmp.dial .c2>*{opacity:1}
+#cmp p{font-size:21px;line-height:1.4}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:112px;font-weight:700;line-height:1;text-align:center;
+  background:linear-gradient(90deg,var(--out),var(--pink),var(--in));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:34px;font-weight:700}
+#title .row{display:flex;gap:40px;margin:28px 0 12px;font-size:24px;font-weight:900;align-items:center}
+#title .row>span{padding:10px 18px;border-radius:14px;background:rgba(255,255,255,.08)}
+#title .row .die{animation:wob 1.6s ease-in-out infinite}
+@keyframes wob{50%{transform:rotate(14deg) translateY(-8px)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(14,9,16,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(245,225,255,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Input vs Output<br>Randomness</div>
+    <h2>Roll, then decide? Or decide, then roll?</h2>
+    <div class="row" id="tRow"></div>
+    <div class="press">Press SPACE to roll</div>
+  </div>
+
+  <div id="acts" class="panel"></div>
+  <div id="log" class="panel card"><div class="lbl" id="logLbl">THREE TURNS</div><div id="turns"></div></div>
+  <div id="info" class="panel card"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="cmp" class="panel card">
+    <div class="c1">
+      <h3>Same three rolls: 2, 6, 3</h3>
+      <table>
+        <tr><th></th><th style="text-align:center">POINTS</th><th style="text-align:center">PLANS RUINED</th><th style="text-align:center">AVERAGE / TURN</th></tr>
+        <tr><td style="color:var(--out);font-weight:900">Output<br><span style="font-size:17px;color:var(--muted)">decide, then roll</span></td><td class="n">4</td><td class="n">2 of 3</td><td class="n">1.3</td></tr>
+        <tr><td style="color:var(--in);font-weight:900">Input<br><span style="font-size:17px;color:var(--muted)">roll, then decide</span></td><td class="n">7</td><td class="n">0 of 3</td><td class="n">2.3</td></tr>
+      </table>
+      <p>Same dice, same odds. Only the <b style="color:var(--gold)">order</b> changed. With input randomness, every roll found a use.</p>
+    </div>
+    <div class="c2">
+      <h3>Two different feelings</h3>
+      <div class="side"><b style="color:var(--out)">Output: suspense</b><span>The roll is the big moment. Hope, cheers and groans. But a bad roll can erase a good plan, and players blame the dice.</span></div>
+      <div class="side"><b style="color:var(--in)">Input: a puzzle</b><span>The dice set the problem; the player solves it. More control and less blame, but less drama at the table.</span></div>
+      <p>Many games mix both: roll dice to decide your options, then roll once more to see if the big move works.</p>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Output randomness</b> (decide, then roll) creates suspense. The roll is the climax, and failure can ruin a plan.</li>
+      <li><b>Input randomness</b> (roll, then decide) creates a puzzle. The roll sets your options, and skill decides how well you use them.</li>
+      <li><b>Order is a design choice.</b> The same dice gave 4 points one way and 7 the other. Pick the order that matches the feeling you want.</li>
+    </ol>
+    <div class="see">You'll see this in: Kingsburg, Risk, Roll for the Galaxy, Talisman.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const PIPS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+const die=v=>`<div class="die">${PIPS[v].map(p=>`<span class="pip" style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></span>`).join('')}</div>`;
+const A={atk:{nm:'Attack',need:5,pts:4,c:'var(--atk)',rq:'Needs a 5 or 6'},srch:{nm:'Search',need:3,pts:2,c:'var(--srch)',rq:'Needs 3 or more'},heal:{nm:'Heal',need:1,pts:1,c:'var(--heal)',rq:'Any roll works'}};
+$('acts').innerHTML=Object.values(A).map(a=>`<div class="act card" style="--c:${a.c}"><div class="nm">${a.nm}</div><div class="rq">${a.rq}</div><div class="rw">Worth <b>${a.pts} point${a.pts>1?'s':''}</b></div></div>`).join('');
+$('tRow').innerHTML=`<span>Decide</span><span style="color:var(--muted)">↔</span>${die(5)}<span style="color:var(--muted)">↔</span><span>Roll</span>`;
+const ROLLS=[2,6,3];
+const OUT=['atk','atk','atk'],IN=['heal','atk','srch'];
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',mode:null,shown:0,from:0,infoNote:'',note:''}}
+function turnRow(i,mode,anim){
+  const r=ROLLS[i],a=A[(mode==='out'?OUT:IN)[i]],ok=r>=a.need;
+  const ch=`<span class="chip choose" style="--c:${a.c}">${a.nm}</span>`,rl=`<span class="chip">${die(r)}</span>`;
+  const seq=mode==='out'?ch+'<span class="arr">→</span>'+rl:rl+'<span class="arr">→</span>'+ch;
+  return `<div class="turn ${anim&&i>=st.from?'in':''}" style="--d:${(i-st.from)*.5}s"><span class="k">Turn ${i+1}</span>${seq}<span class="res ${ok?'ok':'bad'}">${ok?'+'+a.pts:'fail, 0'}</span></div>`;
+}
+function total(mode,n){let t=0,bad=0;for(let i=0;i<n;i++){const a=A[(mode==='out'?OUT:IN)[i]];if(ROLLS[i]>=a.need)t+=a.pts;else bad++}return[t,bad]}
+function render(anim){
+  ['title','acts','log','info','note','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='cmp'||st.view==='end'){$('cmp').classList.add('on');$('cmp').classList.toggle('dial',!!st.dial);if(st.view==='end')$('end').classList.add('on');return}
+  ['acts','log','info','note'].forEach(id=>$(id).classList.add('on'));
+  let h='';for(let i=0;i<3;i++)h+=st.mode&&i<st.shown?turnRow(i,st.mode,anim):'<div class="turn empty"></div>';
+  $('turns').innerHTML=h;
+  const m=st.mode;
+  const [t,bad]=m?total(m,st.shown):[0,0];
+  $('info').innerHTML=(m?`<div id="mode" style="color:${m==='out'?'var(--out)':'var(--in)'}">${m==='out'?'Output randomness':'Input randomness'}</div>
+    <div id="seq">${m==='out'?'<span>1. Decide</span>→<span>2. Roll</span>':'<span>1. Roll</span>→<span>2. Decide</span>'}</div>
+    <div class="stats"><div><b>${t}</b>points</div><div><b>${bad}</b>plans ruined</div></div>`:'<div id="mode">One die, three actions</div><div style="font-size:21px;line-height:1.4;margin-top:10px">Each turn the hero rolls one die and takes one action. The question is <b style="color:var(--gold)">when</b> the hero chooses.</div>')+
+    `<div id="infoNote">${st.infoNote}</div>`;
+  $('note').innerHTML=st.note;
+}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='play';st.infoNote='Attack is worth the most, but needs a high roll. Heal always works, but is worth little.';
+   st.note='The dice for the next three turns will be the same in both versions: 2, 6 and 3.';
+   setHeader('A hero with three actions','Each action needs a certain roll and is worth a certain number of points.')},
+ ()=>{st.mode='out';st.shown=1;st.from=0;st.infoNote='The hero picks Attack, the best action, <b>then</b> rolls. A 2. <span class="r">The plan fails and the turn is wasted.</span>';
+   setHeader('Version 1: decide, then roll','This is output randomness. The roll decides whether the plan works.')},
+ ()=>{st.shown=3;st.from=1;st.infoNote='One roll of 6 pays off. The 3 fails again. <b>4 points</b>, and two of three plans ruined by the dice.';
+   setHeader('Output: turns 2 and 3','Same choice each turn. The dice decide.')},
+ ()=>{st.from=3;st.infoNote='Every roll was a big moment: will it work? That is <b>suspense</b>. But two good plans were undone by luck, and nothing the player could do would change that.';
+   setHeader('How output randomness feels','The roll is the climax. Players cheer and groan.')},
+ ()=>{st.mode='in';st.shown=1;st.from=0;st.infoNote='The hero rolls first: a 2. Too low for Attack or Search, so the hero picks <b>Heal</b>. <span class="g">+1.</span>';
+   setHeader('Version 2: roll, then decide','This is input randomness. The roll sets the options; the player picks the best one.')},
+ ()=>{st.shown=3;st.from=1;st.infoNote='A 6 goes to Attack (+4). A 3 goes to Search (+2). <b>7 points</b>, and <span class="g">no plan was ruined</span>.';
+   setHeader('Input: turns 2 and 3','Same dice: 6, then 3. Each roll finds its best use.')},
+ ()=>{st.view='cmp';setHeader('Same dice, different games','The only change was the order of the roll and the decision.')},
+ ()=>{st.dial=true;setHeader('Suspense or puzzle?','Each order creates a different feeling at the table.')},
+ ()=>{st.view='end';setHeader('What designers take from this','The order of roll and choice is a design decision.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

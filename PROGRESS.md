@@ -1,5 +1,10 @@
 # Mechanics Atlas — progress log
 
+## 2026-11-02 (Phase 0 + 1: Game Structure family)
+- Accomplished: Added a sixth family, Game Structure, and 12 new "Coming soon" entries with briefs (6 structure, plus Event Decks, Hidden Movement, Modular Boards, Resource Conversion, Voting, Simultaneous Action Selection). Built Feedback Loops, Input vs Output Randomness and Turn Order & Initiative. Atlas now 35 built, 9 planned. All pass the checker.
+- Decisions: Feedback loop income = 1 + 1 per 3 points; catch-up rule = +2 for last place (gap 9 vs 0). Input/output uses the same rolls 2, 6, 3 (4 points vs 7). Turn order: fixed 15/9/3, rotating 9/9/9, last place first 11/9/7, bidding for first pick.
+- Next: Phase 2 (Variable Player Powers, Game End Triggers, Scoring Systems).
+
 ## 2026-11-02 (final 3: all planned mechanics built)
 - Accomplished: Built Dice Placement (Market / Tower / Forge / Low Road), Negotiation & Trading (four players, a win-win deal, the leader refused, a broken promise) and Take-That (race to 15, attacks on the leader, kingmaking, elimination). Atlas now 32 mechanics, 0 planned, ~132 min. All pass the checker.
 - Decisions: Every planned brief is now built; the "Coming soon" path in index.html is kept for future additions. Invented characters are referred to by name, not pronouns.

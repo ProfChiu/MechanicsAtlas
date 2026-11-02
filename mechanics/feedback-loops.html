@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Feedback Loops</title>
+<style>
+:root{--bg:#1a1016;--panel:#2a1b24;--panel2:#35222e;--ink:#fbf1f6;--muted:#cdb2c2;--line:rgba(255,220,240,.14);
+  --pink:#e93d82;--gold:#ffcc4d;--ok:#6ee08a;--red:#ff6b6b;--ada:#5ba8ff;--bo:#ff9d4a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#3c1f30 0%,#1a1016 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#chartC{left:40px;top:134px;width:720px;height:476px;padding:16px 20px}
+#chart{position:absolute;left:20px;top:46px}
+.ax{stroke:#6b5563;stroke-width:2}
+.grid{stroke:rgba(255,255,255,.06);stroke-width:1}
+.tick{font:800 17px "Nunito",sans-serif;fill:var(--muted);text-anchor:middle}
+.ln{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.ln.draw{stroke-dasharray:1400;animation:dl 2.4s ease both}
+@keyframes dl{from{stroke-dashoffset:1400}to{stroke-dashoffset:0}}
+.ln.ghost{opacity:.28;stroke-dasharray:8 8}
+.pt{stroke:#1a1016;stroke-width:3}
+.pt.pop{animation:pp .4s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d)}
+@keyframes pp{from{r:0}}
+.val{font:900 19px "Nunito",sans-serif;text-anchor:middle;paint-order:stroke;stroke:#1a1016;stroke-width:5px}
+.gapl{stroke:var(--gold);stroke-width:3;stroke-dasharray:5 5}
+.gapt{font:900 20px "Nunito",sans-serif;fill:var(--gold);paint-order:stroke;stroke:#1a1016;stroke-width:5px}
+#legend{position:absolute;right:22px;top:14px;display:flex;gap:18px;font-size:19px;font-weight:800}
+#legend i{display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:6px;vertical-align:-2px}
+
+#info{left:780px;top:134px;width:460px;height:476px;padding:20px 24px;display:flex;flex-direction:column}
+.rule{padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:21px;line-height:1.35;margin-top:8px}
+.rule b{color:var(--gold)}
+.rule.add{border:2px solid var(--ok);background:rgba(110,224,138,.08);margin-top:10px}
+.rule.add b{color:var(--ok)}
+.stats{display:flex;gap:12px;margin-top:14px}
+.stats div{flex:1;background:rgba(0,0,0,.22);border-radius:12px;padding:8px;text-align:center;font-size:16px;font-weight:800;color:var(--muted)}
+.stats b{display:block;font-family:"Fredoka",sans-serif;font-size:36px;color:var(--gold);line-height:1.1}
+#loop{margin:10px auto 0;display:block}
+#loop text{font:800 18px "Nunito",sans-serif;fill:var(--ink);text-anchor:middle}
+#loop .sign{font:700 52px "Fredoka",sans-serif}
+#infoNote{margin-top:auto;font-size:21px;line-height:1.4;border-top:1px solid var(--line);padding-top:12px}
+#infoNote b{color:var(--gold)}#infoNote .g{color:var(--ok)}#infoNote .r{color:#ff9d9d}
+#note{left:40px;right:40px;top:626px;height:40px;font-size:21px;text-align:center;color:var(--muted)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:136px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--ada),var(--pink),var(--bo));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:12px 0 0;font-size:36px;font-weight:700}
+#title svg{margin:22px 0 10px}
+#title .spin{transform-origin:110px 80px;animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(16,9,13,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,220,240,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Feedback Loops</div>
+    <h2>Does winning help you win, or slow you down?</h2>
+    <svg width="220" height="160"><g class="spin"><circle cx="110" cy="80" r="58" fill="none" stroke="#e93d82" stroke-width="8" stroke-dasharray="80 22"/>
+      <path d="M160,50 l12,-4 l-2,14 z" fill="#e93d82"/></g><text x="110" y="96" text-anchor="middle" style="font:700 46px Fredoka;fill:#ffcc4d">±</text></svg>
+    <div class="press">Press SPACE to start the race</div>
+  </div>
+
+  <div id="chartC" class="panel card"><div class="lbl" id="chartLbl">SCORE BY ROUND</div>
+    <div id="legend"><span><i style="background:var(--ada)"></i>Ada</span><span><i style="background:var(--bo)"></i>Bo</span></div>
+    <svg id="chart" width="680" height="410"></svg></div>
+  <div id="info" class="panel card"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Positive loops snowball.</b> When winning pays, a lucky first round grew a 2-point lead into 9. Good for ending a game, harsh on whoever falls behind.</li>
+      <li><b>Negative loops pull players together.</b> A small bonus for last place kept the race within 2 points and swapped the lead. Close games stay exciting longer.</li>
+      <li><b>Most games use both.</b> An engine that grows (positive) plus a brake on the leader (negative). Tune the balance to set how long the game stays open.</li>
+    </ol>
+    <div class="see">You'll see this in: Monopoly, Power Grid, Catan, Through the Ages.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const DATA={A:{A:[0,3,5,7,10,14,19],B:[0,1,2,3,5,7,10]},B:{A:[0,3,5,7,12,17,23],B:[0,1,4,8,11,17,23]}};
+const X=r=>56+r*84,Y=v=>360-v*13.2;
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',ser:'A',upto:0,from:0,ghost:false,info:'',loop:null,note:'',lbl:'SCORE BY ROUND'}}
+function loopSvg(kind){
+  const pos=kind==='+';const c=pos?'var(--red)':'var(--ok)';
+  const n=pos?['Ahead in points','More income','Even further ahead']:['Behind in points','Catch-up bonus','Back in the race'];
+  return `<svg id="loop" width="400" height="176">
+    <defs><marker id="ah" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="8" refY="8" orient="auto"><path d="M0,0 L16,8 L0,16 z" fill="${c}"/></marker></defs>
+    <ellipse cx="200" cy="88" rx="118" ry="54" fill="none" stroke="${c}" stroke-width="3" stroke-dasharray="10 8" opacity=".6"/>
+    <path d="M262,42 Q305,55 314,92" fill="none" stroke="${c}" stroke-width="5" marker-end="url(#ah)"/>
+    <path d="M250,138 Q200,148 150,138" fill="none" stroke="${c}" stroke-width="5" marker-end="url(#ah)"/>
+    <path d="M86,92 Q95,55 138,42" fill="none" stroke="${c}" stroke-width="5" marker-end="url(#ah)"/>
+    <text x="200" y="26">${n[0]}</text><text x="396" y="168" style="text-anchor:end">${n[1]}</text><text x="4" y="168" style="text-anchor:start">${n[2]}</text>
+    <text class="sign" x="200" y="106" style="fill:${c}">${pos?'+':'−'}</text></svg>`;
+}
+function render(anim){
+  ['title','chartC','info','note','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  ['chartC','info','note'].forEach(id=>$(id).classList.add('on'));
+  if(st.view==='end')$('end').classList.add('on');
+  $('chartLbl').textContent=st.lbl;
+  let h='';
+  for(let v=0;v<=24;v+=4)h+=`<line class="grid" x1="${X(0)}" x2="${X(6)}" y1="${Y(v)}" y2="${Y(v)}"/><text class="tick" x="28" y="${Y(v)+6}">${v}</text>`;
+  h+=`<line class="ax" x1="${X(0)}" x2="${X(6)}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  for(let r=0;r<=6;r++)h+=`<text class="tick" x="${X(r)}" y="${Y(0)+30}">${r?'R'+r:'start'}</text>`;
+  const path=(arr,n)=>arr.slice(0,n+1).map((v,r)=>(r?'L':'M')+X(r)+','+Y(v)).join('');
+  if(st.ghost){for(const k of ['A','B'])h+=`<path class="ln ghost" stroke="${k==='A'?'var(--ada)':'var(--bo)'}" d="${path(DATA.A[k],6)}"/>`}
+  const D=DATA[st.ser];
+  if(st.upto>0){
+    for(const k of ['A','B']){const c=k==='A'?'var(--ada)':'var(--bo)';
+      h+=`<path class="ln ${anim&&st.upto>st.from?'draw':''}" stroke="${c}" d="${path(D[k],st.upto)}"/>`;
+      D[k].slice(0,st.upto+1).forEach((v,r)=>{const isNew=anim&&r>st.from;
+        h+=`<circle class="pt ${isNew?'pop':''}" style="--d:${(r-st.from-1)*0.4+0.2}s" cx="${X(r)}" cy="${Y(v)}" r="8" fill="${c}"/>`});
+      const v=D[k][st.upto];h+=`<text class="val" x="${X(st.upto)+26}" y="${Y(v)+(k==='A'?-10:20)}" fill="${c}">${v}</text>`}
+    const a=D.A[st.upto],b=D.B[st.upto];
+    if(a!==b){h+=`<line class="gapl" x1="${X(st.upto)+50}" x2="${X(st.upto)+50}" y1="${Y(a)}" y2="${Y(b)}"/><text class="gapt" x="${X(st.upto)+58}" y="${(Y(a)+Y(b))/2+6}">gap ${Math.abs(a-b)}</text>`}
+    else h+=`<text class="gapt" x="${X(st.upto)-70}" y="${Y(a)-24}">tied</text>`;
+  }
+  $('chart').innerHTML=h;
+  $('info').innerHTML=st.info+(st.loop?loopSvg(st.loop):'')+`<div id="infoNote">${st.infoNote||''}</div>`;
+  $('note').innerHTML=st.note;
+}
+const RULE='<div class="lbl">THE RULE</div><div class="rule">Each round, earn <b>1 point</b>, plus <b>1 more for every 3 points</b> you already have.</div>';
+const BRAKE='<div class="rule add">Catch-up rule: whoever is <b>in last place</b> earns <b>+2</b> extra each round.</div>';
+const stats=(ser,n)=>{const D=DATA[ser];let ch=0;for(let r=2;r<=n;r++){const p=Math.sign(D.A[r-1]-D.B[r-1]),q=Math.sign(D.A[r]-D.B[r]);if(p&&q&&p!==q)ch++}
+  return `<div class="stats"><div><b>${Math.abs(D.A[n]-D.B[n])}</b>gap now</div><div><b>${ch}</b>lead changes</div></div>`};
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='chart';st.info=RULE;st.infoNote='Points are also your <b>income</b>. The richer you are, the faster you grow.';
+   st.note='Two equal players, six rounds.';
+   setHeader('A race where points make more points','The more you have, the more you earn next round.')},
+ ()=>{st.from=0;st.upto=1;st.info=RULE+stats('A',1);st.infoNote='Round 1 is pure luck: Ada rolls well and scores 3, Bo scores 1. A small, random lead.';
+   setHeader('Round 1: a lucky start','Ada gets 3 points, Bo gets 1. Nothing more than a good roll.')},
+ ()=>{st.from=1;st.upto=6;st.info=RULE+stats('A',6);st.infoNote='Ada\'s lead pays more income every round. A 2-point lead from luck becomes a <span class="r">9-point gap</span>.';
+   setHeader('Rounds 2 to 6: the snowball','Watch the lines pull apart. The gap grows every single round.')},
+ ()=>{st.from=6;st.info='<div class="lbl">THE LOOP</div>';st.loop='+';st.infoNote='This is a <span class="r">positive feedback loop</span>: success feeds more success. It ends games, but can decide them too early.';
+   setHeader('A positive feedback loop','Being ahead makes you get further ahead.')},
+ ()=>{st.ser='B';st.from=0;st.upto=1;st.loop=null;st.lbl='SCORE BY ROUND: WITH CATCH-UP RULE';st.info=RULE+BRAKE+stats('B',1);
+   st.infoNote='Same players, same lucky first round. One new rule.';
+   setHeader('Replay with one extra rule','Last place earns a small bonus each round.')},
+ ()=>{st.from=1;st.upto=6;st.info=RULE+BRAKE+stats('B',6);
+   st.infoNote='Bo catches up and takes the lead in round 3. Ada takes it back. They finish <span class="g">tied at 23</span>.';
+   setHeader('Rounds 2 to 6: the race stays close','The lines cross. The gap never grows past 2.')},
+ ()=>{st.from=6;st.info=BRAKE;st.loop='−';st.infoNote='This is a <span class="g">negative feedback loop</span>: falling behind helps you recover. It keeps games close, but can feel like being punished for playing well.';
+   setHeader('A negative feedback loop','Falling behind pulls you back into the race.')},
+ ()=>{st.ghost=true;st.loop=null;st.lbl='BOTH VERSIONS';
+   st.info='<div class="lbl">THE DESIGNER\'S DIAL</div><div class="rule"><b>Dashed:</b> no brake. Gap 9, winner clear by round 4.</div><div class="rule add"><b>Solid:</b> with brake. Gap 0, still open at the end.</div>';
+   st.infoNote='One small rule changed the whole shape of the game. Designers tune loops to decide <b>how long a game stays open</b>.';
+   setHeader('One rule, two very different games','Same luck in round 1, opposite endings.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Snowballs and brakes.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

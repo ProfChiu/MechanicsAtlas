@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Turn Order &amp; Initiative</title>
+<style>
+:root{--bg:#171218;--panel:#271e29;--panel2:#312633;--ink:#f8f1f8;--muted:#c8b6c8;--line:rgba(245,225,245,.14);
+  --pink:#e93d82;--gold:#ffcc4d;--ok:#6ee08a;--red:#ff6b6b;--ada:#5ba8ff;--bo:#ff9d4a;--cy:#5fd3a0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#38223a 0%,#171218 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#round{left:40px;top:134px;width:720px;height:236px;padding:16px 22px}
+#picks{display:flex;gap:22px;margin-top:14px;justify-content:center}
+.pick{width:200px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.pick .ord{font-size:19px;font-weight:900;color:var(--muted)}
+.med{width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"Fredoka",sans-serif;font-size:50px;font-weight:700;color:#3a2600;
+  background:radial-gradient(circle at 35% 30%,#fff1b8,var(--gold) 50%,#b8860b);box-shadow:inset 0 -6px 0 rgba(0,0,0,.2),0 0 0 6px var(--ring,transparent),0 8px 16px rgba(0,0,0,.45);transition:box-shadow .4s}
+.med.v3{filter:saturate(.75) brightness(.92)}.med.v1{filter:saturate(.4) brightness(.8)}
+.med.in{animation:pop .5s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d)}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.pick .who{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;min-height:30px}
+#bidRow{position:absolute;right:22px;top:14px;font-size:19px;font-weight:800}
+
+#scores{left:40px;top:388px;width:720px;height:222px;padding:16px 22px}
+#scores table{width:100%;border-collapse:collapse;margin-top:6px;font-size:22px}
+#scores th{font-size:17px;color:var(--muted);padding:4px 8px;text-align:center;border-bottom:2px solid var(--line)}
+#scores td{padding:5px 8px;text-align:center;border-bottom:1px solid var(--line);font-weight:800}
+#scores td.n{text-align:left;font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600}
+#scores td.t{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:700;color:var(--gold)}
+#scores td .c{display:inline-block;animation:fadeUp .4s ease both;animation-delay:var(--d)}
+#scores td .neg{color:var(--red);font-size:18px;margin-left:4px}
+
+#info{left:780px;top:134px;width:460px;height:476px;padding:20px 24px;display:flex;flex-direction:column}
+#sys{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--pink)}
+.rule{padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:21px;line-height:1.35;margin-top:10px}
+.rule b{color:var(--gold)}
+.ordList{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.ordList div{font-size:20px;font-weight:800;display:flex;gap:10px;align-items:center}
+.ordList span.k{width:44px;color:var(--muted)}
+.pc{padding:3px 10px;border-radius:10px;font-weight:900;font-size:18px;color:#11121a;background:var(--c)}
+#infoNote{margin-top:auto;font-size:21px;line-height:1.4;border-top:1px solid var(--line);padding-top:12px}
+#infoNote b{color:var(--gold)}#infoNote .g{color:var(--ok)}#infoNote .r{color:#ff9d9d}
+
+#cmp{left:40px;right:40px;top:134px;height:492px;padding:24px 32px}
+#cmp h3{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--gold)}
+#cmp table{width:100%;border-collapse:collapse;font-size:21px}
+#cmp th{text-align:left;font-size:17px;color:var(--muted);padding:6px 10px;border-bottom:2px solid var(--line)}
+#cmp td{padding:12px 10px;border-bottom:1px solid var(--line);line-height:1.3}
+#cmp td.s{font-family:"Fredoka",sans-serif;font-size:23px;font-weight:600;color:var(--pink)}
+#cmp td.sc{font-weight:900;white-space:nowrap}
+#cmp p{font-size:21px;line-height:1.4;margin:16px 0 0}
+#cmp p b{color:var(--gold)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:116px;font-weight:700;line-height:1;text-align:center;
+  background:linear-gradient(90deg,var(--ada),var(--pink),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:34px;font-weight:700}
+#title .row{display:flex;gap:16px;margin:30px 0 14px}
+#title .row .med{animation:bob 2.2s ease-in-out infinite}
+#title .row .med:nth-child(2){animation-delay:.25s}#title .row .med:nth-child(3){animation-delay:.5s}
+@keyframes bob{50%{transform:translateY(-10px)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(14,9,15,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(245,225,245,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+#note{left:40px;right:40px;top:626px;height:40px;font-size:21px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Turn Order<br>&amp; Initiative</div>
+    <h2>Going first is worth something. How much?</h2>
+    <div class="row"><div class="med">5</div><div class="med v3">3</div><div class="med v1">1</div></div>
+    <div class="press">Press SPACE to pick</div>
+  </div>
+
+  <div id="round" class="panel card"><div class="lbl" id="roundLbl">THIS ROUND</div><div id="bidRow"></div><div id="picks"></div></div>
+  <div id="scores" class="panel card"><div class="lbl">SCORES</div><table id="scT"></table></div>
+  <div id="info" class="panel card"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="cmp" class="panel card">
+    <h3>Four ways to share the first pick</h3>
+    <table>
+      <tr><th>SYSTEM</th><th>SCORES AFTER 3 ROUNDS</th><th>GOOD</th><th>WATCH OUT</th></tr>
+      <tr><td class="s">Fixed</td><td class="sc">15 · 9 · 3</td><td>Simple</td><td>Seat decides the game</td></tr>
+      <tr><td class="s">Rotating</td><td class="sc">9 · 9 · 9</td><td>Fair over a full cycle</td><td>The last round's order still matters</td></tr>
+      <tr><td class="s">Last place first</td><td class="sc">11 · 9 · 7</td><td>A built-in catch-up</td><td>Can reward falling behind on purpose</td></tr>
+      <tr><td class="s">Bidding</td><td class="sc">players set the price</td><td>First pick costs what it is worth</td><td>Slower; needs a spare currency</td></tr>
+    </table>
+    <p>The rewards never changed. Only the rule about <b>who picks first</b> did, and it moved the scores more than any single choice.</p>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Turn order is a resource.</b> With fixed order, the first seat scored 15 and the last scored 3 from the same choices.</li>
+      <li><b>Share it, steer it, or sell it.</b> Rotate the first player, give it to last place, or let players bid for it.</li>
+      <li><b>Every system has a side effect.</b> Rotation is fair but predictable; catch-up order can reward hanging back; bidding adds a second economy.</li>
+    </ol>
+    <div class="see">You'll see this in: Puerto Rico, Power Grid, Agricola, Twilight Imperium.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const PL={A:{nm:'Ada',c:'var(--ada)'},B:{nm:'Bo',c:'var(--bo)'},C:{nm:'Cy',c:'var(--cy)'}};
+const REW=[5,3,1];
+const SYS={
+ fixed:{nm:'Fixed order',rule:'The same player always picks first.',orders:[['A','B','C'],['A','B','C'],['A','B','C']]},
+ rotate:{nm:'Rotating first player',rule:'The first player passes to the left each round.',orders:[['A','B','C'],['B','C','A'],['C','A','B']]},
+ catch:{nm:'Last place picks first',rule:'Lowest score picks first. Ties go in seat order.',orders:[['A','B','C'],['C','B','A'],['A','B','C']]},
+ bid:{nm:'Bid for first',rule:'Players bid coins for the first pick. The winner pays the bid.',orders:[['A','B','C']]}
+};
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',sys:null,shown:0,from:0,infoNote:'',note:'',bid:false}}
+function render(anim){
+  ['title','round','scores','info','note','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='cmp'||st.view==='end'){$('cmp').classList.add('on');if(st.view==='end')$('end').classList.add('on');return}
+  ['round','scores','info','note'].forEach(id=>$(id).classList.add('on'));
+  const sy=st.sys&&SYS[st.sys];
+  const ord=sy&&st.shown?sy.orders[st.shown-1]:null;
+  $('roundLbl').textContent=ord?`ROUND ${st.shown}: PICK IN TURN ORDER`:'EACH ROUND: THREE REWARDS';
+  $('bidRow').innerHTML=st.bid?'Bids: <span style="color:var(--ada)">Ada 3</span> · <span style="color:var(--bo)">Bo 2</span> · <span style="color:var(--cy)">Cy 1</span>':'';
+  $('picks').innerHTML=REW.map((v,i)=>{const w=ord&&ord[i];
+    return `<div class="pick"><div class="ord">${['1st pick','2nd pick','3rd pick'][i]}</div><div class="med v${v} ${anim&&w?'in':''}" style="--ring:${w?PL[w].c:'transparent'};--d:${i*.3}s">${v}</div>
+      <div class="who" style="color:${w?PL[w].c:'var(--muted)'}">${w?PL[w].nm:''}</div></div>`}).join('');
+  const n=sy?(st.sys==='bid'?1:3):3;
+  let h=`<tr><th style="text-align:left">PLAYER</th>${[1,2,3].map(r=>`<th>R${r}</th>`).join('')}<th>TOTAL</th></tr>`;
+  for(const k of ['A','B','C']){let t=0;h+=`<tr><td class="n" style="color:${PL[k].c}">${PL[k].nm}</td>`;
+    for(let r=0;r<3;r++){let cell='';
+      if(sy&&r<st.shown&&sy.orders[r]){const v=REW[sy.orders[r].indexOf(k)];t+=v;
+        const pay=st.bid&&k==='A'?3:0;if(pay)t-=pay;
+        cell=`<span class="c" style="--d:${anim&&r>=st.from?(r-st.from)*.3+.6:0}s">+${v}${pay?`<span class="neg">−${pay}</span>`:''}</span>`}
+      h+=`<td>${cell}</td>`}
+    h+=`<td class="t">${sy&&st.shown?t:''}</td></tr>`}
+  $('scT').innerHTML=h;
+  $('info').innerHTML=(sy?`<div id="sys">${sy.nm}</div><div class="rule">${sy.rule}</div>
+    <div class="ordList">${sy.orders.slice(0,Math.max(st.shown,1)).map((o,i)=>`<div><span class="k">R${i+1}</span>${o.map(p=>`<span class="pc" style="--c:${PL[p].c}">${PL[p].nm}</span>`).join('→')}</div>`).join('')}</div>`
+    :'<div id="sys">Three rewards, three players</div><div class="rule">Each round, players take turns picking one reward: <b>5</b>, <b>3</b> or <b>1</b>. Everyone always takes the best one left.</div>')+
+    `<div id="infoNote">${st.infoNote}</div>`;
+  $('note').innerHTML=st.note;
+}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='play';st.infoNote='There is no real decision here: the first player always takes 5. So the only thing that matters is <b>who goes first</b>.';
+   st.note='Three equal players, three rounds.';
+   setHeader('Three rewards, picked in turn order','Whoever picks first gets the best reward.')},
+ ()=>{st.sys='fixed';st.shown=1;st.from=0;st.infoNote='Ada sits in the first seat, so Ada picks first.';
+   setHeader('System 1: fixed order','Round 1: Ada, then Bo, then Cy.')},
+ ()=>{st.shown=3;st.from=1;st.infoNote='Same order every round: <b>15, 9, 3</b>. Same skill, same choices. <span class="r">The seat decided the game.</span>';
+   setHeader('Fixed order: rounds 2 and 3','Nothing changes, so the gap keeps growing.')},
+ ()=>{st.sys='rotate';st.shown=3;st.from=0;st.infoNote='Each player is first once, second once and last once: <span class="g">9, 9, 9</span>. Fair over a full cycle.';
+   setHeader('System 2: rotate the first player','The first pick passes to the left every round.')},
+ ()=>{st.sys='catch';st.shown=2;st.from=0;st.infoNote='After round 1, Cy is last, so Cy picks first in round 2. After two rounds, everyone has <b>6</b>.';
+   setHeader('System 3: last place picks first','Turn order is set by score, lowest first.')},
+ ()=>{st.shown=3;st.from=2;st.infoNote='All tied, so round 3 goes in seat order. Final: <b>11, 9, 7</b>. The order acted as a <span class="g">catch-up rule</span>.';
+   setHeader('Last place first: round 3','Scores stay close because the leader always picks last.')},
+ ()=>{st.sys='bid';st.shown=1;st.from=0;st.bid=true;st.infoNote='Ada wins the first pick but pays 3: <b>5 − 3 = 2</b>. Bo, second, keeps 3. The players themselves set the price of going first.';
+   setHeader('System 4: bid for the first pick','Going first is up for sale. Ada bids 3 coins.')},
+ ()=>{st.view='cmp';setHeader('Same rewards, four systems','Who picks first changed the scores more than any choice did.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Decide who goes first on purpose.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

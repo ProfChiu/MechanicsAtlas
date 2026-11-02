@@ -7,7 +7,8 @@ window.FAMILIES = [
   { id: 'cards',   name: 'Card Systems',      color: '#3e7bfa', blurb: 'Drafting, decks and hands: choices made from cards.' },
   { id: 'space',   name: 'Board & Space',     color: '#30a46c', blurb: 'Where you are on the board matters.' },
   { id: 'economy', name: 'Economy & Actions', color: '#ffb224', blurb: 'Scarce actions, resources and engines.' },
-  { id: 'people',  name: 'Player Interaction',color: '#8e4ec6', blurb: 'Reading, fooling and dealing with each other.' }
+  { id: 'people',  name: 'Player Interaction',color: '#8e4ec6', blurb: 'Reading, fooling and dealing with each other.' },
+  { id: 'structure', name: 'Game Structure',  color: '#e93d82', blurb: 'Turns, scoring, endings and loops: the shape of a whole game.' }
 ];
 
 window.MECHANICS = [
@@ -687,5 +688,119 @@ window.MECHANICS = [
       { name: 'Codenames', note: 'One-word clues point teammates at hidden agents.' }
     ],
     brief: 'A hidden answer among 12 suspects (3 traits each). Questions and answers cross off rows in a deduction grid; show how many remain after each clue (12 → 6 → 3 → 1). Compare a weak and a strong question.'
-  }
+  },
+  /* ================= Third wave (planned 2026-11-02) ================= */
+  /* Game Structure */
+  {
+    id: 'feedback-loops', family: 'structure', title: 'Feedback Loops',
+    file: 'mechanics/feedback-loops.html', w: 1280, h: 720, minutes: 4,
+    hook: 'Winning can make you stronger, or slow you down. The rules decide which.',
+    anatomy: {
+      Procedures: 'Each round, players earn points; how much they earn depends on what they already have.',
+      Rules: 'A positive loop pays the leader more (income grows with score). A negative loop helps whoever is behind (a catch-up bonus).',
+      Resources: 'Points that double as income, and any bonus rules aimed at the leader or the last player.',
+      Outcome: 'Positive loops widen the gap and end games decisively; negative loops keep the race close and the lead changing.'
+    },
+    feel: ['Momentum', 'Hope', 'Fairness'],
+    feelText: 'A snowball feels great for the leader and hopeless for everyone else. A brake keeps everyone in the race, though a leader can feel punished for playing well.',
+    watchFor: 'Watch the gap between first and last place: a positive loop widens it, a negative loop closes it.',
+    examples: [
+      { name: 'Monopoly', note: 'Rent grows with every property you own: a classic runaway leader.' },
+      { name: 'Power Grid', note: 'The leader buys resources last and pays the most: a built-in brake.' },
+      { name: 'Catan', note: 'More settlements mean more resources each roll, which build more settlements.' },
+      { name: 'Through the Ages', note: 'A civilization engine that grows, balanced by aggression from rivals.' }
+    ],
+    brief: 'Two players race over 6 rounds; income grows with score (+1 per 3 points). A lucky first round snowballs into a big gap. Replay with a catch-up rule (last place +2): the lead changes hands and the gap closes. Show both loops as diagrams.'
+  },
+  {
+    id: 'input-output-randomness', family: 'structure', title: 'Input vs Output Randomness',
+    file: 'mechanics/input-output-randomness.html', w: 1280, h: 720, minutes: 4,
+    hook: 'Roll first and plan around it, or plan first and hope the roll agrees.',
+    anatomy: {
+      Procedures: 'Players roll dice and choose actions; the order of those two steps is the design choice.',
+      Rules: 'Output: choose an action, then roll to see if it works. Input: roll first, then choose how to use the result.',
+      Resources: 'The dice results and the actions they can pay for.',
+      Outcome: 'Output randomness creates suspense but can ruin plans; input randomness creates a puzzle and gives more control.'
+    },
+    feel: ['Suspense', 'Control', 'Puzzle'],
+    feelText: 'Rolling after you commit makes every throw a dramatic moment. Rolling before you choose turns the dice into a problem you get to solve.',
+    watchFor: 'Same dice, same odds. Only the order of roll and decision changes, and with it how much control players feel.',
+    examples: [
+      { name: 'Kingsburg', note: 'Roll three dice first, then decide which advisors to influence with them.' },
+      { name: 'Risk', note: 'Declare an attack, then roll to see who wins each battle.' },
+      { name: 'Roll for the Galaxy', note: 'Roll your workers in secret, then assign them to phases.' },
+      { name: 'Talisman', note: 'Roll to move and to fight; the dice decide if a plan works.' }
+    ],
+    brief: 'Three actions (Attack 5+, Search 3+, Heal any). Output: choose, then roll; plans fail. Input: roll the same numbers first, then choose; every roll finds a use. Compare points and how often a plan is ruined.'
+  },
+  {
+    id: 'turn-order', family: 'structure', title: 'Turn Order & Initiative',
+    file: 'mechanics/turn-order.html', w: 1280, h: 720, minutes: 4,
+    hook: 'Who goes first is a resource. Games fix it, rotate it, or make you pay for it.',
+    anatomy: {
+      Procedures: 'Players act one after another each round; the first player gets the first choice.',
+      Rules: 'The order can be fixed, rotate each round, follow the score (last place first), or be bought by bidding.',
+      Resources: 'The first pick itself, which is worth something whenever choices run out.',
+      Outcome: 'The order system can decide a game or keep it balanced, without changing anything else.'
+    },
+    feel: ['Fairness', 'Anticipation', 'Leverage'],
+    feelText: 'Going first feels like an advantage you did not earn unless the rules share it out. Watching the best option vanish before your turn makes order feel very real.',
+    watchFor: 'Watch the first player grab the best option each round, then see how each system shares that advantage out.',
+    examples: [
+      { name: 'Puerto Rico', note: 'The governor passes each round, and each role chosen gives its chooser a bonus.' },
+      { name: 'Power Grid', note: 'Turn order follows the score: the leader goes first in auctions but last for resources.' },
+      { name: 'Agricola', note: 'Taking the starting player space is itself an action you must spend a worker on.' },
+      { name: 'Twilight Imperium', note: 'Strategy cards set initiative numbers, so picking a card also picks your place.' }
+    ],
+    brief: 'Three players pick rewards worth 5, 3 and 1 in turn order for 3 rounds. Fixed order: 15 / 9 / 3. Rotating: 9 / 9 / 9. Last place first: close scores. Bidding for first: the first pick costs coins.'
+  },
+  { id: 'variable-powers', family: 'structure', title: 'Variable Player Powers', file: null,
+    hook: 'Same rules for everyone, plus one ability only you have.',
+    watchFor: 'Watch each power pull its owner toward a different plan. Asymmetry gives each seat its own story.',
+    examples: [{ name: 'Cosmic Encounter' }, { name: 'Pandemic' }, { name: 'Root' }, { name: 'Small World' }],
+    brief: 'Base rules: Gather, Trade, Build; a house takes 7 turns. Four powers (gather more, cheap trades, cheap builds, gain when others build) each change the best plan. A balance check finds one power too strong; one tweak fixes it.' },
+  { id: 'game-end', family: 'structure', title: 'Game End Triggers', file: null,
+    hook: 'Fixed rounds, a target score, or an empty supply: how a game ends shapes how it is played.',
+    watchFor: 'Watch the last few turns under each trigger: a known end invites planning, a player-triggered end invites racing.',
+    examples: [{ name: 'Agricola' }, { name: 'Splendor' }, { name: 'Ticket to Ride' }, { name: 'Carcassonne' }],
+    brief: 'One game, three endings. Fixed 8 rounds: everyone saves for a big final turn. First to 15: the leader sprints and a slower plan never pays off. Supply runs out: the leader speeds the clock, others slow it.' },
+  { id: 'scoring-systems', family: 'structure', title: 'Scoring Systems', file: null,
+    hook: 'Points now, points at the end, or points nobody can see: scoring shapes tension.',
+    watchFor: 'Watch the leader change when end-game points are revealed. Hidden and late scoring keep a game open longer.',
+    examples: [{ name: 'Ticket to Ride' }, { name: 'Carcassonne' }, { name: '7 Wonders' }, { name: 'Splendor' }],
+    brief: 'Three players, the same 6 rounds scored three ways: running score (winner clear by round 3), end-game bonuses (leader flips at the end), hidden goals (nobody knows who leads until the reveal).' },
+  /* Chance & Risk */
+  { id: 'event-decks', family: 'chance', title: 'Event Decks', file: null,
+    hook: 'Draw a card, and the world changes. The deck sets the story and the pace.',
+    watchFor: 'Watch the event deck escalate: a stacked deck makes danger rise on a schedule that still feels surprising.',
+    examples: [{ name: 'Pandemic' }, { name: 'Arkham Horror' }, { name: 'Betrayal at House on the Hill' }, { name: 'Dead of Winter' }],
+    brief: 'A co-op village facing storms. Shuffled events vs a stacked deck (split in thirds, one big storm shuffled into each). Show a tension curve rising in waves, and why designers stack decks to control pacing.' },
+  /* Board & Space */
+  { id: 'hidden-movement', family: 'space', title: 'Hidden Movement', file: null,
+    hook: 'One player moves in secret. Everyone else hunts with clues.',
+    watchFor: 'Watch the possible locations shrink and grow: every reveal narrows the search, every hidden move widens it.',
+    examples: [{ name: 'Scotland Yard' }, { name: 'Fury of Dracula' }, { name: 'Letters from Whitechapel' }, { name: 'Specter Ops' }],
+    brief: 'A thief moves secretly on a 12-node map, one step per turn, written on a hidden sheet. Hunters see a reveal every 3 turns. Show the cloud of possible locations growing and shrinking until the catch.' },
+  { id: 'modular-board', family: 'space', title: 'Modular Boards & Exploration', file: null,
+    hook: 'The map is built as you play. No two games share the same board.',
+    watchFor: 'Watch a new tile change everyone\'s plans. Exploration adds discovery, and variety between plays.',
+    examples: [{ name: 'Catan' }, { name: 'Betrayal at House on the Hill' }, { name: 'Mage Knight' }, { name: 'Tikal' }],
+    brief: 'A fixed board vs a modular one: random hex setup changes which spots are strong. Then exploration: an explorer flips face-down tiles to reveal resources and dangers. End with three different maps from the same tiles.' },
+  /* Economy & Actions */
+  { id: 'resource-conversion', family: 'economy', title: 'Resource Conversion', file: null,
+    hook: 'Turn wood into planks, planks into furniture, furniture into points.',
+    watchFor: 'Watch the exchange rates: one changed number decides which chain every player chases.',
+    examples: [{ name: 'Agricola' }, { name: 'Le Havre' }, { name: 'Puerto Rico' }],
+    brief: 'A three-step chain (wood → planks 2:1 → furniture → points) beside a shortcut (sell wood for 1 point each). Show turns and points for each route, then change one rate and watch the best route flip.' },
+  /* Player Interaction */
+  { id: 'voting', family: 'people', title: 'Voting', file: null,
+    hook: 'Majority rules, so votes become the currency of the table.',
+    watchFor: 'Watch a vote get bought: a proposal that helps one player passes only when it offers something to others.',
+    examples: [{ name: 'Twilight Imperium' }, { name: 'Secret Hitler' }, { name: 'Junta' }, { name: 'The Resistance' }],
+    brief: 'Five players vote on proposals ("+2 coins to the north", "tax the leader"). Show self-interest, vote trading and a coalition against the leader. Then compare open and secret ballots.' },
+  { id: 'simultaneous-selection', family: 'people', title: 'Simultaneous Action Selection', file: null,
+    hook: 'Everyone chooses in secret, then all reveal at once.',
+    watchFor: 'Watch players guess what others will pick. Picking what nobody else picks is often worth more than picking the best action.',
+    examples: [{ name: 'Libertalia' }, { name: 'Race for the Galaxy' }, { name: 'Diplomacy' }, { name: 'Colt Express' }],
+    brief: 'Three players secretly pick one of three actions; players who pick the same action split its reward. Show the reveal, a crowded "best" action paying little, and an empty action paying in full.' }
 ];
