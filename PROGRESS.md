@@ -1,5 +1,10 @@
 # Mechanics Atlas — progress log
 
+## 2026-11-02 (3 more, batch 2)
+- Accomplished: Built Ladder Climbing (four-player climb with a bomb), Tableau Building (treehouse village, 6 turns and a trigger chain) and Grid Movement & Line of Sight (squares vs hexes, LOS, cover, bog terrain). Atlas now 26 mechanics, 6 planned, ~108 min. All pass the checker.
+- Decisions: Ladder hands shown open for teaching; Bo wins with a bomb of 2s to show the lead matters more than high cards. Tableau economy: +2 acorns a turn, Seed Shed pays back 5 for 1. Grid: hit on 3+ open vs 5+ in cover; bog costs 3 so the 7 MP detour beats the 9 MP straight line.
+- Next: Pattern Building, Pick-Up & Deliver, Supply & Demand are next in the planned list.
+
 ## 2026-11-02 (3 more)
 - Accomplished: Built Dice Pools & Successes (ember dice tray), Bag Building (garden seed bag) and Multi-Use Cards (harbor town hand) from their briefs. Atlas now 23 mechanics, 9 planned, ~96 min. All pass the checker.
 - Decisions: Invented content kept simple: hits on 5–6 with one reroll of misses (3 dice + reroll = 6 dice at 91%); bag of 7 Sprouts / 3 Blooms, +2 Blooms twice, then 2 Weeds; hand of Lighthouse / Ferry / Market / Well with three plans compared. Pushed straight to main at Wan's request (no branch/PR), so mechanics.js was updated directly.

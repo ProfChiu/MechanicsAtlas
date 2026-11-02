@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Grid Movement &amp; Line of Sight</title>
+<style>
+:root{--bg:#10151c;--panel:#1b2330;--panel2:#232e3e;--ink:#eef3fa;--muted:#a8b6c9;--line:rgba(210,225,245,.14);
+  --tile:#2c3a4d;--tile2:#334459;--reach:#36c2b4;--extra:#ff6b6b;--gold:#ffc94a;--hero:#ffc94a;--foe:#ff6b6b;--ok:#6ee08a;
+  --bog:#6b5233;--wall:#596273}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#1d2a3c 0%,#10151c 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+
+#boardBox{left:40px;top:134px;width:600px;height:490px}
+#board{position:absolute;left:0;top:0}
+.t{fill:var(--tile);stroke:#1a2230;stroke-width:2}
+.t.alt{fill:var(--tile2)}
+.t.rc{fill:var(--reach);fill-opacity:.55}
+.t.ex{fill:var(--extra);fill-opacity:.6}
+.t.bog{fill:var(--bog)}
+.t.wall{fill:var(--wall);stroke:#2a303a}
+.t.ring{fill:var(--reach);fill-opacity:.85}
+.rv{animation:rv .45s ease both;animation-delay:var(--d)}
+@keyframes rv{from{fill-opacity:0}}
+.num{font:800 18px "Nunito",sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.num.dim{fill:#ffb3b3}
+.tok circle{stroke:#fff;stroke-width:3}
+.tok text{font:700 24px "Fredoka",sans-serif;text-anchor:middle;dominant-baseline:central;fill:#1b1300}
+.los{stroke-width:5;stroke-linecap:round;fill:none}
+.los.draw{stroke-dasharray:700;animation:dl .9s ease both}
+@keyframes dl{from{stroke-dashoffset:700}to{stroke-dashoffset:0}}
+.hit{fill:none;stroke-width:5}
+.path{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.lab{font:800 20px "Nunito",sans-serif;fill:#fff;paint-order:stroke;stroke:#10151c;stroke-width:5px}
+
+#info{left:670px;top:134px;width:570px;height:490px;padding:24px 28px}
+#info h3{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--gold)}
+#info p{font-size:22px;line-height:1.4;margin:0 0 12px}
+#info b{color:var(--gold)}#info .r{color:#ff9d9d}#info .g{color:var(--ok)}#info .c{color:var(--reach)}
+#info .big{font-family:"Fredoka",sans-serif;font-size:56px;font-weight:700;line-height:1}
+#info .row{display:flex;gap:24px;align-items:flex-end;margin:10px 0 16px}
+#info .row div{font-size:19px;font-weight:800;color:var(--muted)}
+#info .bars{display:flex;gap:40px;align-items:flex-end;height:150px;margin:8px 0 14px}
+#info .bar{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:19px;font-weight:800}
+#info .bar i{display:block;width:110px;border-radius:10px 10px 0 0}
+#info .mini{display:flex;gap:30px;justify-content:center;margin:6px 0 10px}
+#info .mini div{text-align:center;font-size:19px;font-weight:800}
+#info .lg{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:6px;font-size:19px;font-weight:700}
+#info .lg i{display:inline-block;width:18px;height:18px;border-radius:4px;margin-right:6px;vertical-align:-3px}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .bigT{font-family:"Fredoka",sans-serif;font-size:116px;font-weight:700;line-height:1;text-align:center;
+  background:linear-gradient(90deg,var(--reach),var(--gold),var(--foe));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:36px;font-weight:700}
+#title svg{margin:24px 0 12px}
+#title .press{font-size:20px;color:var(--muted)}
+#title .pulse{animation:pl 2s ease-in-out infinite}
+@keyframes pl{50%{fill-opacity:.25}}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(9,12,17,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(210,225,245,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="bigT">Grid Movement<br>&amp; Line of Sight</div>
+    <h2>Squares and hexes turn space into numbers.</h2>
+    <svg id="titleSvg" width="420" height="150"></svg>
+    <div class="press">Press SPACE to move</div>
+  </div>
+
+  <div id="boardBox" class="panel card"><svg id="board" width="600" height="490"></svg></div>
+  <div id="info" class="panel card"></div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>The grid decides what "near" means.</b> Squares with free diagonals make corners too cheap. Hexes keep all six neighbours at the same distance.</li>
+      <li><b>Line of sight and cover make position the decision.</b> Two steps turned a blocked shot into a clear one; a crate cut the hit chance in half.</li>
+      <li><b>Movement points make terrain matter.</b> When a bog costs 3, the shortest path is no longer the straightest one.</li>
+    </ol>
+    <div class="see">You'll see this in: Chess, Gloomhaven, Descent, Memoir '44.</div>
+  </div></div>
+
+  <div id="dots"></div>
+</div>
+
+<script>
+const S=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+const dotsEl=$('dots');
+const COLS=9,ROWS=7;
+// square grid geometry
+const Q=62,QX=21,QY=28;
+const qc=(c,r)=>[QX+c*Q+Q/2,QY+r*Q+Q/2];
+// hex grid geometry (pointy top, odd rows shifted right)
+const R=34,HW=Math.sqrt(3)*R,HX=20,HY=40;
+const hc=(c,r)=>[HX+HW*(c+0.5*(r&1))+HW/2,HY+R+r*1.5*R];
+const hexPts=(x,y,rr=R-1)=>[0,1,2,3,4,5].map(i=>{const a=Math.PI/180*(60*i-30);return (x+rr*Math.cos(a)).toFixed(1)+','+(y+rr*Math.sin(a)).toFixed(1)}).join(' ');
+const cube=(c,r)=>{const q=c-(r-(r&1))/2;return[q,r,-q-r]};
+const hdist=(a,b)=>{const A=cube(...a),B=cube(...b);return Math.max(Math.abs(A[0]-B[0]),Math.abs(A[1]-B[1]),Math.abs(A[2]-B[2]))};
+
+// title art
+(function(){let h='';
+  for(let i=0;i<5;i++){h+=`<rect x="${i*44}" y="${40}" width="40" height="40" rx="4" fill="${i===2?'#ffc94a':'#36c2b4'}" fill-opacity="${i===2?1:.6}" class="${i===2?'':'pulse'}" style="animation-delay:${Math.abs(i-2)*.3}s"/>`}
+  for(let i=0;i<4;i++){const x=250+i*42,y=60+(i%2)*0;h+=`<polygon points="${hexPts(x,y+ (i%2?36:0),22)}" fill="${i===1?'#ffc94a':'#36c2b4'}" fill-opacity="${i===1?1:.6}" class="${i===1?'':'pulse'}"/>`}
+  $('titleSvg').innerHTML=h;})();
+
+let cur=0,st;
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+function reset(){st={view:'title',scene:'',info:''}}
+
+// line of sight on squares: sample the segment, collect cells it passes through
+function crossed(a,b){const [x1,y1]=[a[0]+.5,a[1]+.5],[x2,y2]=[b[0]+.5,b[1]+.5],out=new Set();
+  for(let i=1;i<200;i++){const t=i/200,x=x1+(x2-x1)*t,y=y1+(y2-y1)*t;out.add(Math.floor(x)+','+Math.floor(y))}
+  out.delete(a.join());out.delete(b.join());return out}
+// cheapest cost to every square (orthogonal steps), terrain costs
+function dijkstra(src,costOf){const D={},todo=[[0,...src]];D[src.join()]=0;
+  while(todo.length){todo.sort((a,b)=>a[0]-b[0]);const [d,c,r]=todo.shift();if(d>D[c+','+r])continue;
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const nc=c+dx,nr=r+dy;if(nc<0||nr<0||nc>=COLS||nr>=ROWS)return;
+      const k=costOf(nc,nr);if(k===Infinity)return;const nd=d+k;if(D[nc+','+nr]===undefined||nd<D[nc+','+nr]){D[nc+','+nr]=nd;todo.push([nd,nc,nr])}})}
+  return D}
+const BOG=new Set(['3,3','4,3','3,4','4,4','3,5','4,5']);
+const WALL=new Set(['4,1','4,2']);
+const tok=(x,y,l,f)=>`<g class="tok"><circle cx="${x}" cy="${y}" r="22" fill="${f}"/><text x="${x}" y="${y+1}">${l}</text></g>`;
+
+function drawSquares(o,anim){
+  let h='';
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const k=c+','+r,x=QX+c*Q,y=QY+r*Q;let cls='t'+((c+r)%2?' alt':''),st2='',lbl='';
+    if(o.wall&&WALL.has(k))cls='t wall';
+    else if(o.bog&&BOG.has(k))cls='t bog';
+    const v=o.cellCls&&o.cellCls(c,r);
+    if(v){cls+=' '+v.cls;if(anim&&v.d!==undefined){cls+=' rv';st2=`--d:${v.d}ms`}if(v.lbl!==undefined)lbl=`<text class="num ${v.dim?'dim':''}" x="${x+Q/2}" y="${y+Q/2}">${v.lbl}</text>`}
+    h+=`<rect class="${cls}" style="${st2}" x="${x}" y="${y}" width="${Q}" height="${Q}" rx="6"/>${lbl}`;
+    if(o.bog&&BOG.has(k)&&!v)h+=`<text class="num" x="${x+Q/2}" y="${y+Q/2}" style="fill:#e9cf9f">3</text>`;
+  }
+  return h;
+}
+
+const SCENES={
+ sq3(anim){const H=[4,3];
+   return drawSquares({cellCls:(c,r)=>{const d=Math.abs(c-H[0])+Math.abs(r-H[1]);return d&&d<=3?{cls:'rc',d:d*160,lbl:d}:null}},anim)+tok(...qc(...H),'H','var(--hero)')},
+ sqDiag(anim){const H=[4,3];
+   let h=drawSquares({cellCls:(c,r)=>{const m=Math.abs(c-H[0])+Math.abs(r-H[1]),d=Math.max(Math.abs(c-H[0]),Math.abs(r-H[1]));
+     if(!d||d>3)return null;return m<=3?{cls:'rc',lbl:d}:{cls:'ex',d:anim?(m-3)*140:undefined,lbl:d}}},anim);
+   const [x1,y1]=qc(...H),[x2,y2]=qc(7,0);
+   h+=`<line class="los ${anim?'draw':''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#fff" stroke-dasharray="10 8"/>`;
+   h+=`<text class="lab" x="${(x1+x2)/2+14}" y="${(y1+y2)/2-10}">4.2 squares away</text>`;
+   return h+tok(x1,y1,'H','var(--hero)')},
+ hex3(anim,ringOnly){const H=[4,3];let h='';
+   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const [x,y]=hc(c,r),d=hdist([c,r],H);
+     let cls='t'+((c+r)%2?' alt':''),s2='',lbl='';
+     if(d&&(ringOnly?d===1:d<=3)){cls+=ringOnly?' ring':' rc';if(anim&&!ringOnly){cls+=' rv';s2=`--d:${d*160}ms`}lbl=`<text class="num" x="${x}" y="${y}">${d}</text>`}
+     h+=`<polygon class="${cls}" style="${s2}" points="${hexPts(x,y)}"/>${lbl}`}
+   return h+tok(...hc(...H),'H','var(--hero)')},
+ los(anim,which){const A=which==='blocked'?[1,2]:[1,4],T=[7,2],crate=which==='cover';
+   const X=crossed(A,T);let blocked=[...X].some(k=>WALL.has(k)),cov=crate&&X.has('6,2');
+   let h=drawSquares({wall:true,cellCls:(c,r)=>{const k=c+','+r;
+     if(WALL.has(k)&&X.has(k))return{cls:'ex'};if(crate&&k==='6,2')return{cls:'bog'};return null}},anim);
+   if(crate){const [x,y]=qc(6,2);h+=`<rect x="${x-18}" y="${y-18}" width="36" height="36" rx="4" fill="#c58a4a" stroke="#6b4422" stroke-width="3"/><path d="M${x-18},${y-18}L${x+18},${y+18}M${x+18},${y-18}L${x-18},${y+18}" stroke="#6b4422" stroke-width="3"/>`}
+   if(which==='moved'||which==='cover'){const [x,y]=qc(1,2);h+=`<circle cx="${x}" cy="${y}" r="20" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-dasharray="6 6"/>`;
+     const p=[qc(1,2),qc(1,3),qc(1,4)];h+=`<path class="path" stroke="var(--hero)" stroke-opacity=".6" stroke-dasharray="4 10" d="M${p.map(q=>q.join(',')).join('L')}"/>`}
+   const [x1,y1]=qc(...A),[x2,y2]=qc(...T),colr=blocked?'var(--extra)':cov?'var(--gold)':'var(--ok)';
+   h+=`<line class="los ${anim?'draw':''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${colr}"/>`;
+   if(blocked){const mx=QX+4.5*Q,my=y1;h+=`<text class="lab" x="${mx-14}" y="${my+44}" style="fill:#ff9d9d">blocked</text>`}
+   return h+tok(x1,y1,'A','var(--hero)')+tok(x2,y2,'T','var(--foe)')},
+ terrain(anim,mp,path){const H=[1,3],F=[6,3];const D=dijkstra(H,(c,r)=>BOG.has(c+','+r)?3:1);
+   let h=drawSquares({bog:true,cellCls:(c,r)=>{const k=c+','+r;if(k===H.join())return null;const d=D[k];
+     if(path)return null;if(d<=mp)return{cls:'rc',d:d*160,lbl:d};return null}},anim);
+   if(path){
+     const straight=[[1,3],[2,3],[3,3],[4,3],[5,3],[6,3]],detour=[[1,3],[2,3],[2,2],[3,2],[4,2],[5,2],[5,3],[6,3]];
+     const pd=a=>'M'+a.map(p=>qc(...p).join(',')).join('L');
+     h+=`<path class="path" stroke="var(--extra)" stroke-dasharray="12 10" d="${pd(straight)}" transform="translate(0,14)"/>`;
+     h+=`<path class="path ${anim?'los draw':''}" stroke="var(--ok)" d="${pd(detour)}"/>`;
+     h+=`<text class="lab" x="${qc(3,3)[0]-6}" y="${qc(3,3)[1]+50}" style="fill:#ff9d9d">straight: 9 MP</text>`;
+     h+=`<text class="lab" x="${qc(2,1)[0]}" y="${qc(2,1)[1]+6}" style="fill:#9ff0b0">around: 7 MP</text>`;
+   }
+   const [fx,fy]=qc(...F);h+=`<path d="M${fx-6},${fy+20}L${fx-6},${fy-22}L${fx+18},${fy-14}L${fx-6},${fy-6}" fill="var(--foe)" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>`;
+   return h+tok(...qc(...H),'H','var(--hero)')}
+};
+
+function render(anim){
+  ['title','boardBox','info','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  $('boardBox').classList.add('on');$('info').classList.add('on');
+  if(st.view==='end')$('end').classList.add('on');
+  const [fn,...args]=st.scene;
+  $('board').innerHTML=SCENES[fn](anim,...args);
+  $('info').innerHTML=st.info;
+}
+const sqMini=`<svg width="160" height="160">${[0,1,2].map(r=>[0,1,2].map(c=>{const d=(c===1&&r===1)?'':(c===1||r===1)?'1':'1.4';
+  return `<rect x="${c*52+2}" y="${r*52+2}" width="50" height="50" rx="5" fill="${d===''?'#ffc94a':d==='1'?'#36c2b4':'#ff6b6b'}" fill-opacity="${d===''?1:.6}"/><text class="num" x="${c*52+27}" y="${r*52+27}">${d}</text>`}).join('')).join('')}</svg>`;
+const hexMini=`<svg width="170" height="160">${[[0,0],[1,0],[-.5,1],[.5,1],[1.5,1],[0,2],[1,2]].map(([c,r],i)=>{const x=55+c*52,y=28+r*52,ctr=i===3;
+  return `<polygon points="${hexPts(x,y,29)}" fill="${ctr?'#ffc94a':'#36c2b4'}" fill-opacity="${ctr?1:.6}"/>${ctr?'':`<text class="num" x="${x}" y="${y}">1</text>`}`}).join('')}</svg>`;
+
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='board';st.scene=['sq3'];
+   st.info=`<h3>Move 3 on squares</h3><p>Each step to a side neighbour costs <b>1</b>. The numbers show how many steps each square takes.</p>
+     <div class="row"><div><span class="big c">24</span><br>squares in reach</div></div>
+     <p>The reachable area is a <b>diamond</b>, not a circle. Going "diagonally" really means zig-zagging.</p>`;
+   setHeader('A hero with 3 movement on a square grid','Only side-to-side steps are allowed. Count the steps outward.')},
+ ()=>{st.scene=['sqDiag'];
+   st.info=`<h3>What if diagonals cost 1?</h3><p>Many games allow it. The diamond grows into a big <span class="r">square</span>.</p>
+     <div class="row"><div><span class="big c">24</span><br>side steps only</div><div><span class="big r">48</span><br>with free diagonals</div></div>
+     <p>The corner square is "3 moves" away but really <b>4.2 squares</b> as the crow flies. Diagonals cheat distance.</p>`;
+   setHeader('Diagonals break squares','If a diagonal step costs the same as a side step, corners become too cheap to reach.')},
+ ()=>{st.scene=['hex3'];
+   st.info=`<h3>The same move on hexes</h3><p>Every hex touches <b>6 neighbours</b>, and every one of them is exactly 1 step away. No diagonals to argue about.</p>
+     <div class="row"><div><span class="big c">36</span><br>hexes in reach</div></div>
+     <p>The reachable area is close to a <b>circle</b>. Distance on the board matches distance by eye.</p>`;
+   setHeader('Now the hero moves 3 on hexes','Same hero, same 3 points of movement.')},
+ ()=>{st.scene=['hex3',true];
+   st.info=`<h3>Neighbours compared</h3><div class="mini"><div>${sqMini}<br>Square: 4 at 1, 4 at 1.4</div><div>${hexMini}<br>Hex: 6, all at 1</div></div>
+     <p>Squares fit rooms, walls and maps people already know. Hexes give <b>fair, even distances</b>. Designers pick the grid for the feel they want.</p>`;
+   setHeader('Why hexes keep things equal','On a square grid, neighbours are two different distances away. On hexes, they are all the same.')},
+ ()=>{st.scene=['los','blocked'];
+   st.info=`<h3>Line of sight</h3><p>The archer <b>A</b> wants to shoot the target <b>T</b>. Draw a line from centre to centre.</p>
+     <p>If the line crosses a <span class="r">wall</span>, there is no shot. Here the wall sits right in the way.</p>
+     <div class="lg"><span><i style="background:var(--wall)"></i>Wall</span><span><i style="background:var(--hero)"></i>Archer</span><span><i style="background:var(--foe)"></i>Target</span></div>`;
+   setHeader('Can the archer see the target?','Walls block sight. The board answers the question with a straight line.')},
+ ()=>{st.scene=['los','moved'];
+   st.info=`<h3>Two steps change everything</h3><p>The archer moves <b>2 squares down</b>. The new line slips past the end of the wall.</p>
+     <p class="g">Clear shot.</p><p>Moving is no longer just about getting closer. It is about finding an <b>angle</b>.</p>`;
+   setHeader('Move to find a clear line','Position is the decision: the same archer, two squares away, now has a shot.')},
+ ()=>{st.scene=['los','cover'];
+   st.info=`<h3>Cover</h3><p>A crate sits on the line, next to the target. It does not block the shot, but it makes it <b>harder</b>.</p>
+     <div class="bars"><div class="bar"><i style="height:${0.67*140}px;background:var(--ok)"></i>Open: hit on 3+<br>67%</div>
+       <div class="bar"><i style="height:${0.33*140}px;background:var(--gold)"></i>Cover: hit on 5+<br>33%</div></div>`;
+   setHeader('Cover makes a hit less likely','Partial blockers cut the odds instead of stopping the shot.')},
+ ()=>{st.scene=['terrain',3];
+   st.info=`<h3>Movement points and terrain</h3><p>Plain ground costs <b>1</b>. The bog costs <b>3</b> to enter. The hero still has 3 movement points.</p>
+     <p>Numbers show the cost to reach each square. The bog swallows the hero's whole turn, so the reachable area <span class="r">bends away</span> from it.</p>
+     <div class="lg"><span><i style="background:var(--bog)"></i>Bog: 3 MP</span><span><i style="background:var(--reach)"></i>In reach</span></div>`;
+   setHeader('Terrain changes the cost of a step','Movement points turn the map into a price list.')},
+ ()=>{st.scene=['terrain',7,true];
+   st.info=`<h3>Straight is not shortest</h3><p>Next turn the hero has <b>7 MP</b> and wants the flag.</p>
+     <p><span class="r">Straight through the bog:</span> 5 steps, <b>9 MP</b>. Too far.</p>
+     <p><span class="g">Around the bog:</span> 7 steps, <b>7 MP</b>. Just enough.</p>
+     <p>The longer path is the cheaper one. Players now read the map before they move.</p>`;
+   setHeader('The shortest path is the cheapest, not the straightest','With movement points, a detour can beat a direct line.')},
+ ()=>{st.view='end';setHeader('What designers take from this','The grid, the line and the price of a step.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  render(false);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

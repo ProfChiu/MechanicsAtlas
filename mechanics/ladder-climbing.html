@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Ladder Climbing</title>
+<style>
+:root{--bg:#1a0f18;--panel:#2a1a28;--panel2:#352132;--ink:#fbf1f6;--muted:#cdb1c4;--line:rgba(255,220,240,.14);
+  --felt:#2b5b4a;--felt2:#173d31;--gold:#ffcc4d;--rose:#ff6f91;--sky:#62b6ff;--mint:#5fe0a8;--violet:#b48cff;--red:#ff4f4f}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#3a2036 0%,#1a0f18 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+
+/* playing cards */
+.pc{width:44px;height:64px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-family:"Fredoka",sans-serif;font-weight:700;font-size:24px;color:#2a1626;position:relative;
+  background:linear-gradient(165deg,#fffaf2,#ecdcc8);box-shadow:0 0 0 2px rgba(0,0,0,.08) inset,0 4px 8px rgba(0,0,0,.45);transition:opacity .4s,transform .4s}
+.pc::before{content:"";position:absolute;left:5px;right:5px;top:5px;height:5px;border-radius:3px;background:var(--c)}
+.pc.big{width:76px;height:108px;border-radius:12px;font-size:42px}
+.pc.big::before{height:8px;left:8px;right:8px;top:8px}
+.pc.bomb{box-shadow:0 0 0 3px var(--red),0 0 22px rgba(255,79,79,.75),0 4px 8px rgba(0,0,0,.45)}
+.pc.in{animation:drop .55s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes drop{from{transform:translate(var(--fx),var(--fy)) scale(.5) rotate(-20deg);opacity:0}to{transform:none;opacity:1}}
+
+/* table */
+#table{left:330px;top:250px;width:620px;height:290px;border-radius:150px;
+  background:radial-gradient(ellipse at 50% 40%,#3a7a62,var(--felt) 55%,var(--felt2));border:10px solid #5a3420;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.55),0 14px 34px rgba(0,0,0,.5)}
+#pile{position:absolute;left:0;right:0;top:56px;display:flex;justify-content:center;gap:10px;height:108px}
+#pileLbl{position:absolute;left:0;right:0;top:20px;text-align:center;font-size:20px;font-weight:800;color:#e9fff6}
+#pileLbl b{color:var(--gold)}
+#hist{position:absolute;left:40px;right:40px;bottom:26px;text-align:center;font-size:19px;color:#cfeee2;font-weight:700}
+#shapes{position:absolute;left:30px;right:30px;top:48px;display:flex;justify-content:center;gap:16px;opacity:0;transition:opacity .5s}
+#shapes.on{opacity:1}
+#shapes .sh{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:18px;font-weight:800;color:#e9fff6}
+#shapes .row{display:flex;gap:3px}
+#shapes .pc{width:30px;height:44px;font-size:17px}
+#shapes .pc::before{height:3px;top:3px;left:3px;right:3px}
+
+/* seats */
+.seat{position:absolute;padding:12px 14px;transition:box-shadow .4s,border-color .4s}
+.seat .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.seat .nm{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600}
+.seat .cnt{margin-left:auto;font-size:19px;font-weight:800;color:var(--muted)}
+.seat .cnt b{font-family:"Fredoka",sans-serif;font-size:26px;color:var(--ink)}
+.seat .hand{display:flex;flex-wrap:wrap;gap:5px;min-height:64px}
+.seat .tag{position:absolute;right:-10px;top:-14px;padding:4px 12px;border-radius:14px;font-size:18px;font-weight:900;opacity:0;transform:scale(.6);
+  transition:opacity .3s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.seat .tag.on{opacity:1;transform:none}
+.seat .tag.pass{background:#4a3a48;color:#e8d6e2}
+.seat .tag.lead{background:var(--gold);color:#3a2600}
+.seat .tag.out{background:var(--mint);color:#062a1b}
+.seat.active{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 26px rgba(255,204,77,.45),0 12px 32px rgba(0,0,0,.45)}
+.seat.won{border-color:var(--mint);box-shadow:0 0 0 3px var(--mint),0 0 30px rgba(95,224,168,.55),0 12px 32px rgba(0,0,0,.45)}
+#sA{left:390px;top:560px;width:500px}
+#sC{left:390px;top:126px;width:500px}
+#sB{left:40px;top:300px;width:265px}
+#sD{left:975px;top:300px;width:265px}
+#openNote{left:40px;top:126px;width:320px;font-size:18px;color:var(--muted);line-height:1.35}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:130px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--sky),var(--gold),var(--rose));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:12px 0 0;font-size:36px;font-weight:700}
+#title .lad{display:flex;align-items:flex-end;gap:16px;margin:30px 0 18px}
+#title .lad .pc{width:70px;height:100px;font-size:38px;animation:bob 2.2s ease-in-out infinite}
+#title .lad .pc::before{height:7px;top:7px;left:7px;right:7px}
+#title .lad .pc:nth-child(2){margin-bottom:24px;animation-delay:.2s}#title .lad .pc:nth-child(3){margin-bottom:48px;animation-delay:.4s}
+#title .lad .pc:nth-child(4){margin-bottom:72px;animation-delay:.6s}
+@keyframes bob{50%{transform:translateY(-10px)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+/* insight */
+#ins{left:120px;right:120px;top:140px;height:470px;padding:26px 34px;z-index:15}
+#ins h3{margin:0 0 14px;font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--gold)}
+#ins .tr{display:flex;align-items:center;gap:10px;margin:12px 0;font-size:21px;flex-wrap:wrap}
+#ins .tr .k{width:100px;font-weight:900;color:var(--muted);font-size:19px}
+#ins .ch{padding:6px 12px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid var(--line);font-weight:800}
+#ins .ch.win{background:rgba(255,204,77,.18);border-color:var(--gold);color:var(--gold)}
+#ins .ar{color:var(--muted)}
+#ins .bars{display:flex;gap:30px;margin-top:22px;align-items:flex-end;height:120px}
+#ins .bar{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:19px;font-weight:800}
+#ins .bar i{display:block;width:70px;border-radius:8px 8px 0 0;background:linear-gradient(var(--rose),#a33a58)}
+#ins .bar.w i{background:var(--mint);height:6px!important}
+#ins .foot{margin-top:18px;font-size:22px;line-height:1.4;border-top:1px solid var(--line);padding-top:14px}
+#ins .foot b{color:var(--gold)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(18,9,16,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,220,240,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Ladder Climbing</div>
+    <h2>Beat it with the same shape, or pass.</h2>
+    <div class="lad" id="lad"></div>
+    <div class="press">Press SPACE to climb</div>
+  </div>
+
+  <div id="game" class="panel" style="inset:0">
+    <div id="table" class="panel on">
+      <div id="pileLbl"></div>
+      <div id="shapes"></div>
+      <div id="pile"></div>
+      <div id="hist"></div>
+    </div>
+    <div id="sA" class="seat card"></div>
+    <div id="sB" class="seat card"></div>
+    <div id="sC" class="seat card"></div>
+    <div id="sD" class="seat card"></div>
+    <div id="openNote" class="panel on">Hands are shown open so you can follow every choice. In play they are hidden.</div>
+  </div>
+
+  <div id="ins" class="panel card">
+    <h3>The real prize is the lead</h3>
+    <div class="tr"><span class="k">Climb 1</span><span class="ch">Ada 3·3</span><span class="ar">→</span><span class="ch">Bo 4·4</span><span class="ar">→</span><span class="ch">Cy 9·9</span><span class="ar">→</span><span class="ch win">Dee 12·12 takes the lead</span></div>
+    <div class="tr"><span class="k">Climb 2</span><span class="ch">Dee 8-9-10</span><span class="ar">→</span><span class="ch win">Bo bomb 2·2·2·2 takes the lead</span><span class="ar">→</span><span class="ch">Bo leads 10: out!</span></div>
+    <div class="bars" id="insBars"></div>
+    <div class="foot">Bo held the <b>lowest cards</b> at the table and still won. The bomb won the lead, and the lead let Bo play the last card freely. <b>Whoever leads chooses the shape</b>, so they can dump cards nobody else could.</div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Match the shape, go higher, or pass.</b> One simple rule makes every play a challenge to the next player.</li>
+      <li><b>The lead is power.</b> When everyone passes, the top player plays any shape. Saving a strong card to win the lead is the core skill.</li>
+      <li><b>Bombs are the spice.</b> A rule that breaks the ladder (four of a kind beats anything) keeps low cards dangerous and comebacks possible.</li>
+    </ol>
+    <div class="see">You'll see this in: Big Two, Tichu, The Great Dalmuti, Scout.</div>
+  </div></div>
+
+  <div id="dots"></div>
+</div>
+
+<script>
+const S=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+const dotsEl=$('dots');
+const col=r=>`hsl(${210-(r-1)*16},80%,58%)`;
+const pc=(r,cls='',st='')=>`<div class="pc ${cls}" style="--c:${col(r)};${st}">${r}</div>`;
+$('lad').innerHTML=[3,4,9,12].map(r=>pc(r)).join('');
+$('shapes').innerHTML=[['Single',[7]],['Pair',[5,5]],['Run of 3+',[6,7,8]],['Bomb: beats all',[2,2,2,2]]].map(([n,c])=>
+  `<div class="sh"><div class="row">${c.map(r=>pc(r,n.startsWith('Bomb')?'bomb':'')).join('')}</div>${n}</div>`).join('');
+
+const START={A:[3,3,6,7,8,11,12],B:[2,2,2,2,4,4,10],C:[1,5,6,7,9,9,13],D:[1,4,8,9,10,12,12]};
+const NAME={A:'Ada',B:'Bo',C:'Cy',D:'Dee'};
+const FROM={A:['0px','220px'],B:['-320px','0px'],C:['0px','-200px'],D:['320px','0px']};
+let cur=0,st,token=0;
+
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+function reset(){
+  st={view:'title',hand:JSON.parse(JSON.stringify(START)),tag:{},active:null,won:null,pile:[],by:null,bomb:false,lbl:'',hist:[],shapes:false,pileKey:''};
+}
+function play(p,cards,bomb){
+  cards.forEach(c=>{const i=st.hand[p].indexOf(c);st.hand[p].splice(i,1)});
+  st.pile=cards;st.by=p;st.bomb=!!bomb;st.active=p;st.tag={};
+}
+function render(anim){
+  ['title','game','ins','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='game')$('game').classList.add('on');
+  if(st.view==='ins'||st.view==='end')$('ins').classList.add('on');
+  if(st.view==='end')$('end').classList.add('on');
+  ['A','B','C','D'].forEach(p=>{
+    const el=$('s'+p),t=st.tag[p];
+    el.className='seat card'+(st.active===p?' active':'')+(st.won===p?' won':'');
+    el.innerHTML=`<div class="top"><span class="nm">${NAME[p]}${p==='A'?' (you)':''}</span><span class="cnt"><b>${st.hand[p].length}</b> cards</span></div>
+      <div class="hand">${st.hand[p].map(r=>pc(r)).join('')}</div>
+      <div class="tag ${t||''} ${t?'on':''}">${t==='pass'?'PASS':t==='lead'?'LEADS':t==='out'?'OUT! WINS':''}</div>`;
+  });
+  $('shapes').classList.toggle('on',st.shapes);
+  const key=st.pile.join()+st.by;
+  if(key!==st.pileKey){st.pileKey=key;
+    $('pile').innerHTML=st.pile.map((r,i)=>pc(r,'big'+(st.bomb?' bomb':'')+(anim?' in':''),
+      st.by?`--fx:${FROM[st.by][0]};--fy:${FROM[st.by][1]};animation-delay:${i*90}ms`:'')).join('');
+  }
+  $('pileLbl').innerHTML=st.lbl;
+  $('hist').textContent=st.hist.length?'This climb: '+st.hist.join('  →  '):'';
+  $('insBars').innerHTML=['A','B','C','D'].map(p=>`<div class="bar ${st.hand[p].length?'':'w'}"><i style="height:${st.hand[p].length*15}px"></i>${NAME[p]}: ${st.hand[p].length}</div>`).join('');
+}
+
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='game';
+   setHeader('Four players, seven cards each','Cards rank from 1 (low) to 13 (high). Empty your hand first to win.')},
+ ()=>{st.shapes=true;st.lbl='Legal shapes';
+   setHeader('The rule: same shape, higher rank','To beat a play, use the same shape with higher cards. Or pass. One exception: a bomb beats anything.')},
+ ()=>{st.shapes=false;play('A',[3,3]);st.tag.A='lead';st.hist=['Ada 3·3'];st.lbl='To beat: <b>a pair higher than 3</b>';
+   setHeader('Ada leads a pair of 3s','The leader picks the shape. Now everyone must play a higher pair, or pass.')},
+ ()=>{play('B',[4,4]);st.hist.push('Bo 4·4');st.lbl='To beat: <b>a pair higher than 4</b>';
+   setHeader('Bo climbs with 4s','Just one step higher. Bo keeps the big cards for later.')},
+ ()=>{play('C',[9,9]);st.hist.push('Cy 9·9');st.lbl='To beat: <b>a pair higher than 9</b>';
+   setHeader('Cy jumps to 9s','Bigger jumps shut out more players. Only a pair of 10 or higher can follow.')},
+ ()=>{play('D',[12,12]);st.hist.push('Dee 12·12');st.lbl='To beat: <b>a pair higher than 12</b>';
+   setHeader('Dee plays 12s','Almost the top of the ladder. Nobody else holds a high pair.')},
+ ()=>{st.tag={A:'pass',B:'pass',C:'pass'};st.active='D';
+   st.lbl='Everyone passed. <b>Dee takes the lead.</b>';
+   setHeader('Pass, pass, pass','When everyone passes, the pile is cleared and the last player on top leads anything they like.')},
+ ()=>{play('D',[8,9,10]);st.tag={D:'lead'};st.hist=['Dee 8-9-10'];st.lbl='To beat: <b>a run of 3 higher than 8-9-10</b>';
+   setHeader('Dee leads a run','With the lead, Dee picks a shape that dumps three cards at once. Dee is down to 2 cards.')},
+ ()=>{play('B',[2,2,2,2],true);st.tag={A:'pass'};st.hist.push('Ada passes','Bo BOMB 2·2·2·2');st.lbl='<b>Bomb!</b> Four of a kind beats any shape.';
+   setHeader('Ada passes. Bo drops a bomb','Ada\'s 6-7-8 is too low. Bo has four 2s: the lowest cards in the game, but together they beat anything.')},
+ ()=>{play('B',[10]);st.tag={C:'pass',D:'pass',A:'pass',B:'out'};st.won='B';st.active=null;st.hist=['Bo leads 10'];
+   st.lbl='Bo is out of cards. <b>Bo wins.</b>';
+   setHeader('Nobody beats a bomb, so Bo leads','Bo plays the last card as a single. Hand empty, round over.')},
+ ()=>{st.view='ins';
+   setHeader('Why did Bo win?','Not by holding high cards. By winning the lead at the right moment.')},
+ ()=>{st.view='end';setHeader('What designers take from this','A ladder, a pass, and a way to break the ladder.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  render(false);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

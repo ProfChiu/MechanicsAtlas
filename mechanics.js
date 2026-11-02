@@ -451,23 +451,71 @@ window.MECHANICS = [
     ],
     brief: 'A card with three uses (build it, spend it as money, or use its action). Show the same card played each way and what is lost each time. Then a hand of 4 where every choice blocks another.'
   },
-  { id: 'ladder-climbing', family: 'cards', title: 'Ladder Climbing', file: null,
+  {
+    id: 'ladder-climbing', family: 'cards', title: 'Ladder Climbing',
+    file: 'mechanics/ladder-climbing.html', w: 1280, h: 720, minutes: 4,
     hook: 'Beat the last play with a higher set of the same shape, or pass.',
+    anatomy: {
+      Procedures: 'The leader plays a shape (single, pair, run). Each player beats it with the same shape, higher, or passes.',
+      Rules: 'When everyone passes, the pile clears and the last player on top leads any shape. A bomb beats anything.',
+      Resources: 'The cards in your hand, and the right to lead.',
+      Outcome: 'The first player to empty their hand wins; the lead decides who can dump cards freely.'
+    },
+    feel: ['Escalation', 'Timing', 'Standoff'],
+    feelText: 'Each play dares the next player to go higher. Holding back your best card while others burn theirs feels tense, and a well-timed bomb feels like a heist.',
     watchFor: 'Notice when everyone passes: the player on top leads anything, so holding the highest card is power.',
-    examples: [{ name: 'Big Two' }, { name: 'Tichu' }, { name: 'The Great Dalmuti' }, { name: 'Scout' }],
-    brief: 'Four players; a pair is led, beaten by higher pairs, players pass, the leader resets with a run. Track hands shrinking; first to empty wins. Highlight bombs or special beats as the designer\'s spice.' },
-  { id: 'tableau-building', family: 'cards', title: 'Tableau Building', file: null,
+    examples: [
+      { name: 'Big Two', note: 'The classic: singles, pairs and five-card hands, with 2 as the top rank.' },
+      { name: 'Tichu', note: 'A partnership climber with bombs, a dragon and bets on going out first.' },
+      { name: 'The Great Dalmuti', note: 'Your finishing place sets your seat and trades for the next round.' },
+      { name: 'Scout', note: 'You cannot reorder your hand, so taking cards from a play reshapes it.' }
+    ],
+    brief: 'Four players; a pair is led, beaten by higher pairs, players pass, the leader resets with a run. Track hands shrinking; first to empty wins. Highlight bombs or special beats as the designer\'s spice.'
+  },
+  {
+    id: 'tableau-building', family: 'cards', title: 'Tableau Building',
+    file: 'mechanics/tableau-building.html', w: 1280, h: 720, minutes: 4,
     hook: 'The cards you play stay in front of you and change what you can do next.',
+    anatomy: {
+      Procedures: 'Each turn, gain resources and play one card into the area in front of you.',
+      Rules: 'Played cards stay for the whole game. Their abilities give income, discounts or triggers that react to later plays.',
+      Resources: 'Acorns (money), cards in hand, and the cards already in your tableau.',
+      Outcome: 'Each player ends with a different set of rules; the best tableaus chain into big final turns.'
+    },
+    feel: ['Growth', 'Ownership', 'Combo joy'],
+    feelText: 'Your table slowly becomes your own little machine. Watching one play set off four cards you placed turns ago is the payoff.',
     watchFor: 'Watch each new card change the rules for its owner. A tableau is a personal rulebook built during play.',
-    examples: [{ name: 'Wingspan' }, { name: 'Everdell' }, { name: '7 Wonders' }, { name: 'Res Arcana' }],
-    brief: 'One player\'s table fills with 6 cards over 6 turns; each card adds an ability (discounts, triggers). Show a trigger chain on the last turn. Contrast with hand cards that disappear after use.' },
+    examples: [
+      { name: 'Wingspan', note: 'Birds placed in habitats trigger again each time you use that row.' },
+      { name: 'Everdell', note: 'Critters and constructions in your city, with free plays from linked cards.' },
+      { name: '7 Wonders', note: 'Cards drafted each round build a city that discounts and scores.' },
+      { name: 'Res Arcana', note: 'A small tableau of artifacts and places that make and convert essences.' }
+    ],
+    brief: 'One player\'s table fills with 6 cards over 6 turns; each card adds an ability (discounts, triggers). Show a trigger chain on the last turn. Contrast with hand cards that disappear after use.'
+  },
 
   /* Board & Space */
-  { id: 'grid-movement', family: 'space', title: 'Grid Movement & Line of Sight', file: null,
+  {
+    id: 'grid-movement', family: 'space', title: 'Grid Movement & Line of Sight',
+    file: 'mechanics/grid-movement.html', w: 1280, h: 720, minutes: 4,
     hook: 'Squares and hexes turn distance, cover and facing into decisions.',
+    anatomy: {
+      Procedures: 'Spend movement points to step from space to space, then check a line from centre to centre to attack.',
+      Rules: 'Terrain changes the cost of a step; walls block line of sight; cover makes a hit harder.',
+      Resources: 'Movement points each turn, and safe or open positions on the board.',
+      Outcome: 'Where you stand decides what you can do: space becomes a resource to read and plan.'
+    },
+    feel: ['Tactical', 'Spatial', 'Readable'],
+    feelText: 'Every move is a little puzzle you can count out. Finding the one square with a clear shot and cover feels clever.',
     watchFor: 'Compare a square grid and a hex grid: diagonals break squares, hexes keep every neighbour equal.',
-    examples: [{ name: 'Chess' }, { name: 'Gloomhaven' }, { name: 'Descent' }, { name: 'Memoir \'44' }],
-    brief: 'A hero moves 3 spaces on a square grid, then the same move on hexes. Show line of sight blocked by a wall, cover reducing a hit, and why movement points make terrain matter.' },
+    examples: [
+      { name: 'Chess', note: 'Each piece moves in its own pattern on an 8x8 square grid.' },
+      { name: 'Gloomhaven', note: 'Hex maps with line of sight, obstacles and difficult terrain.' },
+      { name: 'Descent', note: 'Square-grid dungeon crawling with movement points and blocking.' },
+      { name: 'Memoir \'44', note: 'Hex battlefields where woods and hedges block sight and give cover.' }
+    ],
+    brief: 'A hero moves 3 spaces on a square grid, then the same move on hexes. Show line of sight blocked by a wall, cover reducing a hit, and why movement points make terrain matter.'
+  },
   { id: 'pattern-building', family: 'space', title: 'Pattern Building', file: null,
     hook: 'Arrange pieces into the shapes the scoring rules reward.',
     watchFor: 'Each goal card names a shape. Watch one placement serve two patterns at once: that overlap is the skill.',

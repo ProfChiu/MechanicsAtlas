@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Tableau Building</title>
+<style>
+:root{--bg:#10170f;--panel:#1e2a1c;--panel2:#273624;--ink:#f3f6ea;--muted:#b7c6a6;--line:rgba(225,245,200,.14);
+  --acorn:#e0a050;--acorn2:#9a5f22;--gold:#ffd166;--inc:#6cc24a;--disc:#5ba8ff;--trig:#ff9f43;--draw:#b48cff;--pt:#ff6f91;--wood:#7a5232}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#26381f 0%,#10170f 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:19px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+/* tableau */
+#tab{left:40px;top:140px;width:800px;height:448px;padding:16px 20px;
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.06) 0 3px,transparent 3px 46px),linear-gradient(180deg,#5d3e25,#3f2916);border-radius:22px;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.5),0 14px 34px rgba(0,0,0,.5);border:1px solid rgba(255,220,170,.15)}
+#tab .lbl{color:#f0d9b5}
+#slots{position:absolute;left:20px;top:52px;display:grid;grid-template-columns:repeat(3,245px);grid-auto-rows:182px;gap:16px 12px}
+.slot{border-radius:14px;border:2px dashed rgba(255,230,190,.25);display:flex;align-items:center;justify-content:center;font-size:19px;color:rgba(255,230,190,.45);font-weight:800;position:relative}
+.tc{position:absolute;inset:0;border-radius:14px;overflow:visible;background:linear-gradient(170deg,#fbf4e3,#e8dab9);color:#2d2414;
+  box-shadow:0 0 0 3px var(--c) inset,0 10px 22px rgba(0,0,0,.5);display:flex;flex-direction:column;transition:box-shadow .4s,transform .4s}
+.tc .hd{background:var(--c);color:#fff;border-radius:11px 11px 0 0;padding:8px 12px;display:flex;align-items:center;gap:8px}
+.tc .nm{font-family:"Fredoka",sans-serif;font-size:22px;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.tc .cost{margin-left:auto;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:19px;
+  background:radial-gradient(circle at 35% 30%,#ffd59a,var(--acorn) 50%,var(--acorn2));color:#3a2108;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.tc .ty{font-size:15px;font-weight:900;letter-spacing:.8px;color:var(--c);padding:8px 12px 0;filter:brightness(.8)}
+.tc .ab{font-size:20px;font-weight:700;line-height:1.3;padding:4px 12px}
+.tc.new{animation:place .6s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes place{from{transform:translateY(-60px) scale(.7) rotate(-8deg);opacity:0}to{transform:none;opacity:1}}
+.tc.fire{animation:fire 1.1s ease both;animation-delay:var(--d)}
+@keyframes fire{0%{box-shadow:0 0 0 3px var(--c) inset,0 10px 22px rgba(0,0,0,.5)}
+  30%{box-shadow:0 0 0 5px #fff inset,0 0 0 4px var(--gold),0 0 40px rgba(255,209,102,.9)}100%{box-shadow:0 0 0 3px var(--c) inset,0 0 0 3px var(--gold),0 0 18px rgba(255,209,102,.5)}}
+.pop{position:absolute;right:-10px;top:-16px;padding:5px 12px;border-radius:16px;font-size:19px;font-weight:900;background:#14100a;color:var(--gold);
+  border:2px solid var(--gold);box-shadow:0 4px 10px rgba(0,0,0,.5);z-index:5;white-space:nowrap;animation:popin .45s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d)}
+.pop .n{display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#2a1d00;text-align:center;line-height:24px;margin-right:6px;font-size:16px}
+@keyframes popin{from{opacity:0;transform:scale(.4) translateY(10px)}to{opacity:1;transform:none}}
+
+/* side */
+#side{left:860px;top:140px;width:380px;height:448px;padding:18px 22px;display:flex;flex-direction:column}
+#side .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0 14px}
+#side .st{background:rgba(0,0,0,.2);border-radius:12px;padding:8px 6px;text-align:center}
+#side .st b{display:block;font-family:"Fredoka",sans-serif;font-size:34px;font-weight:700;line-height:1.1}
+#side .st span{font-size:16px;font-weight:800;color:var(--muted)}
+#side .st.ac b{color:var(--acorn)}#side .st.pt b{color:var(--pt)}#side .st.dr b{color:var(--draw)}
+#side .turn{font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600}
+#side .turn small{font-size:19px;color:var(--muted);font-family:"Nunito",sans-serif;font-weight:700;margin-left:8px}
+#rules{list-style:none;margin:6px 0 0;padding:0}
+#rules li{font-size:19px;line-height:1.25;padding:5px 0 5px 12px;border-left:4px solid var(--c);margin-bottom:5px;background:rgba(255,255,255,.04);border-radius:0 8px 8px 0}
+#rules li.new{animation:fadeUp .5s ease both}
+#rules .none{color:var(--muted);border-left-color:var(--line)}
+#side.big{box-shadow:0 0 0 3px var(--gold),0 0 30px rgba(255,209,102,.35),0 12px 32px rgba(0,0,0,.45)}
+#note{left:40px;right:40px;top:606px;font-size:22px;line-height:1.35;text-align:center}
+#note b{color:var(--gold)}#note .a{color:var(--acorn)}#note .p{color:var(--pt)}
+
+/* payback */
+#pay{left:40px;right:40px;top:140px;height:470px;display:flex;gap:26px}
+#pay .tbl{flex:1.6;padding:20px 26px}
+#pay table{width:100%;border-collapse:collapse;font-size:21px}
+#pay th{text-align:left;font-size:16px;letter-spacing:.8px;color:var(--muted);padding:6px 10px;border-bottom:2px solid var(--line)}
+#pay td{padding:9px 10px;border-bottom:1px solid var(--line)}
+#pay td .sw{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:8px;vertical-align:-1px}
+#pay td.r{font-weight:900;color:var(--gold)}
+#pay tr{opacity:0;transform:translateX(-12px);transition:opacity .4s,transform .4s}
+#pay.on tr{opacity:1;transform:none}
+#pay .one{flex:1;padding:20px 26px;display:flex;flex-direction:column;align-items:center}
+#pay .one .tc{position:relative;width:245px;height:182px;margin:14px 0 18px;opacity:.45;filter:grayscale(.6);transform:rotate(-6deg)}
+#pay .one .gone{font-size:21px;line-height:1.4;text-align:center}
+#pay .one .gone b{color:var(--gold)}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:124px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--inc),var(--gold),var(--trig));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:12px 0 0;font-size:36px;font-weight:700}
+#title .row{display:flex;gap:16px;margin:30px 0 16px}
+#title .row .tc{position:relative;width:150px;height:110px;animation:bob 2.4s ease-in-out infinite}
+#title .row .tc .nm{font-size:17px}#title .row .tc .cost{width:24px;height:24px;font-size:14px}
+#title .row .tc:nth-child(2){animation-delay:.25s}#title .row .tc:nth-child(3){animation-delay:.5s}#title .row .tc:nth-child(4){animation-delay:.75s}
+@keyframes bob{50%{transform:translateY(-10px)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(10,15,9,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(225,245,200,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Tableau Building</div>
+    <h2>The cards you play stay, and keep working.</h2>
+    <div class="row" id="titleRow"></div>
+    <div class="press">Press SPACE to build</div>
+  </div>
+
+  <div id="tab" class="panel"><div class="lbl">YOUR TABLEAU: TREEHOUSE VILLAGE</div><div id="slots"></div></div>
+  <div id="side" class="panel card">
+    <div class="turn" id="turn"></div>
+    <div class="stats">
+      <div class="st ac"><b id="vA">0</b><span>acorns</span></div>
+      <div class="st pt"><b id="vP">0</b><span>points</span></div>
+      <div class="st dr"><b id="vD">0</b><span>cards drawn</span></div>
+    </div>
+    <div class="lbl">YOUR EXTRA RULES</div>
+    <ul id="rules"></ul>
+  </div>
+  <div id="note" class="panel"></div>
+
+  <div id="pay" class="panel">
+    <div class="tbl card">
+      <div class="lbl" style="margin-bottom:8px">WHAT EACH TABLEAU CARD PAID BACK OVER 6 TURNS</div>
+      <table id="payT"></table>
+    </div>
+    <div class="one card">
+      <div class="lbl">A ONE-SHOT HAND CARD</div>
+      <div class="tc" style="--c:#8a8f7a"><div class="hd"><span class="nm">Windfall</span><span class="cost">1</span></div>
+        <div class="ty">ONE-SHOT</div><div class="ab">Gain 3 acorns. Then discard this card.</div></div>
+      <div class="gone">Used once, then gone: <b>3 acorns</b> total.<br>The Seed Shed cost the same and paid <b>5</b>, and it would keep paying.</div>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>A tableau is a personal rulebook.</b> Each card stays and changes the rules for its owner, so no two players end up playing the same game.</li>
+      <li><b>Early cards pay back longest.</b> A 1-acorn Seed Shed on turn 1 returned 5. Timing matters as much as the card.</li>
+      <li><b>Triggers chain.</b> One play on the last turn set off four cards. Designers tune chains so they feel explosive but stay countable.</li>
+    </ol>
+    <div class="see">You'll see this in: Wingspan, Everdell, 7 Wonders, Res Arcana.</div>
+  </div></div>
+
+  <div id="dots"></div>
+</div>
+
+<script>
+const S=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+const dotsEl=$('dots');
+const C={
+  shed:{nm:'Seed Shed',cost:1,c:'var(--inc)',ty:'INCOME',ab:'Each turn: +1 acorn.'},
+  bridge:{nm:'Rope Bridge',cost:2,c:'var(--disc)',ty:'DISCOUNT',ab:'Your other cards cost 1 acorn less.'},
+  look:{nm:'Lookout',cost:2,c:'var(--trig)',ty:'TRIGGER',ab:'When you play a card: draw 1 card.'},
+  owl:{nm:'Owl Library',cost:3,c:'var(--draw)',ty:'TRIGGER',ab:'When you draw a card: +1 acorn.'},
+  lamp:{nm:'Lantern Post',cost:3,c:'var(--pt)',ty:'TRIGGER',ab:'When you play a card: +1 point.'},
+  tree:{nm:'Grand Treehouse',cost:5,c:'#d4921a',ty:'WHEN PLAYED',ab:'+1 point for each card in your tableau.'}
+};
+const ORDER=['shed','bridge','look','owl','lamp','tree'];
+const tc=(k,cls='',extra='')=>{const c=C[k];return `<div class="tc ${cls}" style="--c:${c.c};${extra}"><div class="hd"><span class="nm">${c.nm}</span><span class="cost">${c.cost}</span></div><div class="ty">${c.ty}</div><div class="ab">${c.ab}</div></div>`};
+$('titleRow').innerHTML=['shed','look','owl','lamp'].map(k=>`<div class="tc" style="--c:${C[k].c}"><div class="hd"><span class="nm">${C[k].nm}</span><span class="cost">${C[k].cost}</span></div></div>`).join('');
+$('payT').innerHTML=`<tr><th>CARD</th><th>PAID</th><th>GAVE BACK</th></tr>`+[
+  ['shed','1','<b>5 acorns</b> (turns 2–6)'],['bridge','2','<b>4 acorns</b> saved on 4 cards'],['look','1','<b>3 cards</b> drawn'],
+  ['owl','2','<b>3 acorns</b> from draws'],['lamp','2','<b>1 point</b>'],['tree','4','<b>6 points</b>']
+].map((r,i)=>`<tr style="transition-delay:${i*.12}s"><td><span class="sw" style="background:${C[r[0]].c}"></span>${C[r[0]].nm}</td><td>${r[1]}</td><td class="r">${r[2].replace(/<\/?b>/g,'')}</td></tr>`).join('');
+
+let cur=0,st;
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+function reset(){st={view:'title',played:[],fresh:null,pops:{},fire:{},turn:0,A:0,P:0,D:0,note:'',big:false}}
+// one turn: gain, then play a card; events = list of [card, label] pops in order
+function turn(n,k,A,P,D,pops){st.turn=n;st.played.push(k);st.fresh=k;st.A=A;st.P=P;st.D=D;st.pops={};st.fire={};
+  (pops||[]).forEach(([c,l],i)=>{st.pops[c]=[l,i]});}
+
+function render(anim){
+  ['title','tab','side','note','pay','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='play'){
+    ['tab','side','note'].forEach(id=>$(id).classList.add('on'));
+    $('slots').innerHTML=ORDER.map((k,i)=>{
+      if(!st.played.includes(k))return `<div class="slot">Slot ${i+1}</div>`;
+      const p=st.pops[k],f=st.fire[k];
+      const d=p?`--d:${p[1]*0.9+0.5}s`:'';
+      return `<div class="slot">${tc(k,(anim&&st.fresh===k?'new ':'')+(f&&anim?'fire':''),d)}${p?`<div class="pop" style="${anim?d:''}">${f?`<span class="n">${p[1]+1}</span>`:''}${p[0]}</div>`:''}</div>`;
+    }).join('');
+    $('turn').innerHTML=st.turn?`Turn ${st.turn}<small>of 6</small>`:'Before turn 1';
+    $('vA').textContent=st.A;$('vP').textContent=st.P;$('vD').textContent=st.D;
+    $('rules').innerHTML=st.played.length?[].concat(st.played.filter(k=>k!=='tree').map(k=>`<li class="${anim&&st.fresh===k?'new':''}" style="--c:${C[k].c}">${C[k].ab.replace('Your other','Other')}</li>`)).join('')
+      :'<li class="none">None yet. Base rules only: +2 acorns, play 1 card.</li>';
+    $('side').classList.toggle('big',st.big);
+    $('note').innerHTML=st.note;
+  }
+  if(st.view==='pay'||st.view==='end')$('pay').classList.add('on');
+  if(st.view==='end')$('end').classList.add('on');
+}
+
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='play';
+   st.note='Watch the list on the right. Every card you play <b>adds a rule</b> that only you follow.';
+   setHeader('An empty table, six turns','Each turn you gain 2 acorns and may play one card. Played cards stay in front of you: your tableau.')},
+ ()=>{turn(1,'shed',1,0,0);
+   st.note='<span class="a">2 acorns</span> in, 1 spent. The Seed Shed is cheap, and it will pay every turn from now on.';
+   setHeader('Turn 1: Seed Shed','An income card. Played early, it has the most turns left to pay out.')},
+ ()=>{turn(2,'bridge',2,0,0,[['shed','+1 acorn']]);
+   st.note='2 acorns + 1 from the Shed = <span class="a">4</span>. The Bridge costs 2. From now on every card costs 1 less.';
+   setHeader('Turn 2: Rope Bridge','The Shed pays out for the first time. A discount card goes down next to it.')},
+ ()=>{turn(3,'look',4,0,0,[['shed','+1 acorn'],['bridge','−1 cost']]);
+   st.note='The Lookout prints a cost of 2 but costs you <b>1</b>. Two cards already bend the rules for you.';
+   setHeader('Turn 3: Lookout','A trigger card. It does nothing alone, but reacts to every card played after it.')},
+ ()=>{turn(4,'owl',6,0,1,[['shed','+1 acorn'],['bridge','−1 cost'],['look','draw 1'],['owl','+1 acorn']]);
+   st.note='Playing the Owl Library makes the Lookout draw, and that draw pays the Library. <b>The first small chain.</b>';
+   setHeader('Turn 4: Owl Library','A new card reacts to an old one in the same turn.')},
+ ()=>{turn(5,'lamp',8,0,2,[['shed','+1 acorn'],['bridge','−1 cost'],['look','draw 1'],['owl','+1 acorn']]);
+   st.note='<span class="a">8 acorns</span> saved up. The Lantern Post scores a point for every card played <b>after</b> it.';
+   setHeader('Turn 5: Lantern Post','Five cards in. The rules list on the right is now longer than the base rules.')},
+ ()=>{turn(6,'tree',7,0,2,[['shed','+1 acorn'],['bridge','−1 cost']]);
+   st.note='Printed cost 5, minus the Bridge: <b>4 acorns</b>. Now watch what playing it sets off.';
+   setHeader('Turn 6: the Grand Treehouse','The last card, and the biggest.')},
+ ()=>{st.fresh=null;st.A=8;st.P=7;st.D=3;
+   st.pops={lamp:['+1 point',0],look:['draw 1',1],owl:['+1 acorn',2],tree:['+6 points',3]};st.fire={lamp:1,look:1,owl:1,tree:1};st.big=true;
+   st.note='One play, four reactions: <span class="p">+1 point</span>, a draw, <span class="a">+1 acorn</span>, <span class="p">+6 points</span>. Each card read the rules the others added.';
+   setHeader('The trigger chain','Lantern Post scores. Lookout draws. Owl Library pays for the draw. The Treehouse counts six cards.')},
+ ()=>{st.view='pay';
+   setHeader('Cards that stay keep paying','Compare the tableau with a one-shot card from hand that is used once and discarded.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Build your own rules, one card at a time.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  render(false);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

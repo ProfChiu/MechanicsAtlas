@@ -5,7 +5,7 @@ Made for GAME 121 · Introduction to Game Development (SCAD, Prof. Wan Chiu).
 
 **Open `index.html`** — or visit the live site (GitHub Pages).
 
-- 23 mechanics in 5 families (9 more planned): Chance & Risk, Card Systems, Board & Space, Economy & Actions, Player Interaction.
+- 26 mechanics in 5 families (6 more planned): Chance & Risk, Card Systems, Board & Space, Economy & Actions, Player Interaction.
 - Each animation sits beside designer's notes: what to watch for, its anatomy (Fullerton's formal elements,
   *Game Design Workshop* ch. 3), what it feels like, and games that use it.
 - Step with click / Space / →, back with ←, or press **Auto-play**. "Watch them all in order" plays the full tour.
