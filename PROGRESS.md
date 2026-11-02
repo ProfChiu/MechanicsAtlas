@@ -1,5 +1,11 @@
 # Mechanics Atlas — progress log
 
+## 2026-11-02 (rework: Tableau Building and Multi-Use Cards)
+- Accomplished: Both animations now explain the game before it starts and show the reasoning behind each decision (15 steps each, ~6 min).
+- Tableau Building: setup beat (hand of six, 6 turns, +2 acorns, acorns score nothing); turn 1 and turn 2 decision tables with payback math; rule of thumb (value = effect × turns left); new play order Shed → Lantern → Bridge → Lookout → Owl → Treehouse scores 10, compared with the old order (triggers late) at 7.
+- Multi-Use Cards: setup beat (first to 10, draw 1 a turn, coins expire, rival at 4); "now / later / forever" framing of the three uses; a "Think:" line on every plan; three-turn projection with fixed draws (Well, Lighthouse, Well): A 5, B 6, C 8; early vs late game (invest vs cash in).
+- Next: Wan to test; then consider the same check on other worked-example animations; Phase 4.
+
 ## 2026-11-02 (Phase 3: chance and space gaps)
 - Accomplished: Built Event Decks, Hidden Movement and Modular Boards & Exploration. Atlas now 41 built, 3 planned, ~164 min. All pass the checker.
 - Decisions: Event deck of 6 Calm (+1 repair) / 3 Gust (−1) / 3 Storm (−3), shelter 10: shuffles lose the village; a stacked deck ends at 3; an escalating stack (same cards, gusts moved later) ends at 2. Hidden movement on a 12-space grid, reveal every 3rd turn, caught on turn 4. Modular board scores corners by the sum of three tiles (Gold 3, Field/Forest 2, Hill 1, Desert 0).

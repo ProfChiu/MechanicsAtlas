@@ -434,7 +434,7 @@ window.MECHANICS = [
   /* Card Systems */
   {
     id: 'multi-use-cards', family: 'cards', title: 'Multi-Use Cards',
-    file: 'mechanics/multi-use-cards.html', w: 1280, h: 720, minutes: 4,
+    file: 'mechanics/multi-use-cards.html', w: 1280, h: 720, minutes: 6,
     hook: 'One card, several ways to play it. Choosing one means giving up the rest.',
     anatomy: {
       Procedures: 'Play a card for one of its uses: build it, spend it as money, or trigger its action.',
@@ -476,7 +476,7 @@ window.MECHANICS = [
   },
   {
     id: 'tableau-building', family: 'cards', title: 'Tableau Building',
-    file: 'mechanics/tableau-building.html', w: 1280, h: 720, minutes: 4,
+    file: 'mechanics/tableau-building.html', w: 1280, h: 720, minutes: 6,
     hook: 'The cards you play stay in front of you and change what you can do next.',
     anatomy: {
       Procedures: 'Each turn, gain resources and play one card into the area in front of you.',

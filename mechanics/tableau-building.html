@@ -69,6 +69,46 @@ html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
 #note{left:40px;right:40px;top:606px;font-size:22px;line-height:1.35;text-align:center}
 #note b{color:var(--gold)}#note .a{color:var(--acorn)}#note .p{color:var(--pt)}
 
+
+/* setup, decisions, rule of thumb, order comparison */
+.lft{left:40px;top:140px;width:800px;height:448px;padding:18px 22px}
+#setupC .grid{position:absolute;left:20px;top:56px;display:grid;grid-template-columns:repeat(3,245px);grid-auto-rows:182px;gap:16px 12px}
+#setupC .grid>div{position:relative}
+#howto{left:860px;top:140px;width:380px;height:448px;padding:18px 22px}
+#howto h3{margin:0 0 10px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--gold)}
+#howto li{font-size:20px;line-height:1.35;margin-bottom:10px}
+#howto ul{margin:0;padding-left:22px}
+#howto b{color:var(--gold)}
+#dec .row{display:flex;align-items:center;gap:14px;height:58px;margin-top:8px;padding:0 14px;border-radius:12px;background:rgba(0,0,0,.18);border:2px solid transparent;font-size:19px}
+#dec .row .nm{width:190px;font-family:"Fredoka",sans-serif;font-size:21px;font-weight:600;display:flex;align-items:center;gap:8px}
+#dec .row .nm i{width:14px;height:34px;border-radius:4px;background:var(--c)}
+#dec .row .cs{width:70px;font-weight:900;color:var(--acorn)}
+#dec .row .why{flex:1;line-height:1.25}
+#dec .row .net{width:96px;text-align:right;font-family:"Fredoka",sans-serif;font-size:22px;font-weight:600}
+#dec .row.no{opacity:.4}
+#dec .row.pick{border-color:var(--gold);background:rgba(255,209,102,.1)}
+#dec .row.in{animation:fadeUp .4s ease both;animation-delay:var(--d)}
+#dec .hdr{display:flex;justify-content:space-between;align-items:baseline}
+#dec .hdr b{font-family:"Fredoka",sans-serif;font-size:26px;color:var(--acorn)}
+#thumb .bars{position:absolute;left:40px;right:40px;top:80px;height:270px;display:flex;gap:22px;align-items:flex-end}
+#thumb .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:19px;font-weight:800}
+#thumb .bar i{display:block;width:72px;border-radius:10px 10px 0 0;background:linear-gradient(#a6ec82,var(--inc));transition:height .8s cubic-bezier(.3,1.3,.5,1)}
+#thumb .bar b{font-family:"Fredoka",sans-serif;font-size:28px;color:var(--acorn)}
+#thumb .bar.hl i{box-shadow:0 0 0 3px var(--gold),0 0 18px rgba(255,209,102,.6)}
+#thumb .rule{position:absolute;left:40px;right:40px;bottom:20px;text-align:center;font-size:23px;font-weight:800}
+#thumb .rule b{color:var(--gold)}
+#orders{left:40px;right:40px;top:140px;height:466px;padding:20px 28px}
+#orders h3{margin:0 0 6px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--gold)}
+#orders table{width:100%;border-collapse:collapse;font-size:20px;margin-top:6px}
+#orders th{font-size:16px;color:var(--muted);padding:6px 6px;border-bottom:2px solid var(--line);text-align:center}
+#orders td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:center;font-weight:800}
+#orders td.k{text-align:left;font-family:"Fredoka",sans-serif;font-size:22px;font-weight:600}
+#orders td.t{font-family:"Fredoka",sans-serif;font-size:30px;color:var(--pt)}
+#orders .chip{display:inline-block;padding:3px 8px;border-radius:8px;font-size:15px;font-weight:900;color:#fff;background:var(--c)}
+#orders .lamp{box-shadow:0 0 0 3px var(--gold)}
+#orders p{font-size:21px;line-height:1.4;margin:14px 0 0}
+#orders p b{color:var(--gold)}
+
 /* payback */
 #pay{left:40px;right:40px;top:140px;height:470px;display:flex;gap:26px}
 #pay .tbl{flex:1.6;padding:20px 26px}
@@ -133,6 +173,15 @@ html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
   </div>
   <div id="note" class="panel"></div>
 
+  <div id="setupC" class="panel card lft"><div class="lbl">YOUR HAND: SIX CARDS, AND THE PRICE OF EACH</div><div class="grid" id="handGrid"></div></div>
+  <div id="howto" class="panel card"><h3>How the game works</h3><ul>
+    <li>The game lasts <b>6 turns</b>. Most points at the end wins.</li>
+    <li>Each turn you get <b>2 acorns</b>, then may play <b>one card</b> by paying its cost. Unspent acorns are saved.</li>
+    <li>Played cards <b>stay on your table</b> and keep working every turn.</li>
+    <li>Points come only from card abilities. Acorns are worth nothing at the end.</li></ul></div>
+  <div id="dec" class="panel card lft"></div>
+  <div id="thumb" class="panel card lft"><div class="lbl" id="thumbLbl"></div><div class="bars" id="thumbBars"></div><div class="rule" id="thumbRule"></div></div>
+  <div id="orders" class="panel card"></div>
   <div id="pay" class="panel">
     <div class="tbl card">
       <div class="lbl" style="margin-bottom:8px">WHAT EACH TABLEAU CARD PAID BACK OVER 6 TURNS</div>
@@ -142,7 +191,7 @@ html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
       <div class="lbl">A ONE-SHOT HAND CARD</div>
       <div class="tc" style="--c:#8a8f7a"><div class="hd"><span class="nm">Windfall</span><span class="cost">1</span></div>
         <div class="ty">ONE-SHOT</div><div class="ab">Gain 3 acorns. Then discard this card.</div></div>
-      <div class="gone">Used once, then gone: <b>3 acorns</b> total.<br>The Seed Shed cost the same and paid <b>5</b>, and it would keep paying.</div>
+      <div class="gone">Used once, then gone: <b>3 acorns</b> total.<br>The Seed Shed cost 1 and paid <b>5</b>, and it would keep paying.</div>
     </div>
   </div>
 
@@ -150,8 +199,8 @@ html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
     <h2>What designers take from this</h2>
     <ol>
       <li><b>A tableau is a personal rulebook.</b> Each card stays and changes the rules for its owner, so no two players end up playing the same game.</li>
-      <li><b>Early cards pay back longest.</b> A 1-acorn Seed Shed on turn 1 returned 5. Timing matters as much as the card.</li>
-      <li><b>Triggers chain.</b> One play on the last turn set off four cards. Designers tune chains so they feel explosive but stay countable.</li>
+      <li><b>A card's value is its effect × the turns left.</b> The Seed Shed on turn 1 returned 5 acorns; the Lantern Post on turn 2 scored 4 points, but only 1 on turn 5.</li>
+      <li><b>Order is the real decision.</b> The same six cards scored 10 points in one order and 7 in another. Engines first, triggers early, the big payoff last.</li>
     </ol>
     <div class="see">You'll see this in: Wingspan, Everdell, 7 Wonders, Res Arcana.</div>
   </div></div>
@@ -171,76 +220,121 @@ const C={
   lamp:{nm:'Lantern Post',cost:3,c:'var(--pt)',ty:'TRIGGER',ab:'When you play a card: +1 point.'},
   tree:{nm:'Grand Treehouse',cost:5,c:'#d4921a',ty:'WHEN PLAYED',ab:'+1 point for each card in your tableau.'}
 };
-const ORDER=['shed','bridge','look','owl','lamp','tree'];
+const HAND=['shed','bridge','look','owl','lamp','tree'];
+const ORDER=['shed','lamp','bridge','look','owl','tree'];
 const tc=(k,cls='',extra='')=>{const c=C[k];return `<div class="tc ${cls}" style="--c:${c.c};${extra}"><div class="hd"><span class="nm">${c.nm}</span><span class="cost">${c.cost}</span></div><div class="ty">${c.ty}</div><div class="ab">${c.ab}</div></div>`};
 $('titleRow').innerHTML=['shed','look','owl','lamp'].map(k=>`<div class="tc" style="--c:${C[k].c}"><div class="hd"><span class="nm">${C[k].nm}</span><span class="cost">${C[k].cost}</span></div></div>`).join('');
+$('handGrid').innerHTML=HAND.map(k=>`<div>${tc(k)}</div>`).join('');
 $('payT').innerHTML=`<tr><th>CARD</th><th>PAID</th><th>GAVE BACK</th></tr>`+[
-  ['shed','1','<b>5 acorns</b> (turns 2–6)'],['bridge','2','<b>4 acorns</b> saved on 4 cards'],['look','1','<b>3 cards</b> drawn'],
-  ['owl','2','<b>3 acorns</b> from draws'],['lamp','2','<b>1 point</b>'],['tree','4','<b>6 points</b>']
-].map((r,i)=>`<tr style="transition-delay:${i*.12}s"><td><span class="sw" style="background:${C[r[0]].c}"></span>${C[r[0]].nm}</td><td>${r[1]}</td><td class="r">${r[2].replace(/<\/?b>/g,'')}</td></tr>`).join('');
+  ['shed','1','5 acorns (turns 2–6)'],['lamp','3','4 points (turns 3–6)'],['bridge','2','3 acorns saved on 3 cards'],
+  ['look','1','2 cards drawn'],['owl','2','2 acorns from draws'],['tree','4','6 points']
+].map((r,i)=>`<tr style="transition-delay:${i*.12}s"><td><span class="sw" style="background:${C[r[0]].c}"></span>${C[r[0]].nm}</td><td>${r[1]}</td><td class="r">${r[2]}</td></tr>`).join('');
 
+const DEC={
+ 1:{ac:2,rows:[
+   ['shed','1','+1 acorn each turn × <b>5 turns left</b> = 5 acorns','+4',1],
+   ['bridge','2','Saves 1 acorn on each of 5 later cards = 5 acorns','+3'],
+   ['look','2','Draws a card on later plays. Cards alone score nothing yet.','?'],
+   ['lamp','3','Too expensive: you have 2 acorns.','',0,1],['owl','3','Too expensive.','',0,1],['tree','5','Too expensive.','',0,1]]},
+ 2:{ac:4,rows:[
+   ['lamp','3','+1 point for each later card: <b>4 cards left</b> = 4 points','4 pts',1],
+   ['bridge','2','Saves 1 acorn on each of 4 later cards = 4 acorns','+2'],
+   ['look','2','Draws on later plays, but nothing turns cards into points yet.','?'],
+   ['owl','3','Pays for draws, but there is no Lookout to draw yet.','0'],
+   ['tree','5','Too expensive. And it scores more the later you play it.','',0,1]]}
+};
 let cur=0,st;
 function setHeader(t,s){
   const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
   h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
 }
-function reset(){st={view:'title',played:[],fresh:null,pops:{},fire:{},turn:0,A:0,P:0,D:0,note:'',big:false}}
-// one turn: gain, then play a card; events = list of [card, label] pops in order
-function turn(n,k,A,P,D,pops){st.turn=n;st.played.push(k);st.fresh=k;st.A=A;st.P=P;st.D=D;st.pops={};st.fire={};
+function reset(){st={view:'title',played:[],fresh:null,pops:{},fire:{},turn:0,A:0,P:0,D:0,note:'',big:false,dec:null,thumb:null}}
+function turn(n,k,A,P,D,pops){st.view='play';st.turn=n;st.played.push(k);st.fresh=k;st.A=A;st.P=P;st.D=D;st.pops={};st.fire={};
   (pops||[]).forEach(([c,l],i)=>{st.pops[c]=[l,i]});}
 
 function render(anim){
-  ['title','tab','side','note','pay','end'].forEach(id=>$(id).classList.remove('on'));
-  if(st.view==='title'){$('title').classList.add('on');return}
-  if(st.view==='play'){
-    ['tab','side','note'].forEach(id=>$(id).classList.add('on'));
+  ['title','tab','side','note','pay','end','setupC','howto','dec','thumb','orders'].forEach(id=>$(id).classList.remove('on'));
+  const v=st.view;
+  if(v==='title'){$('title').classList.add('on');return}
+  if(v==='setup'){['setupC','howto','note'].forEach(id=>$(id).classList.add('on'))}
+  if(v==='play'||v==='dec'||v==='thumb'){
+    $(v==='play'?'tab':v).classList.add('on');$('side').classList.add('on');$('note').classList.add('on');
     $('slots').innerHTML=ORDER.map((k,i)=>{
-      if(!st.played.includes(k))return `<div class="slot">Slot ${i+1}</div>`;
+      if(!st.played.includes(k))return `<div class="slot">Turn ${i+1}</div>`;
       const p=st.pops[k],f=st.fire[k];
       const d=p?`--d:${p[1]*0.9+0.5}s`:'';
       return `<div class="slot">${tc(k,(anim&&st.fresh===k?'new ':'')+(f&&anim?'fire':''),d)}${p?`<div class="pop" style="${anim?d:''}">${f?`<span class="n">${p[1]+1}</span>`:''}${p[0]}</div>`:''}</div>`;
     }).join('');
     $('turn').innerHTML=st.turn?`Turn ${st.turn}<small>of 6</small>`:'Before turn 1';
     $('vA').textContent=st.A;$('vP').textContent=st.P;$('vD').textContent=st.D;
-    $('rules').innerHTML=st.played.length?[].concat(st.played.filter(k=>k!=='tree').map(k=>`<li class="${anim&&st.fresh===k?'new':''}" style="--c:${C[k].c}">${C[k].ab.replace('Your other','Other')}</li>`)).join('')
+    $('rules').innerHTML=st.played.length?st.played.filter(k=>k!=='tree').map(k=>`<li class="${anim&&st.fresh===k?'new':''}" style="--c:${C[k].c}">${C[k].ab.replace('Your other','Other')}</li>`).join('')
       :'<li class="none">None yet. Base rules only: +2 acorns, play 1 card.</li>';
     $('side').classList.toggle('big',st.big);
-    $('note').innerHTML=st.note;
   }
-  if(st.view==='pay'||st.view==='end')$('pay').classList.add('on');
-  if(st.view==='end')$('end').classList.add('on');
+  if(v==='dec'){const d=DEC[st.dec];
+    $('dec').innerHTML=`<div class="hdr"><span class="lbl">TURN ${st.dec}: WHICH CARD?</span><span><b>${d.ac}</b> acorns to spend</span></div>`+
+      d.rows.map(([k,c,why,net,pick,no],i)=>`<div class="row ${pick?'pick':''} ${no?'no':''} ${anim?'in':''}" style="--d:${i*.12}s;--c:${C[k].c}">
+        <span class="nm"><i></i>${C[k].nm}</span><span class="cs">cost ${c}</span><span class="why">${why}</span><span class="net" style="color:${pick?'var(--gold)':'var(--muted)'}">${net}</span></div>`).join('');
+  }
+  if(v==='thumb'){
+    $('thumbLbl').textContent='THE SAME SEED SHED, PLAYED ON DIFFERENT TURNS';
+    $('thumbBars').innerHTML=[5,4,3,2,1,0].map((n,i)=>`<div class="bar ${i===0?'hl':''}"><b>${n}</b><i style="height:${n*44+4}px"></i>Turn ${i+1}</div>`).join('');
+    $('thumbRule').innerHTML='Value of a lasting card = <b>its effect × the turns left</b>. Play engine cards early.';
+  }
+  if(v==='orders'){$('orders').classList.add('on');
+    const row=(nm,ord,pts,tot)=>`<tr><td class="k">${nm}</td>${ord.map(k=>`<td><span class="chip ${k==='lamp'?'lamp':''}" style="--c:${C[k].c}">${C[k].nm}</span></td>`).join('')}<td class="t">${tot}</td></tr>
+      <tr><td style="text-align:left;color:var(--muted);font-size:17px">points so far</td>${pts.map(p=>`<td>${p}</td>`).join('')}<td></td></tr>`;
+    $('orders').innerHTML=`<h3>Same six cards, two orders</h3><table><tr><th></th>${[1,2,3,4,5,6].map(t=>`<th>TURN ${t}</th>`).join('')}<th>TOTAL</th></tr>
+      ${row('This game',ORDER,[0,0,1,2,3,10],10)}${row('Triggers late',['shed','bridge','look','owl','lamp','tree'],[0,0,0,0,0,7],7)}</table>
+      <p>The difference is the <b>Lantern Post</b>. On turn 2 it saw four later cards: <b>4 points</b>. On turn 5 it saw one: <b>1 point</b>.
+      The Rope Bridge played on turn 2 instead saved acorns, but acorns are worth nothing at the end. <b>Points win; acorns only matter if they buy something.</b></p>`;
+  }
+  if(v==='pay'||v==='end')$('pay').classList.add('on');
+  if(v==='end')$('end').classList.add('on');
+  $('note').innerHTML=st.note;
 }
 
 const steps=[
  ()=>{st.view='title';setHeader('','')},
- ()=>{st.view='play';
-   st.note='Watch the list on the right. Every card you play <b>adds a rule</b> that only you follow.';
-   setHeader('An empty table, six turns','Each turn you gain 2 acorns and may play one card. Played cards stay in front of you: your tableau.')},
+ ()=>{st.view='setup';
+   st.note='Every card here does nothing on its own the turn you play it. Its value depends on <b>when</b> you play it.';
+   setHeader('Before the game: your hand and the rules','Six cards, six turns, one card a turn. Which order scores the most?')},
+ ()=>{st.view='dec';st.dec=1;st.turn=1;st.A=2;
+   st.note='Shed and Bridge both pay back 5, but the Shed costs less and leaves 1 acorn over. <b>Pick: Seed Shed.</b>';
+   setHeader('Turn 1: what can you afford, and what will it pay?','2 acorns. Three cards are affordable. Count what each one returns over the turns left.')},
  ()=>{turn(1,'shed',1,0,0);
-   st.note='<span class="a">2 acorns</span> in, 1 spent. The Seed Shed is cheap, and it will pay every turn from now on.';
-   setHeader('Turn 1: Seed Shed','An income card. Played early, it has the most turns left to pay out.')},
- ()=>{turn(2,'bridge',2,0,0,[['shed','+1 acorn']]);
-   st.note='2 acorns + 1 from the Shed = <span class="a">4</span>. The Bridge costs 2. From now on every card costs 1 less.';
-   setHeader('Turn 2: Rope Bridge','The Shed pays out for the first time. A discount card goes down next to it.')},
- ()=>{turn(3,'look',4,0,0,[['shed','+1 acorn'],['bridge','−1 cost']]);
-   st.note='The Lookout prints a cost of 2 but costs you <b>1</b>. Two cards already bend the rules for you.';
-   setHeader('Turn 3: Lookout','A trigger card. It does nothing alone, but reacts to every card played after it.')},
- ()=>{turn(4,'owl',6,0,1,[['shed','+1 acorn'],['bridge','−1 cost'],['look','draw 1'],['owl','+1 acorn']]);
-   st.note='Playing the Owl Library makes the Lookout draw, and that draw pays the Library. <b>The first small chain.</b>';
-   setHeader('Turn 4: Owl Library','A new card reacts to an old one in the same turn.')},
- ()=>{turn(5,'lamp',8,0,2,[['shed','+1 acorn'],['bridge','−1 cost'],['look','draw 1'],['owl','+1 acorn']]);
-   st.note='<span class="a">8 acorns</span> saved up. The Lantern Post scores a point for every card played <b>after</b> it.';
-   setHeader('Turn 5: Lantern Post','Five cards in. The rules list on the right is now longer than the base rules.')},
- ()=>{turn(6,'tree',7,0,2,[['shed','+1 acorn'],['bridge','−1 cost']]);
-   st.note='Printed cost 5, minus the Bridge: <b>4 acorns</b>. Now watch what playing it sets off.';
-   setHeader('Turn 6: the Grand Treehouse','The last card, and the biggest.')},
- ()=>{st.fresh=null;st.A=8;st.P=7;st.D=3;
+   st.note='<span class="a">2 acorns</span> in, 1 spent. The Seed Shed will pay 1 acorn on each of the next 5 turns.';
+   setHeader('Turn 1: Seed Shed','An income card, played as early as possible.')},
+ ()=>{st.view='thumb';
+   st.note='Played on turn 1, the Shed returns 5 acorns. Played on turn 5, it returns 1. <b>Same card, five times the value.</b>';
+   setHeader('The rule of thumb: earlier is worth more','A lasting card works once for every turn that is left.')},
+ ()=>{st.view='dec';st.dec=2;st.turn=2;st.A=4;st.pops={shed:['+1 acorn',0]};st.fresh=null;
+   st.note='The Bridge saves acorns, but acorns score nothing. The Lantern Post turns every later card into a point. <b>Pick: Lantern Post.</b>';
+   setHeader('Turn 2: points or savings?','4 acorns (2 + 1 left over + 1 from the Shed). Two good options.')},
+ ()=>{turn(2,'lamp',1,0,0,[['shed','+1 acorn']]);
+   st.note='3 of 4 acorns spent. From now on, <b>every card you play scores 1 point</b>.';
+   setHeader('Turn 2: Lantern Post','A trigger card. It reacts to every card played after it, so it goes down early.')},
+ ()=>{turn(3,'bridge',2,1,0,[['shed','+1 acorn'],['lamp','+1 point']]);
+   st.note='The Bridge still saves 1 acorn on each of the 3 cards left, which pays for the Lookout and Owl Library. The Lantern scores its first point.';
+   setHeader('Turn 3: Rope Bridge','Now the discount is worth taking: 3 cards are still to come.')},
+ ()=>{turn(4,'look',4,2,0,[['shed','+1 acorn'],['bridge','−1 cost'],['lamp','+1 point']]);
+   st.note='Printed cost 2, you pay <b>1</b>. The Lookout comes before the Owl Library so the Library has draws to react to.';
+   setHeader('Turn 4: Lookout','Order matters: a trigger only sees cards played after it.')},
+ ()=>{turn(5,'owl',6,3,1,[['shed','+1 acorn'],['bridge','−1 cost'],['lamp','+1 point'],['look','draw 1'],['owl','+1 acorn']]);
+   st.note='Playing the Owl Library sets off the Lantern (+1 point) and the Lookout (draw), and the draw pays the Library. <b>A small chain.</b>';
+   setHeader('Turn 5: Owl Library','The table now reacts to itself.')},
+ ()=>{turn(6,'tree',5,3,1,[['shed','+1 acorn'],['bridge','−1 cost']]);
+   st.note='Saved for last on purpose: it scores <b>1 point per card on the table</b>, and the table is now full. Cost 5 − 1 = 4.';
+   setHeader('Turn 6: the Grand Treehouse','The payoff card goes last.')},
+ ()=>{st.fresh=null;st.A=6;st.P=10;st.D=2;
    st.pops={lamp:['+1 point',0],look:['draw 1',1],owl:['+1 acorn',2],tree:['+6 points',3]};st.fire={lamp:1,look:1,owl:1,tree:1};st.big=true;
-   st.note='One play, four reactions: <span class="p">+1 point</span>, a draw, <span class="a">+1 acorn</span>, <span class="p">+6 points</span>. Each card read the rules the others added.';
+   st.note='One play, four reactions: <span class="p">+1 point</span>, a draw, <span class="a">+1 acorn</span>, <span class="p">+6 points</span>. Final score: <b>10 points</b>.';
    setHeader('The trigger chain','Lantern Post scores. Lookout draws. Owl Library pays for the draw. The Treehouse counts six cards.')},
+ ()=>{st.view='orders';
+   setHeader('Was the order right?','Compare a player who holds the same cards but plays the triggers late.')},
  ()=>{st.view='pay';
    setHeader('Cards that stay keep paying','Compare the tableau with a one-shot card from hand that is used once and discarded.')},
- ()=>{st.view='end';setHeader('What designers take from this','Build your own rules, one card at a time.')}
+ ()=>{st.view='end';setHeader('What designers take from this','Build your own rules, one card at a time, in the right order.')}
 ];
 
 dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');

@@ -88,8 +88,9 @@ html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
 #side .r:last-child{border:none}
 #side .r b{font-family:"Fredoka",sans-serif;font-size:30px;color:var(--coin)}
 #side h4{margin:0 0 6px;font-size:18px;letter-spacing:.8px;color:var(--muted)}
-#plan{left:40px;right:40px;top:490px;height:150px;padding:18px 26px;font-size:22px;line-height:1.4}
-#plan .t{font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600;color:var(--coin);margin-bottom:4px}
+#plan{left:40px;right:40px;top:480px;height:168px;padding:14px 24px;font-size:20px;line-height:1.38}
+#plan .t{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;color:var(--coin);margin-bottom:2px}
+#plan .th{color:#c9d4ff;font-style:italic}
 #plan .x{color:#ffb0b0}#plan .g{color:var(--good)}
 
 /* table */
@@ -103,6 +104,47 @@ html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
 #cmp.on tr{opacity:1;transform:none}
 #cmp .foot{margin-top:18px;font-size:22px;line-height:1.4}
 #cmp .foot b{color:var(--coin)}
+
+
+/* setup, projection, timing */
+#setup{left:40px;right:40px;top:136px;height:486px;display:flex;gap:24px}
+#setup .rules{flex:1.5;padding:22px 28px}
+#setup h3{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--coin)}
+#setup li{font-size:22px;line-height:1.4;margin-bottom:10px}
+#setup ul{margin:0;padding-left:24px}
+#setup b{color:var(--coin)}
+#setup .score{flex:1;padding:22px 28px;display:flex;flex-direction:column;gap:18px}
+#setup .pl{font-size:22px;font-weight:800}
+#setup .trk{position:relative;height:22px;border-radius:12px;background:rgba(255,255,255,.08);margin-top:8px}
+#setup .trk i{position:absolute;left:0;top:0;bottom:0;border-radius:12px}
+#setup .trk span{position:absolute;right:-4px;top:-28px;font-size:16px;color:var(--muted)}
+#setup .q{margin-top:auto;font-size:21px;line-height:1.4;padding:14px 16px;border-radius:14px;background:rgba(255,201,74,.1);border:2px solid var(--coin)}
+#threeFoot{position:absolute;left:0;right:0;top:420px;text-align:center;font-size:22px;font-weight:800}
+#threeFoot b{color:var(--coin)}
+#proj{left:40px;right:40px;top:136px;height:486px;display:flex;gap:24px}
+#proj .ch{flex:1.25;padding:16px 20px;position:relative}
+#proj .tx{flex:1;padding:20px 24px;display:flex;flex-direction:column;gap:10px}
+#proj .tx h3{margin:0;font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600;color:var(--coin)}
+#proj .tx p{margin:0;font-size:20px;line-height:1.38}
+#proj .tx .k{font-weight:900}
+#proj .draws{display:flex;gap:8px;align-items:center;font-size:18px;font-weight:800;color:var(--muted);margin-top:6px}
+#proj .draws span{padding:3px 10px;border-radius:8px;background:rgba(255,255,255,.08);color:var(--ink)}
+.pax{stroke:#4a5675;stroke-width:2}.pgr{stroke:rgba(255,255,255,.06)}
+.ptk{font:800 17px "Nunito",sans-serif;fill:var(--muted);text-anchor:middle}
+.pln{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.pln.draw{stroke-dasharray:900;animation:pdl 1.8s ease both}
+@keyframes pdl{from{stroke-dashoffset:900}to{stroke-dashoffset:0}}
+.pv{font:900 19px "Nunito",sans-serif;paint-order:stroke;stroke:#0f1524;stroke-width:5px}
+#timing{left:40px;right:40px;top:136px;height:486px;padding:22px 30px}
+#timing h3{margin:0 0 14px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--coin)}
+#timing .cols{display:flex;gap:24px}
+#timing .col{flex:1;padding:18px 22px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line)}
+#timing .col h4{margin:0 0 6px;font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600}
+#timing .col .sit{font-size:20px;color:var(--muted);margin-bottom:12px}
+#timing .col .pick{font-size:22px;font-weight:900;margin-bottom:8px}
+#timing .col p{font-size:20px;line-height:1.4;margin:0}
+#timing .rule{margin-top:18px;text-align:center;font-size:24px;font-weight:800}
+#timing .rule b{color:var(--coin)}
 
 /* title */
 #title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -153,6 +195,31 @@ html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
   <div id="side" class="panel card"></div>
   <div id="plan" class="panel card"></div>
 
+  <div id="setup" class="panel">
+    <div class="rules card"><h3>Harbour Town: the rules</h3><ul>
+      <li><b>First to 10 points</b> wins.</li>
+      <li>Each turn: <b>draw 1 card</b>, then play as many cards from your hand as you like.</li>
+      <li>Coins only last for the turn. <b>Unspent coins are lost.</b></li>
+      <li>Built cards stay on the table and keep their points. A built <b>Market</b> gives +1 coin at the start of each of your turns.</li></ul></div>
+    <div class="score card"><div class="lbl">THE SCORE</div>
+      <div class="pl" style="color:var(--build)">You: 0 points<div class="trk"><i style="width:0%;background:var(--build)"></i><span>10</span></div></div>
+      <div class="pl" style="color:#ff9d9d">Rival: 4 points<div class="trk"><i style="width:40%;background:#ff6b6b"></i><span>10</span></div></div>
+      <div class="q">It is early in the game. You have <b>0 coins</b>, so anything you build must be paid for <b>with other cards</b>.</div></div>
+  </div>
+  <div id="proj" class="panel"><div class="ch card"><div class="lbl">YOUR POINTS OVER THE NEXT TURNS</div><svg id="projSvg" width="640" height="420"></svg></div>
+    <div class="tx card" id="projTx"></div></div>
+  <div id="timing" class="panel card">
+    <h3>Same hand, different moment, different answer</h3>
+    <div class="cols">
+      <div class="col"><h4 style="color:var(--act)">Early game</h4><div class="sit">You 0, rival 4. Many turns to go.</div>
+        <div class="pick" style="color:var(--act)">Best: Plan C, build the Market</div>
+        <p>Income keeps paying, and the Ferry stays in hand for later. Behind now, ahead by turn 3.</p></div>
+      <div class="col"><h4 style="color:#ff9d9d">Late game</h4><div class="sit">You 6, rival 9. The rival wins next turn.</div>
+        <div class="pick" style="color:#ff9d9d">Best: Plan B, build the Ferry</div>
+        <p>6 + 5 = 11. You win on the spot. A Market's income is worthless if there is no next turn.</p></div>
+    </div>
+    <div class="rule">Early, <b>invest</b>. Late, <b>cash in</b>. The best use of a card depends on how much game is left.</div>
+  </div>
   <div id="cmp" class="panel card">
     <table>
       <tr><th>PLAN</th><th style="text-align:center">POINTS NOW</th><th style="text-align:center">CARDS LEFT</th><th>WHAT IT COST</th></tr>
@@ -160,7 +227,7 @@ html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
       <tr style="transition-delay:.3s"><td><b>B</b> · Spend three, build Ferry</td><td class="n">5</td><td class="n">0</td><td class="x">Every other card and all four actions</td></tr>
       <tr style="transition-delay:.5s"><td><b>C</b> · Spend Lighthouse, build Market</td><td class="n">1</td><td class="n">2</td><td class="x">Points now, for +1 coin every turn</td></tr>
     </table>
-    <div class="foot">No plan is free. Each card you spend is a building you will never own. That is the whole mechanic: <b>every card in your hand is paying for another one.</b></div>
+    <div class="foot">Judged on this turn alone, <b>Plan B wins</b>. But each card you spend is a building you will never own, and the game is longer than one turn.</div>
   </div>
 
   <div id="end" class="panel"><div class="card">
@@ -168,7 +235,7 @@ html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
     <ol>
       <li><b>One card, several uses</b> turns every play into a trade. The real price of an action is the best use you gave up.</li>
       <li><b>Cards as money</b> means you pay for good cards with other good cards. A hand of four is a puzzle, not a list.</li>
-      <li><b>Fewer cards, more decisions.</b> A small deck stays interesting because each card can mean many things. Balance each use against the others on the same card.</li>
+      <li><b>The best use depends on the moment.</b> Early, the Market investment reached 8 points by turn 4; late, the Ferry wins on the spot. Balance each use so every one is right sometimes.</li>
     </ol>
     <div class="see">You'll see this in: Glory to Rome, Twilight Struggle, Race for the Galaxy, Gloomhaven.</div>
   </div></div>
@@ -214,8 +281,30 @@ const RES={
      x:['<span>The Lighthouse is discarded: no 3 points</span>','<span>No 2 coins this turn</span>'],foot:'Actions buy flexibility. You pay with the card\'s other two lives.'}
 };
 
+
+const PROJ={A:[0,3,4,4,5],B:[0,5,5,6,6],C:[0,1,2,7,8]};
+const PC={A:'#9dbaff',B:'#ff9d9d',C:'var(--act)'};
+function renderProj(anim){
+  const X=t=>70+t*130,Y=v=>370-v*34;let h='';
+  for(let v=0;v<=10;v+=2)h+=`<line class="pgr" x1="${X(0)}" x2="${X(4)}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ptk" x="40" y="${Y(v)+6}">${v}</text>`;
+  h+=`<line class="pax" x1="${X(0)}" x2="${X(4)}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  for(let t=1;t<=4;t++)h+=`<text class="ptk" x="${X(t)}" y="${Y(0)+30}">Turn ${t}</text>`;
+  h+=`<line stroke="var(--coin)" stroke-width="2" stroke-dasharray="6 6" x1="${X(0)}" x2="${X(4)}" y1="${Y(10)}" y2="${Y(10)}"/><text class="ptk" style="fill:var(--coin)" x="${X(4)-30}" y="${Y(10)-8}">goal 10</text>`;
+  for(const k of ['A','B','C']){const a=PROJ[k];
+    h+=`<path class="pln ${anim?'draw':''}" stroke="${PC[k]}" d="${a.map((v,t)=>(t?'L':'M')+X(t)+','+Y(v)).join('')}"/>`;
+    h+=`<text class="pv" fill="${PC[k]}" x="${X(4)+12}" y="${Y(a[4])+(k==='A'?14:6)}">${k} ${a[4]}</text>`;}
+  $('projSvg').innerHTML=h;
+  $('projTx').innerHTML=`<h3>Look three turns ahead</h3>
+    <div class="draws">You draw:<span>T2 Well</span><span>T3 Lighthouse</span><span>T4 Well</span></div>
+    <p><span class="k" style="color:#ff9d9d">Plan B</span> leads at first, then stalls: the hand is empty and there is no income, so new cards have nothing to pay for them.</p>
+    <p><span class="k" style="color:#9dbaff">Plan A</span> keeps two cheap cards, but the Ferry it spent was its best building.</p>
+    <p><span class="k" style="color:var(--act)">Plan C</span> starts last. On turn 3 the Market's coin, the Well and the new Lighthouse pay for the <b style="color:var(--coin)">Ferry it kept</b>: 7 points, then 8.</p>`;
+}
 function render(anim){
-  ['title','one','result','three','hand','side','plan','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  ['title','one','result','three','hand','side','plan','cmp','end','setup','proj','timing'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='setup'){$('setup').classList.add('on');return}
+  if(st.view==='timing'){$('timing').classList.add('on');return}
+  if(st.view==='proj'){$('proj').classList.add('on');renderProj(anim);return}
   if(st.view==='title'){$('title').classList.add('on');return}
   if(st.view==='one'){
     $('one').classList.add('on');$('result').classList.add('on');
@@ -232,9 +321,10 @@ function render(anim){
   }
   if(st.view==='three'){
     $('three').classList.add('on');
-    const W=[['b','Build','+3 points','−2 coins, −2 cards'],['c','Spend','+2 coins','−3 points, −2 cards'],['a','Action','+2 cards','−3 points, −2 coins']];
+    const W=[['b','Build: pays forever','+3 points, kept all game','gives up 2 coins and 2 cards'],['c','Spend: pays now','+2 coins this turn only','gives up 3 points and 2 cards'],['a','Action: pays later','+2 cards, more choices next turn','gives up 3 points and 2 coins']];
     $('three').innerHTML=W.map((w,i)=>`<div class="col" style="left:${i*400}px">${gc('L',w[0])}
-      <div class="cap"><div class="t">${w[1]}</div><div class="g">${w[2]}</div><div class="x">${w[3]}</div></div></div>`).join('');
+      <div class="cap"><div class="t">${w[1]}</div><div class="g">${w[2]}</div><div class="x">${w[3]}</div></div></div>`).join('')+
+      '<div id="threeFoot">Each use pays at a different time. <b>The real price of a choice is the best use you gave up.</b></div>';
   }
   if(st.view==='hand'){
     ['hand','side','plan'].forEach(id=>$(id).classList.add('on'));
@@ -257,29 +347,35 @@ function render(anim){
 
 const steps=[
  ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='setup';
+   setHeader('Before you play: the game you are in','A race to 10 points. Knowing the goal and the clock is what makes a choice good or bad.')},
  ()=>{st.view='one';st.mode='';
    setHeader('Meet the Lighthouse','Every card in this game has three bands. Each band is a different way to play the same card.')},
  ()=>{st.mode='b';setHeader('Way 1: build it','Pay its cost and keep it on the table. The other two bands are crossed out.')},
  ()=>{st.mode='c';setHeader('Way 2: spend it as money','Throw it away for its coin value. Now the building is the thing you lose.')},
  ()=>{st.mode='a';setHeader('Way 3: use its action','Discard it for the effect. Points and coins both leave with it.')},
  ()=>{st.view='three';
-   setHeader('Same card, three trades','Whatever you pick, you pay for it with the two things you did not pick.')},
+   setHeader('Now, later, or forever','Each band pays at a different time. That is what you are really choosing between.')},
  ()=>{st.view='hand';st.hand={};st.rib={};st.side={coins:0,built:'none',pts:0,left:4};
-   st.plan='<div class="t">Your turn: you have 0 coins</div>Four cards, no money. To build any card you must spend others as coins. Watch what each plan blocks.';
-   setHeader('Now a hand of four','Lighthouse, Ferry, Market and Well. Every card is a building, a coin and an action.')},
+   st.plan='<div class="t">Your turn: 0 coins, 0 points</div><span class="th">Think: "I need points, but every building costs coins. My only coins are my other cards. Which cards am I willing to lose?"</span>';
+   setHeader('Your hand of four','Lighthouse, Ferry, Market and Well. Every card is a building, a coin and an action.')},
  ()=>{st.hand={F:'spend',L:'build'};st.rib={F:['rc','+3 coins'],L:['rb','BUILT']};st.side={coins:'3 → 0',built:'Lighthouse',pts:3,left:2};
-   st.plan='<div class="t">Plan A: spend the Ferry, build the Lighthouse</div><span class="g">3 points, and Market and Well stay in hand.</span> <span class="x">But the Ferry was worth 5 points. It just became 3 coins.</span>';
-   setHeader('Plan A: a quick build','The Ferry\'s coin band pays exactly for the Lighthouse.')},
+   st.plan='<div class="t">Plan A: spend the Ferry, build the Lighthouse</div><span class="th">Think: "The Ferry is worth exactly 3 coins, and the Lighthouse costs 3. Neat."</span> <span class="g">3 points, and two cards stay in hand.</span> <span class="x">But the Ferry was the best building in hand: 5 points, now gone for good.</span>';
+   setHeader('Plan A: a tidy build','The Ferry\'s coin band pays exactly for the Lighthouse.')},
  ()=>{st.hand={L:'spend',M:'spend',W:'spend',F:'build'};st.rib={L:['rc','+2'],M:['rc','+1'],W:['rc','+1'],F:['rb','BUILT']};
    st.side={coins:'4 → 0',built:'Ferry',pts:5,left:0};
-   st.plan='<div class="t">Plan B: spend three cards, build the Ferry</div><span class="g">The best building: 5 points.</span> <span class="x">Three cards gone, hand empty, and not one action used this turn.</span>';
-   setHeader('Plan B: go big','Three cards together make 4 coins, enough for the Ferry.')},
+   st.plan='<div class="t">Plan B: spend three cards, build the Ferry</div><span class="th">Think: "Take the most points I can, right now."</span> <span class="g">5 points, the most this turn.</span> <span class="x">Hand empty, no income: next turn starts from nothing.</span>';
+   setHeader('Plan B: go big now','Three cards together make 4 coins, enough for the Ferry.')},
  ()=>{st.hand={L:'spend',M:'build'};st.rib={L:['rc','+2 coins'],M:['rb','BUILT']};st.side={coins:'2 → 0',built:'Market',pts:1,left:2};
-   st.plan='<div class="t">Plan C: spend the Lighthouse, build the Market</div><span class="g">Only 1 point, but +1 coin every turn from now on.</span> <span class="x">You give up 3 points today for money later.</span>';
+   st.plan='<div class="t">Plan C: spend the Lighthouse, build the Market</div><span class="th">Think: "Keep the Ferry for later and build something that pays me every turn."</span> <span class="g">+1 coin every turn, and the Ferry stays in hand.</span> <span class="x">Only 1 point today.</span>';
    setHeader('Plan C: invest','A small building that pays coins each turn. Slower now, stronger later.')},
  ()=>{st.view='cmp';
-   setHeader('Every plan blocks another','Same four cards, three very different turns. None of them gets everything.')},
- ()=>{st.view='end';setHeader('What designers take from this','The cost of a card is the card it could have been.')}
+   setHeader('Judged on this turn alone','Plan B scores the most right now. Is that the whole story?')},
+ ()=>{st.view='proj';
+   setHeader('Judged over the next three turns','Same hand, same draws, followed for three more turns.')},
+ ()=>{st.view='timing';
+   setHeader('So which plan is right?','It depends on how much game is left.')},
+ ()=>{st.view='end';setHeader('What designers take from this','The cost of a card is the card it could have been, and when.')}
 ];
 
 dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
