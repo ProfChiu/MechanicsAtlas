@@ -32,3 +32,15 @@ The viewer (`watch.html`) shows it in an iframe next to the designer's notes fro
 ## Reference
 `mechanics/dice-probability.html` is the pattern: see its `<style>` head, and the last ~40 lines
 of its script (`steps`, `goTo`, `next`, `back`, key handling, `fit`).
+
+## Cloud builds (parallel sessions)
+Several sessions may build mechanics at the same time, each on its own branch.
+- **Only add your own file** `mechanics/<id>.html`. Do **not** edit `mechanics.js`, `index.html`,
+  `watch.html` or any other shared file: parallel edits there conflict.
+- Put the notes for `mechanics.js` in the pull request description instead, as one fenced ```js block
+  holding the full entry (keep the existing `hook`, `watchFor`, `brief`; add `file`, `w: 1280`, `h: 720`,
+  `minutes`, `anatomy` (3–4 of Fullerton's formal elements), `feel` (3 words), `feelText`, and `examples`
+  with a one-line `note` each). The maintainer merges all entries in one pass.
+- Verify with `tools/check_animation.py` (needs `pip install playwright pillow` and
+  `python -m playwright install chromium`). Open the contact sheet and fix layout problems before the PR.
+- Branch name `mechanic/<id>`; PR title `Add <Title> animation`. Paste the checker output into the PR.
