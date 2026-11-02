@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Multi-Use Cards</title>
+<style>
+:root{--bg:#0e1a22;--panel:#172a36;--panel2:#1f3746;--line:#33566b;--ink:#f2f7f8;--muted:#9fb6c2;
+  --build:#2fb39a;--build2:#156657;--coin:#f4bf4f;--coin2:#9a6a12;--act:#a37cf0;--act2:#52309a;
+  --paper:#f4ead6;--paper2:#d9c8a6;--bad:#ff5d6c;--star:#ffd45e}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 0%,#1d3a4a 0%,#0e1a22 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+h1,h2,h3,.fred{font-family:"Fredoka","Nunito",sans-serif}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:20px;z-index:10}
+#header h1{margin:0;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(var(--r))}50%{transform:translateY(-14px) rotate(var(--r))}}
+@keyframes blink{50%{opacity:.35}}
+@keyframes glow{50%{box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 30px var(--g)}}
+
+/* panels */
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* the card */
+.card{position:relative;width:230px;height:318px;border-radius:16px;padding:10px;
+  background:linear-gradient(170deg,var(--paper) 0%,var(--paper2) 100%);color:#22303a;
+  border:3px solid #fff8;box-shadow:0 10px 24px rgba(0,0,0,.5),0 2px 0 rgba(0,0,0,.25),inset 0 0 0 2px rgba(80,60,20,.18);
+  display:flex;flex-direction:column;gap:8px;transition:transform .6s cubic-bezier(.3,1.4,.5,1),opacity .5s,filter .5s}
+.card .name{font-family:"Fredoka",sans-serif;font-weight:600;font-size:22px;text-align:center;line-height:1.1;color:#22303a}
+.band{position:relative;border-radius:10px;padding:6px 10px;color:#fff;transition:filter .5s,opacity .5s,box-shadow .5s,transform .5s}
+.band .tag{font-family:"Fredoka",sans-serif;font-size:14px;font-weight:600;letter-spacing:1.5px;opacity:.85}
+.band .txt{font-size:20px;font-weight:800;line-height:1.2}
+.band.b{--g:var(--build);background:linear-gradient(135deg,var(--build),var(--build2))}
+.band.c{--g:var(--coin);background:linear-gradient(135deg,var(--coin),var(--coin2));color:#2c1c00;display:flex;align-items:center;gap:10px}
+.band.a{--g:var(--act);background:linear-gradient(135deg,var(--act),var(--act2));flex:1}
+.coinI{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff3c0,var(--coin) 55%,var(--coin2));border:2px solid #7a520a;
+  font-family:"Fredoka",sans-serif;font-weight:700;font-size:19px;color:#3a2600;box-shadow:0 2px 4px rgba(0,0,0,.35)}
+.band.used{animation:glow 1.6s ease-in-out infinite;transform:scale(1.04);z-index:2}
+.band.lost{filter:grayscale(1) brightness(.7);opacity:.55}
+.band.lost::after{content:"";position:absolute;left:6px;right:6px;top:50%;height:4px;margin-top:-2px;background:var(--bad);border-radius:2px;transform:rotate(-6deg);box-shadow:0 0 6px rgba(0,0,0,.4)}
+.card.spent{filter:saturate(.85)}
+.card.big{width:330px;height:456px;padding:14px;gap:12px;border-radius:22px}
+.card.big .name{font-size:32px}
+.card.big .band{padding:10px 16px;border-radius:14px}
+.card.big .band .tag{font-size:17px}
+.card.big .band .txt{font-size:26px}
+.card.big .coinI{width:52px;height:52px;font-size:28px}
+.card.big .art{height:70px;border-radius:12px;background:linear-gradient(#7fb6c8,#cfe3dc);position:relative;overflow:hidden}
+.art i{position:absolute;bottom:0;background:#2f4a58;border-radius:3px 3px 0 0}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+#title .big{font-family:"Fredoka",sans-serif;font-size:96px;font-weight:600;line-height:1;
+  background:linear-gradient(90deg,var(--build),var(--coin),var(--act));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:32px;font-weight:500}
+#title .fan{display:flex;gap:26px;margin:26px 0 14px}
+#title .fan .card{animation:bob 2.6s ease-in-out infinite}
+#title .fan .card:nth-child(1){--r:-7deg}
+#title .fan .card:nth-child(2){--r:0deg;animation-delay:-.9s}
+#title .fan .card:nth-child(3){--r:7deg;animation-delay:-1.8s}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+
+/* one-card section */
+#one{left:40px;top:150px;width:1200px;height:520px}
+#one .card.big{position:absolute;left:40px;top:10px}
+#arrow{position:absolute;left:400px;top:210px;font-size:60px;color:var(--muted);opacity:0;transition:opacity .5s}
+#arrow.on{opacity:1}
+.tbl{position:absolute;left:480px;top:10px;width:330px;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:16px 20px;
+  box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.tbl h3{margin:0 0 10px;font-size:22px;font-weight:500;color:var(--muted)}
+.stat{display:flex;align-items:center;justify-content:space-between;font-size:22px;padding:8px 0;border-top:1px solid #2a4556}
+.stat b{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600}
+.stat b.pop{animation:pop .6s ease}
+.town{display:flex;gap:8px;min-height:44px;align-items:flex-end}
+.house{width:56px;height:40px;border-radius:6px 6px 3px 3px;background:linear-gradient(var(--build),var(--build2));position:relative;font-size:13px;font-weight:800;
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:3px;opacity:0;transform:scale(.3);transition:opacity .5s,transform .6s cubic-bezier(.3,1.6,.5,1)}
+.house::before{content:"";position:absolute;left:-4px;right:-4px;top:-14px;height:16px;background:#c86b4a;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.house.on{opacity:1;transform:none}
+.mini{display:inline-block;width:24px;height:34px;border-radius:4px;background:linear-gradient(var(--paper),var(--paper2));border:2px solid #fff8;margin-right:4px;vertical-align:middle;
+  opacity:0;transform:translateY(-14px);transition:opacity .4s,transform .5s}
+.mini.on{opacity:1;transform:none}
+.ledger{position:absolute;left:840px;top:10px;width:320px;display:flex;flex-direction:column;gap:14px}
+.box{border-radius:16px;padding:14px 18px;border:2px solid var(--line);background:var(--panel);opacity:0;transform:translateX(20px);transition:opacity .5s,transform .5s}
+.box.on{opacity:1;transform:none}
+.box h4{margin:0 0 6px;font-family:"Fredoka",sans-serif;font-size:20px;font-weight:600;letter-spacing:.5px}
+.box div{font-size:21px;line-height:1.35}
+.box.got{border-color:var(--build)}.box.got h4{color:var(--build)}
+.box.gave{border-color:var(--bad)}.box.gave h4{color:var(--bad)}
+#rule{position:absolute;left:480px;top:330px;width:680px;font-size:22px;line-height:1.4;background:var(--panel2);border-left:6px solid var(--coin);
+  border-radius:12px;padding:14px 20px;opacity:0;transition:opacity .5s}
+#rule.on{opacity:1}
+
+/* side-by-side */
+#three{left:40px;right:40px;top:150px;display:flex;justify-content:center;gap:60px}
+#three .col{display:flex;flex-direction:column;align-items:center;gap:14px;opacity:0;transform:translateY(20px);transition:opacity .5s,transform .6s}
+#three.on .col{opacity:1;transform:none}
+#three .col:nth-child(2){transition-delay:.25s}
+#three .col:nth-child(3){transition-delay:.5s}
+#three .lab{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600}
+#three .cost{font-size:20px;color:var(--muted);text-align:center;width:300px;line-height:1.3}
+#three .cost b{color:var(--bad)}
+
+/* hand section */
+#hand{left:40px;top:146px;width:1200px;height:540px}
+.slot{position:absolute;top:0;transition:transform .6s cubic-bezier(.3,1.4,.5,1)}
+.slot .num{position:absolute;top:-12px;left:-12px;width:36px;height:36px;border-radius:50%;background:var(--ink);color:#0e1a22;
+  font-family:"Fredoka",sans-serif;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;z-index:3;
+  opacity:0;transform:scale(.3);transition:opacity .4s,transform .5s cubic-bezier(.3,1.6,.5,1);box-shadow:0 3px 8px rgba(0,0,0,.5)}
+.slot .num.on{opacity:1;transform:none}
+.slot.lift{transform:translateY(-8px)}
+#status{position:absolute;left:1000px;top:0;width:200px;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:14px 18px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+#status h3{margin:0 0 6px;font-size:20px;font-weight:500;color:var(--muted)}
+#status .stat{font-size:20px}
+#disc{font-size:18px;font-weight:800;color:var(--act);text-align:center;padding:6px;border:2px dashed var(--act);border-radius:10px;margin-top:8px;opacity:0;transition:opacity .4s}
+#disc.on{opacity:1}
+#disc.done{color:var(--muted);border-color:var(--muted);text-decoration:line-through}
+#log{position:absolute;left:0;top:350px;width:1200px;display:flex;gap:14px;align-items:stretch}
+.chip{flex:1;border-radius:14px;padding:10px 14px;background:var(--panel);border:2px solid var(--line);font-size:20px;line-height:1.3;
+  opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s}
+.chip.on{opacity:1;transform:none}
+.chip b{font-family:"Fredoka",sans-serif;font-weight:600}
+.chip .k{display:inline-block;font-size:14px;font-weight:900;letter-spacing:1px;border-radius:6px;padding:1px 6px;margin-right:6px;color:#fff;vertical-align:2px}
+.k.b{background:var(--build2)}.k.c{background:var(--coin2)}.k.a{background:var(--act2)}
+#tally{position:absolute;left:0;top:470px;width:1200px;font-size:24px;text-align:center;opacity:0;transition:opacity .5s}
+#tally.on{opacity:1}
+#tally b{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600}
+#tally .u{color:var(--build)}#tally .l{color:var(--bad)}
+
+/* compare plans */
+#plans{left:40px;right:40px;top:150px;height:520px}
+.plan{position:absolute;left:0;width:1200px;height:118px;display:flex;align-items:center;gap:20px;opacity:0;transform:translateX(-20px);transition:opacity .5s,transform .5s}
+.plan.on{opacity:1;transform:none}
+.plan .pn{width:300px;font-size:22px;line-height:1.25}
+.plan .pn b{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;display:block}
+.plan .uses{width:250px;display:flex;gap:6px}
+.plan .uses span{flex:1;height:44px;border-radius:8px;font-size:15px;font-weight:900;color:#fff;display:flex;align-items:center;justify-content:center;letter-spacing:.5px}
+.u-b{background:var(--build2);border:2px solid var(--build)}.u-c{background:var(--coin2);border:2px solid var(--coin)}.u-a{background:var(--act2);border:2px solid var(--act)}
+.plan .track{position:relative;width:420px;height:44px;background:#132430;border-radius:10px;border:2px solid var(--line)}
+.plan .fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:8px;background:linear-gradient(90deg,#c58f12,var(--star));transition:width 1s cubic-bezier(.3,1.2,.5,1)}
+.plan .val{width:180px;font-size:22px}
+.plan .val b{font-family:"Fredoka",sans-serif;font-size:30px;color:var(--star)}
+.phead{position:absolute;left:320px;top:6px;width:250px;display:flex;gap:6px}.phead span{flex:1;text-align:center;font-size:17px;font-weight:800;color:var(--muted)}
+.plan.best .track{border-color:var(--star);box-shadow:0 0 18px rgba(255,212,94,.4)}
+#plansNote{position:absolute;left:0;top:432px;width:1200px;font-size:23px;line-height:1.4;background:var(--panel2);border-left:6px solid var(--star);border-radius:12px;padding:14px 20px;opacity:0;transition:opacity .5s}
+#plansNote.on{opacity:1}
+
+/* end */
+#end{inset:0;background:rgba(6,12,16,.84);display:flex;align-items:center;justify-content:center;z-index:20}
+#end .cardx{background:#15283a;border:2px solid #36607a;border-radius:24px;padding:34px 48px;width:960px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+#end h2{margin:0 0 14px;font-size:38px;font-weight:600}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--coin)}
+#end .see{margin-top:18px;font-size:20px;color:var(--muted)}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#2c4757;transition:background .3s,transform .3s}
+#dots i.on{background:var(--coin);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;left:20px;font-size:13px;color:#5f7d8c;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Multi-Use Cards</div>
+    <h2>One card. Three ways to play it. You only get one.</h2>
+    <div class="fan" id="titleFan"></div>
+    <div class="press">Press SPACE to continue</div>
+  </div>
+
+  <div id="one" class="panel">
+    <div id="bigSlot"></div>
+    <div id="arrow">➜</div>
+    <div class="tbl">
+      <h3>Your harbor</h3>
+      <div class="stat"><span>Coins</span><b id="oCoins">4</b></div>
+      <div class="stat"><span>Stars ★</span><b id="oStars">0</b></div>
+      <div class="stat"><span>Town</span><div class="town"><div class="house" id="oHouse">Mill</div></div></div>
+      <div class="stat"><span>Hand</span><div><span class="mini" id="oM1"></span><span class="mini" id="oM2"></span><b id="oHand">0</b></div></div>
+    </div>
+    <div class="ledger">
+      <div class="box got" id="oGot"><h4>YOU GET</h4><div id="oGotT"></div></div>
+      <div class="box gave" id="oGave"><h4>YOU GIVE UP</h4><div id="oGaveT"></div></div>
+    </div>
+    <div id="rule">The rule: play the card <b>one</b> way. Then it is gone. The other two uses leave with it.</div>
+  </div>
+
+  <div id="three" class="panel"></div>
+
+  <div id="hand" class="panel">
+    <div id="slots"></div>
+    <div id="status">
+      <h3>This turn</h3>
+      <div class="stat"><span>Coins</span><b id="hCoins">1</b></div>
+      <div class="stat"><span>Stars ★</span><b id="hStars">0</b></div>
+      <div id="disc">Next build −2</div>
+    </div>
+    <div id="log"></div>
+    <div id="tally"></div>
+  </div>
+
+  <div id="plans" class="panel"></div>
+
+  <div id="end" class="panel"><div class="cardx">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li><b>Every play is a trade.</b> The use you pick is paid for with the uses printed beside it.</li>
+      <li><b>Few cards, many decisions.</b> 4 cards with 3 uses each gave 12 options and a real puzzle about order.</li>
+      <li><b>Balance the bands against each other.</b> If one use is always best, the other two are just decoration.</li>
+    </ul>
+    <div class="see">You'll see this in: Glory to Rome, Twilight Struggle, Race for the Galaxy, Gloomhaven.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">SPACE / click ▸ next &nbsp;·&nbsp; ← back &nbsp;·&nbsp; R restart</div>
+</div>
+
+<script>
+const S=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+
+// card data: build cost → stars, coin value, action text
+const CARDS={
+  mill:{name:'Lantern Mill',cost:3,vp:2,coin:2,act:'Draw 2 cards'},
+  loft:{name:'Net Loft',cost:2,vp:1,coin:1,act:'Your next build costs 2 less'},
+  bell:{name:'Tide Bell',cost:4,vp:4,coin:3,act:'Score 2★ now'},
+  post:{name:'Gull Post',cost:1,vp:1,coin:1,act:'+1 coin for each building you own'}
+};
+const ART='<div class="art"><i style="left:20px;width:40px;height:34px"></i><i style="left:70px;width:26px;height:52px"></i><i style="left:200px;width:60px;height:28px"></i><i style="left:150px;width:30px;height:44px"></i></div>';
+function cardHTML(k,id,big){
+  const c=CARDS[k];
+  return `<div class="card${big?' big':''}" id="${id}">
+    <div class="name">${c.name}</div>${big?ART:''}
+    <div class="band b"><div class="tag">BUILD</div><div class="txt">Pay ${c.cost} → ${c.vp}★</div></div>
+    <div class="band c"><span class="coinI">${c.coin}</span><div><div class="tag">COIN</div><div class="txt">Spend as ${c.coin}</div></div></div>
+    <div class="band a"><div class="tag">ACTION</div><div class="txt">${c.act}</div></div>
+  </div>`;
+}
+const band=(id,t)=>$(id).querySelector('.band.'+t);
+function markCard(id,use){ // use: 'b'|'c'|'a'|null
+  ['b','c','a'].forEach(t=>{const b=band(id,t);b.classList.toggle('used',t===use);b.classList.toggle('lost',!!use&&t!==use)});
+  $(id).classList.toggle('spent',!!use);
+}
+
+// static bits
+$('titleFan').innerHTML=cardHTML('loft','tf1')+cardHTML('mill','tf2')+cardHTML('bell','tf3');
+$('bigSlot').innerHTML=cardHTML('mill','big',true);
+$('three').innerHTML=[['b','Build it','Gives up <b>2 coins</b> and <b>2 cards</b>'],['c','Spend it','Gives up <b>the Mill (2★)</b> and <b>2 cards</b>'],['a','Use its action','Gives up <b>the Mill (2★)</b> and <b>2 coins</b>']]
+  .map(([u,l,t],i)=>`<div class="col"><div class="lab">${l}</div>${cardHTML('mill','tri'+i)}<div class="cost">${t}</div></div>`).join('');
+['b','c','a'].forEach((u,i)=>markCard('tri'+i,u));
+const ORDER=['loft','mill','bell','post'];
+$('slots').innerHTML=ORDER.map((k,i)=>`<div class="slot" id="s${i}" style="left:${i*245}px"><div class="num" id="n${i}">${i+1}</div>${cardHTML(k,'h'+i)}</div>`).join('');
+const LOG=[
+  ['a','Net Loft','Next build costs 2 less.'],
+  ['c','Lantern Mill','Coins 1 + 2 = 3.'],
+  ['b','Tide Bell','Pay 4 − 2 = 2. Coins 1. +4★'],
+  ['b','Gull Post','Pay 1. Coins 0. +1★']];
+$('log').innerHTML=LOG.map(([u,n,t],i)=>`<div class="chip" id="c${i}"><span class="k ${u}">${({b:'BUILD',c:'COIN',a:'ACTION'})[u]}</span><b>${n}</b><br>${t}</div>`).join('');
+$('tally').innerHTML='4 cards × 3 uses = <b>12</b> printed options. &nbsp;Used: <b class="u">4</b>. &nbsp;Given up: <b class="l">8</b>.';
+const PLANS=[
+  {n:'Plan A: Discount, then build',d:'(the play we just watched)',u:['a','c','b','b'],vp:5,extra:'0 coins left',best:1},
+  {n:'Plan B: Cash the Bell',d:'Bell as coin, then build Mill and Post',u:['c','b','c','b'],vp:3,extra:'1 coin left'},
+  {n:'Plan C: Every action',d:'Take all four actions',u:['a','a','a','a'],vp:2,extra:'+2 cards'}];
+const UL={b:'BUILD',c:'COIN',a:'ACT'};
+$('plans').innerHTML=PLANS.map((p,i)=>`<div class="plan${p.best?' best':''}" id="p${i}" style="top:${44+i*126}px">
+  <div class="pn"><b>${p.n}</b>${p.d}</div>
+  <div class="uses">${p.u.map(x=>`<span class="u-${x}">${UL[x]}</span>`).join('')}</div>
+  <div class="track"><div class="fill" id="pf${i}"></div></div>
+  <div class="val"><b>${p.vp}★</b><br>${p.extra}</div></div>`).join('')
+  +'<div class="phead"><span>Loft</span><span>Mill</span><span>Bell</span><span>Post</span></div><div id="plansNote">Same four cards, same start. The score depends only on <b>which band</b> of each card you use and in <b>what order</b>.</div>';
+const dotsEl=$('dots');
+
+let cur=0;
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+function setNum(id,v){const b=$(id);if(b.textContent!==String(v)){b.textContent=v;b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')}}
+const panels=['title','one','three','hand','plans','end'];
+function show(p){panels.forEach(x=>$(x).classList.toggle('on',x===p||(p==='end'&&x==='plans')))}
+
+function oneState(use){
+  markCard('big',use);
+  $('arrow').classList.toggle('on',!!use);
+  setNum('oCoins',use==='b'?1:use==='c'?6:4);
+  setNum('oStars',use==='b'?2:0);
+  $('oHouse').classList.toggle('on',use==='b');
+  setNum('oHand',use==='a'?2:0);
+  $('oM1').classList.toggle('on',use==='a');$('oM2').classList.toggle('on',use==='a');
+  const G={b:['The Mill in your town: +2★','2 coins, 2 cards'],c:['+2 coins (4 → 6)','The Mill (2★), 2 cards'],a:['2 new cards in hand','The Mill (2★), 2 coins']};
+  ['oGot','oGave'].forEach(x=>$(x).classList.toggle('on',!!use));
+  if(use){$('oGotT').textContent=G[use][0];$('oGaveT').textContent=G[use][1]}
+  $('rule').classList.toggle('on',!use);
+}
+function handState(n){ // n = number of plays made (0..4)
+  ORDER.forEach((k,i)=>{markCard('h'+i,i<n?LOG[i][0]:null);$('n'+i).classList.toggle('on',i<n);$('s'+i).classList.toggle('lift',i===n-1);$('c'+i).classList.toggle('on',i<n)});
+  setNum('hCoins',[1,1,3,1,0][n]);setNum('hStars',[0,0,0,4,5][n]);
+  $('disc').classList.toggle('on',n>=1);$('disc').classList.toggle('done',n>=3);
+}
+function reset(){
+  show('title');oneState(null);$('rule').classList.remove('on');handState(0);$('tally').classList.remove('on');
+  PLANS.forEach((p,i)=>{$('p'+i).classList.remove('on');$('pf'+i).style.width='0'});$('plansNote').classList.remove('on');
+}
+
+const steps=[
+ ()=>{show('title');setHeader('','')},
+ ()=>{show('one');oneState(null);$('rule').classList.add('on');
+   setHeader('One card, three bands','Lantern Mill can be built, spent as money, or used for its action. You start with 4 coins.')},
+ ()=>{oneState('b');
+   setHeader('Way 1: build it','Pay 3 of your 4 coins. The Mill joins your town for 2★. Its coin and its action are gone.')},
+ ()=>{oneState('c');
+   setHeader('Way 2: spend it as money','Same card, back at the start. Discard it for 2 coins: 4 + 2 = 6. No Mill, no draw.')},
+ ()=>{oneState('a');
+   setHeader('Way 3: use its action','Discard it to draw 2 cards. You keep your 4 coins, but you get no Mill and no money.')},
+ ()=>{show('three');
+   setHeader('Every play is a trade','The use you take is paid for with the two uses printed beside it. Red lines are the price.')},
+ ()=>{show('hand');handState(0);
+   setHeader('Now a hand of four','You have 1 coin. Play each card once, any band, in any order. Goal: the most ★ this turn.')},
+ ()=>{handState(1);
+   setHeader('Play 1: Net Loft for its action','Your next build costs 2 less. That means Net Loft will never be a building or a coin.')},
+ ()=>{handState(2);
+   setHeader('Play 2: Lantern Mill as coin','1 + 2 = 3 coins. The Mill could have been 2★. We burn it to pay for something bigger.')},
+ ()=>{handState(3);
+   setHeader('Play 3: build the Tide Bell','Cost 4, minus 2 from the Loft = 2. Coins 3 − 2 = 1. +4★. Its own coin and action are lost.')},
+ ()=>{handState(4);
+   setHeader('Play 4: build the Gull Post','Pay the last coin: 1 − 1 = 0. +1★, for 5★ in total. The Post\'s action is lost.')},
+ ()=>{$('tally').classList.add('on');
+   setHeader('Count what you gave up','Each card used one band. Two thirds of the printed options were the price of the plan.')},
+ ()=>{show('plans');PLANS.forEach((p,i)=>{$('p'+i).style.transitionDelay=(i*.3)+'s';$('p'+i).classList.add('on');$('pf'+i).style.transitionDelay=(.3+i*.3)+'s';$('pf'+i).style.width=(p.vp/5*100)+'%'});
+   $('plansNote').classList.add('on');
+   setHeader('Same hand, different trades','Plan A scores 5★, the best this hand allows. Each other plan gave up a use that mattered.')},
+ ()=>{show('end');setHeader('','')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>
