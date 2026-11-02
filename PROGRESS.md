@@ -1,5 +1,10 @@
 # Mechanics Atlas — progress log
 
+## 2026-11-02 (Phase 3: chance and space gaps)
+- Accomplished: Built Event Decks, Hidden Movement and Modular Boards & Exploration. Atlas now 41 built, 3 planned, ~164 min. All pass the checker.
+- Decisions: Event deck of 6 Calm (+1 repair) / 3 Gust (−1) / 3 Storm (−3), shelter 10: shuffles lose the village; a stacked deck ends at 3; an escalating stack (same cards, gusts moved later) ends at 2. Hidden movement on a 12-space grid, reveal every 3rd turn, caught on turn 4. Modular board scores corners by the sum of three tiles (Gold 3, Field/Forest 2, Hill 1, Desert 0).
+- Next: Phase 4 (Resource Conversion, Voting, Simultaneous Action Selection).
+
 ## 2026-11-02 (Phase 2: Game Structure complete)
 - Accomplished: Built Variable Player Powers, Game End Triggers and Scoring Systems. The Game Structure family is complete (6 of 6). Atlas now 38 built, 6 planned, ~152 min. All pass the checker.
 - Decisions: Powers measured in turns to a first house (base 7; Merchant 4 was the outlier, fixed to 5 with a 2-wood trade limit). Game end: fixed 8 rounds (Bo wins on a planned last turn), first to 15 (Ada wins in round 5), supply of 30 (leader rushes it). Scoring: running (Ada 21), end bonuses (Bo 25), hidden goals (Cy 25).

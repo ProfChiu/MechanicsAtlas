@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Hidden Movement</title>
+<style>
+:root{--bg:#0e1316;--panel:#1a2226;--panel2:#212b30;--ink:#eef5f6;--muted:#a8bcc0;--line:rgba(215,240,245,.14);
+  --gold:#ffcc4d;--ok:#6ee08a;--red:#ff5d5d;--fog:#9b7bff;--h1:#5ba8ff;--h2:#5fd3a0;--node:#2d3a40}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#1c2d33 0%,#0e1316 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#mapC{left:40px;top:134px;width:720px;height:476px;padding:0;background:radial-gradient(circle at 40% 40%,#22323a,#151d21);border-radius:22px;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.5),0 14px 34px rgba(0,0,0,.5);border:1px solid var(--line)}
+#map{position:absolute;left:10px;top:4px}
+.edge{stroke:#3d5059;stroke-width:8;stroke-linecap:round}
+.nd{fill:var(--node);stroke:#4e636c;stroke-width:3}
+.nd.fog{fill:var(--fog);fill-opacity:.55;stroke:#c9b6ff}
+.nd.fog.in{animation:fog .5s ease both;animation-delay:var(--d)}
+@keyframes fog{from{fill-opacity:0}}
+.nl{font:800 17px "Nunito",sans-serif;fill:rgba(255,255,255,.5);text-anchor:middle}
+.q{font:700 28px "Fredoka",sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:central}
+.x{stroke:var(--gold);stroke-width:5;stroke-linecap:round}
+.tok circle{stroke:#fff;stroke-width:3}
+.tok text{font:700 20px "Fredoka",sans-serif;fill:#0e1316;text-anchor:middle;dominant-baseline:central}
+.tok{transition:transform .7s cubic-bezier(.45,0,.3,1)}
+.path{fill:none;stroke:var(--red);stroke-width:5;stroke-dasharray:10 8;stroke-linecap:round}
+.arrow{stroke-width:5;fill:none;stroke-linecap:round}
+.boom{fill:none;stroke:var(--gold);stroke-width:5;animation:boom 1s ease both}
+@keyframes boom{from{r:10;opacity:1}to{r:60;opacity:.4}}
+
+#info{left:780px;top:134px;width:460px;height:476px;padding:20px 24px;display:flex;flex-direction:column}
+#turn{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600}
+#turn small{font-size:18px;color:var(--muted);font-family:"Nunito",sans-serif;font-weight:800;margin-left:8px}
+.stats{display:flex;gap:12px;margin-top:12px}
+.stats div{flex:1;background:rgba(0,0,0,.22);border-radius:12px;padding:8px;text-align:center;font-size:16px;font-weight:800;color:var(--muted)}
+.stats b{display:block;font-family:"Fredoka",sans-serif;font-size:40px;color:var(--fog);line-height:1.1}
+#sheet{margin-top:14px;padding:10px 14px;border-radius:12px;background:#efe6cf;color:#2a2416;font-size:19px;font-weight:800}
+#sheet .r{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+#sheet .r span{padding:2px 9px;border-radius:7px;background:#d9cba6}
+#sheet .r span.h{background:#2a2416;color:#2a2416}
+#sheet .r span.rv{background:var(--red);color:#fff}
+#infoNote{margin-top:auto;font-size:21px;line-height:1.4;border-top:1px solid var(--line);padding-top:12px}
+#infoNote b{color:var(--gold)}#infoNote .g{color:var(--ok)}#infoNote .f{color:#c9b6ff}
+#note{left:40px;right:40px;top:626px;height:40px;font-size:21px;text-align:center;color:var(--muted)}
+#note b{color:var(--gold)}
+
+#cmp{left:40px;right:40px;top:134px;height:492px;padding:24px 32px;display:flex;gap:36px}
+#cmp .c1,#cmp .c2{flex:1}
+#cmp h3{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--gold)}
+#cmp .bars{display:flex;gap:22px;align-items:flex-end;height:230px;margin:10px 0}
+#cmp .bar{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:18px;font-weight:800}
+#cmp .bar i{display:block;width:62px;border-radius:10px 10px 0 0;background:linear-gradient(#c9b6ff,var(--fog))}
+#cmp .bar b{font-family:"Fredoka",sans-serif;font-size:28px;color:#c9b6ff}
+#cmp .bar.rv i{background:linear-gradient(#ff9d9d,var(--red))}
+#cmp p{font-size:21px;line-height:1.4;margin:0 0 12px}
+#cmp p b{color:var(--gold)}
+#cmp .k{padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--line);margin-bottom:12px;font-size:20px;line-height:1.35}
+#cmp .k b{display:block;font-family:"Fredoka",sans-serif;font-size:22px;color:var(--ink)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:130px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--h1),var(--fog),var(--red));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:34px;font-weight:700}
+#title .fogs{display:flex;gap:16px;margin:30px 0 14px}
+#title .fogs i{width:60px;height:60px;border-radius:50%;background:var(--fog);opacity:.3;animation:pulse 2s ease-in-out infinite;display:flex;align-items:center;justify-content:center;font-style:normal;font:700 30px "Fredoka";color:#fff}
+#title .fogs i:nth-child(2){animation-delay:.3s}#title .fogs i:nth-child(3){animation-delay:.6s}#title .fogs i:nth-child(4){animation-delay:.9s}
+@keyframes pulse{50%{opacity:.9}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(8,11,13,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(215,240,245,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Hidden Movement</div>
+    <h2>One player moves in secret. The others hunt.</h2>
+    <div class="fogs"><i>?</i><i>?</i><i>?</i><i>?</i></div>
+    <div class="press">Press SPACE to start the chase</div>
+  </div>
+
+  <div id="mapC" class="panel"><svg id="map" width="700" height="468"></svg></div>
+  <div id="info" class="panel card"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="cmp" class="panel card">
+    <div class="c1">
+      <h3>The cloud of possible places</h3>
+      <div class="bars" id="cloudBars"></div>
+      <p>Hidden moves <b>grow</b> the cloud. Searches and reveals <b>shrink</b> it. That push and pull is the whole game.</p>
+    </div>
+    <div class="c2">
+      <h3>Dials the designer can turn</h3>
+      <div class="k"><b>How often the thief is revealed</b>Every 3 turns here. Fewer reveals favour the thief.</div>
+      <div class="k"><b>How connected the map is</b>More routes let the cloud grow faster.</div>
+      <div class="k"><b>Speed on each side</b>A faster thief, or more hunters, tips the balance.</div>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>The hidden player writes, the others deduce.</b> One secret sheet turns a simple board into a game of logic and bluff.</li>
+      <li><b>The cloud is the tension.</b> Every hidden move widens the possible places; every search and reveal narrows them.</li>
+      <li><b>Tune reveals, map and speed.</b> Those three dials decide whether the hunt feels hopeless, easy, or tense to the end.</li>
+    </ol>
+    <div class="see">You'll see this in: Scotland Yard, Fury of Dracula, Letters from Whitechapel, Specter Ops.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const P=i=>[95+(i%4)*170,85+Math.floor(i/4)*150];
+const EDGES=[];for(let i=0;i<12;i++){if(i%4<3)EDGES.push([i,i+1]);if(i<8)EDGES.push([i,i+4])}
+const REAL=[5,6,10,11,10];
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',t:0,cloud:[5],fresh:[],thief:5,h1:0,h2:3,searched:[],arrows:null,caught:false,path:false,sheetN:0,reveal:[0],infoNote:'',note:''}}
+const tok=(i,l,c,dy=0)=>{const [x,y]=P(i);return `<g class="tok" style="transform:translate(${x}px,${y+dy}px)"><circle r="20" fill="${c}"/><text>${l}</text></g>`};
+function render(anim){
+  ['title','mapC','info','note','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='cmp'||st.view==='end'){$('cmp').classList.add('on');if(st.view==='end')$('end').classList.add('on');
+    $('cloudBars').innerHTML=[['Start',1,1],['T1',3],['T2',4],['T3',1,1],['T4',1]].map(([t,n,rv])=>`<div class="bar ${rv?'rv':''}"><b>${n}</b><i style="height:${n*40}px"></i>${t}${rv?'<br>reveal':''}</div>`).join('');return}
+  ['mapC','info','note'].forEach(id=>$(id).classList.add('on'));
+  let h=EDGES.map(([a,b])=>{const [x1,y1]=P(a),[x2,y2]=P(b);return `<line class="edge" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`}).join('');
+  for(let i=0;i<12;i++){const [x,y]=P(i),f=st.cloud.includes(i),fi=st.fresh.indexOf(i);
+    h+=`<circle class="nd ${f?'fog':''} ${f&&anim&&fi>=0?'in':''}" style="--d:${fi*.15}s" cx="${x}" cy="${y}" r="32"/>`;
+    h+=`<text class="nl" x="${x}" y="${y+52}">${i+1}</text>`;
+    if(f&&!(st.thiefShown&&st.thief===i))h+=`<text class="q" x="${x}" y="${y}">?</text>`;
+    if(st.searched.includes(i))h+=`<path class="x" d="M${x-18},${y-18}L${x+18},${y+18}M${x+18},${y-18}L${x-18},${y+18}"/>`}
+  if(st.path){const pts=REAL.map(P);h+=`<polyline class="path" points="${pts.map(p=>p.join(',')).join(' ')}"/>`}
+  if(st.arrows){for(const [a,b,c] of st.arrows){const [x1,y1]=P(a),[x2,y2]=P(b);const mx=x1+(x2-x1)*.62,my=y1+(y2-y1)*.62;
+    h+=`<line class="arrow" stroke="${c}" x1="${x1+(x2-x1)*.3}" y1="${y1+(y2-y1)*.3}" x2="${mx}" y2="${my}"/>`;
+    if(c==='var(--red)')h+=`<path class="x" style="stroke:var(--red)" d="M${mx-10},${my-10}L${mx+10},${my+10}M${mx+10},${my-10}L${mx-10},${my+10}"/>`}}
+  if(st.thiefShown)h+=tok(st.thief,'T','var(--red)');
+  h+=tok(st.h1,'H1','var(--h1)',st.thiefShown&&st.h1===st.thief?-26:0)+tok(st.h2,'H2','var(--h2)');
+  if(st.caught&&anim){const [x,y]=P(st.thief);h+=`<circle class="boom" cx="${x}" cy="${y}" r="10"/>`}
+  $('map').innerHTML=h;
+  const sheet=REAL.slice(1).map((n,i)=>i<st.sheetN?`<span class="${st.path||st.reveal.includes(i+1)?'rv':'h'}">${st.path||st.reveal.includes(i+1)?n+1:'##'}</span>`:'').join('');
+  $('info').innerHTML=`<div id="turn">${st.t?'Turn '+st.t:'Start'}<small>${st.t&&st.t%3===0?'reveal turn':''}</small></div>
+    <div class="stats"><div><b>${st.cloud.length}</b>possible places</div><div><b style="color:var(--gold)">2</b>hunters</div></div>
+    <div id="sheet">Thief's secret sheet<div class="r">${sheet||'<span style="background:none">empty</span>'}</div></div>
+    <div id="infoNote">${st.infoNote}</div>`;
+  $('note').innerHTML=st.note;
+}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='map';st.thiefShown=true;
+   st.infoNote='The thief starts on space 6, in plain sight. Two hunters wait in the corners. Everyone moves <b>one step per turn</b>.';
+   setHeader('A thief and two hunters','Twelve spaces joined by roads.')},
+ ()=>{st.thiefShown=false;
+   st.infoNote='From now on the thief <b>writes each move</b> on a hidden sheet. Every <b>3rd turn</b> the thief must reveal where they are.';
+   st.note='Purple spaces with <b>?</b> are the places the thief could be.';
+   setHeader('The thief vanishes','Moves are secret. The hunters only know where the thief started.')},
+ ()=>{st.t=1;st.sheetN=1;st.cloud=[4,6,9];st.fresh=[4,6,9];st.h1=1;st.h2=7;st.searched=[1];
+   st.infoNote='One hidden step means the thief could be on <b>4 spaces</b>. Hunter 1 searches space 2: empty. <span class="f">3 places left.</span>';
+   setHeader('Turn 1: the cloud grows','Every hidden move spreads the possible places.')},
+ ()=>{st.t=2;st.sheetN=2;st.cloud=[0,5,8,10];st.fresh=[0,5,8,10];st.h1=2;st.searched=[2];
+   st.infoNote='Another hidden step: the thief could be on 5 spaces. A search rules out space 3. Still <b>4 places</b>. The hunters are guessing.';
+   setHeader('Turn 2: still growing','The cloud is wider than the hunters can cover.')},
+ ()=>{st.t=3;st.sheetN=3;st.reveal=[0,3];st.cloud=[11];st.fresh=[11];st.thief=11;st.thiefShown=true;st.searched=[];
+   st.infoNote='Reveal turn. The thief is on space <b>12</b>. <span class="g">The cloud collapses to a single space.</span>';
+   setHeader('Turn 3: the reveal','The thief must show their position.')},
+ ()=>{st.h1=6;st.arrows=[[11,7,'var(--red)'],[11,10,'var(--fog)']];st.thiefShown=true;
+   st.infoNote='Hunter 2 guards space 8. Hunter 1 moves next to space 11. From 12, the thief\'s only safe move is to <b>11</b>.';
+   setHeader('The hunters close the net','With the cloud this small, the hunters can block the exits.')},
+ ()=>{st.t=4;st.sheetN=4;st.thief=10;st.cloud=[10];st.h1=10;st.caught=true;st.arrows=null;
+   st.infoNote='The thief slips to 11. Hunter 1 steps in. <span class="g">Caught on turn 4.</span>';
+   setHeader('Turn 4: caught','The reveal gave the hunters just enough to corner the thief.')},
+ ()=>{st.path=true;st.caught=false;
+   st.infoNote='The thief\'s real route: 6 → 7 → 11 → 12 → 11. The hunters never saw it, but they <b>deduced</b> enough of it.';
+   setHeader('The secret sheet, revealed','What actually happened while the hunters were guessing.')},
+ ()=>{st.view='cmp';setHeader('Grow, shrink, catch','The number of possible places tells the story of the chase.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Secrets on one side, deduction on the other.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;st.fresh=[];steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

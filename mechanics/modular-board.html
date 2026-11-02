@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Modular Boards &amp; Exploration</title>
+<style>
+:root{--bg:#10150f;--panel:#1d241b;--panel2:#252e22;--ink:#f2f6ec;--muted:#b4c2a8;--line:rgba(230,245,215,.14);
+  --gold:#ffcc4d;--ok:#6ee08a;--red:#ff5d5d;--sea:#1f4f6b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#243822 0%,#10150f 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#boardC{left:40px;top:134px;width:640px;height:476px;border-radius:22px;background:radial-gradient(circle at 50% 50%,#2a6a88,var(--sea) 70%);
+  box-shadow:inset 0 0 50px rgba(0,0,0,.45),0 14px 34px rgba(0,0,0,.5)}
+#board{position:absolute;left:0;top:0}
+.hx{stroke:#1d2a18;stroke-width:4}
+.hx.in{animation:hin .5s cubic-bezier(.3,1.5,.5,1) both;animation-delay:var(--d);transform-box:fill-box;transform-origin:center}
+@keyframes hin{from{transform:scale(.2) rotate(-60deg);opacity:0}to{transform:none;opacity:1}}
+.hn{font:800 18px "Nunito",sans-serif;fill:#14200f;text-anchor:middle}
+.hv{font:700 28px "Fredoka",sans-serif;fill:#14200f;text-anchor:middle}
+.hq{font:700 44px "Fredoka",sans-serif;fill:rgba(255,255,255,.35);text-anchor:middle;dominant-baseline:central}
+.vs{font:900 16px "Nunito",sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#14200f;stroke-width:4px}
+.star{fill:var(--gold);stroke:#fff;stroke-width:3;filter:drop-shadow(0 0 8px rgba(255,204,77,.9))}
+.star.in{animation:hin .6s cubic-bezier(.3,1.6,.5,1) both;animation-delay:.6s;transform-box:fill-box;transform-origin:center}
+.ex circle{fill:#fff;stroke:#14200f;stroke-width:3}
+.ex text{font:700 20px "Fredoka",sans-serif;fill:#14200f;text-anchor:middle;dominant-baseline:central}
+.ex{transition:transform .8s cubic-bezier(.45,0,.3,1)}
+.route{fill:none;stroke:#fff;stroke-width:5;stroke-dasharray:10 8;stroke-linecap:round}
+.danger{fill:none;stroke:var(--red);stroke-width:6;opacity:.9}
+
+#info{left:700px;top:134px;width:540px;height:476px;padding:20px 24px;display:flex;flex-direction:column}
+#bt{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--gold)}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-top:12px}
+.legend div{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800}
+.legend i{width:22px;height:22px;border-radius:6px;display:inline-block}
+.rule{padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:21px;line-height:1.35;margin-top:12px}
+.rule b{color:var(--gold)}
+.games{display:flex;gap:10px;margin-top:12px}
+.games div{flex:1;background:rgba(0,0,0,.22);border-radius:12px;padding:8px;text-align:center;font-size:16px;font-weight:800;color:var(--muted)}
+.games b{display:block;font-family:"Fredoka",sans-serif;font-size:30px;color:var(--gold)}
+#infoNote{margin-top:auto;font-size:21px;line-height:1.4;border-top:1px solid var(--line);padding-top:12px}
+#infoNote b{color:var(--gold)}#infoNote .g{color:var(--ok)}#infoNote .r{color:#ff9d9d}
+#note{left:40px;right:40px;top:626px;height:40px;font-size:21px;text-align:center;color:var(--muted)}
+#note b{color:var(--gold)}
+
+#three{left:40px;right:40px;top:134px;height:492px;padding:22px 30px}
+#three h3{margin:0 0 6px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--gold)}
+#three .row{display:flex;gap:20px;justify-content:space-between}
+#three .m{flex:1;text-align:center;font-size:20px;font-weight:800}
+#three .m svg{display:block;margin:0 auto;border-radius:18px;background:radial-gradient(circle at 50% 50%,#2a6a88,var(--sea) 70%)}
+#three p{font-size:21px;line-height:1.4;margin:12px 0 0}
+#three p b{color:var(--gold)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:112px;font-weight:700;line-height:1;text-align:center;
+  background:linear-gradient(90deg,#b5d65a,var(--gold),#3f8f4f);-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:34px;font-weight:700}
+#title svg{margin:20px 0 10px}
+#title .sp{animation:spin 10s linear infinite;transform-origin:110px 100px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(9,12,8,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(230,245,215,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Modular Boards<br>&amp; Exploration</div>
+    <h2>The map is built as you play.</h2>
+    <svg width="220" height="200" id="tSvg"></svg>
+    <div class="press">Press SPACE to lay the tiles</div>
+  </div>
+
+  <div id="boardC" class="panel"><svg id="board" width="640" height="476"></svg></div>
+  <div id="info" class="panel card"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="three" class="panel card">
+    <h3>Same seven tiles, three different games</h3>
+    <div class="row" id="threeRow"></div>
+    <p>With a fixed board, the best start is the same every time and players stop exploring it. With modular tiles, every game asks a new question: <b>where is the best spot this time?</b></p>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>A fixed board gets solved.</b> When the best start never moves, players memorise it and the opening stops being a decision.</li>
+      <li><b>Modular tiles keep openings fresh.</b> Shuffling the same seven tiles moved the best spot every game. Players must read the board, not remember it.</li>
+      <li><b>Exploration adds discovery.</b> Flipping tiles mid-game reveals rewards and dangers that change plans. Balance the tile mix so no single flip decides the game.</li>
+    </ol>
+    <div class="see">You'll see this in: Catan, Betrayal at House on the Hill, Mage Knight, Tikal.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const T={Go:{n:'Gold',v:3,c:'#f2c14e'},Fi:{n:'Field',v:2,c:'#b5d65a'},Fo:{n:'Forest',v:2,c:'#5aa865'},Hi:{n:'Hill',v:1,c:'#d07a4c'},De:{n:'Desert',v:0,c:'#ddca98'},
+  Ca:{n:'Camp',v:'',c:'#e9e2cf'},Mo:{n:'Monster',v:'!',c:'#d9534f'},Ri:{n:'River',v:'',c:'#6ab7e0'}};
+const L={fixed:['Fi','Go','Fi','Hi','De','Fo','Hi'],m1:['Hi','Fo','De','Fi','Go','Hi','Fo'],m2:['Go','Hi','Fo','De','Fi','Fo','Hi']};
+const R0=78,SQ=Math.sqrt(3);
+const cen=(cx,cy,R,i)=>i===0?[cx,cy]:[cx+SQ*R*Math.cos(Math.PI/3*(i-1)),cy+SQ*R*Math.sin(Math.PI/3*(i-1))];
+const hexPts=(x,y,R)=>[0,1,2,3,4,5].map(k=>{const a=Math.PI/180*(30+60*k);return (x+R*Math.cos(a)).toFixed(1)+','+(y+R*Math.sin(a)).toFixed(1)}).join(' ');
+const vtx=(cx,cy,R,k)=>{const a=Math.PI/180*(30+60*k);return[cx+R*Math.cos(a),cy+R*Math.sin(a)]};
+const vscore=(lay,k)=>T[lay[0]].v+T[lay[1+k]].v+T[lay[1+(k+1)%6]].v;
+function best(lay){let b=0;for(let k=1;k<6;k++)if(vscore(lay,k)>vscore(lay,b))b=k;return b}
+const starPath=(x,y,r)=>{let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;d+=(i?'L':'M')+(x+rr*Math.cos(a)).toFixed(1)+','+(y+rr*Math.sin(a)).toFixed(1)}return d+'Z'};
+function flower(lay,cx,cy,R,opt={}){let h='';
+  lay.forEach((t,i)=>{const [x,y]=cen(cx,cy,R,i),tt=T[t];const down=opt.down&&opt.down.includes(i);
+    h+=`<polygon class="hx ${opt.anim?'in':''}" style="--d:${i*.08}s" fill="${down?'#2c3a2a':tt.c}" points="${hexPts(x,y,R-2)}"/>`;
+    if(down)h+=`<text class="hq" x="${x}" y="${y}">?</text>`;
+    else if(!opt.mini){h+=`<text class="hn" x="${x}" y="${y-6}">${tt.n}</text>`;if(tt.v!=='')h+=`<text class="hv" x="${x}" y="${y+26}">${tt.v}</text>`}});
+  if(opt.scores)for(let k=0;k<6;k++){const [x,y]=vtx(cx,cy,R,k);h+=`<circle cx="${x}" cy="${y}" r="13" fill="rgba(20,32,15,.75)"/><text class="vs" x="${x}" y="${y}">${vscore(lay,k)}</text>`}
+  if(opt.star){const k=best(lay),[x,y]=vtx(cx,cy,R,k);h+=`<path class="star ${opt.anim?'in':''}" d="${starPath(x,y,opt.mini?16:26)}"/>`}
+  return h}
+$('tSvg').innerHTML=`<g class="sp">${flower(['Go','Fi','Fo','Hi','De','Fo','Fi'],110,100,34,{mini:true})}</g>`;
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',lay:'fixed',fresh:false,star:true,scores:false,games:null,explore:null,infoNote:'',bt:'',rule:'',note:''}}
+const CX=320,CY=238;
+function render(anim){
+  ['title','boardC','info','note','three','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='three'||st.view==='end'){$('three').classList.add('on');if(st.view==='end')$('end').classList.add('on');
+    $('threeRow').innerHTML=[['fixed','Fixed board'],['m1','Modular: game 2'],['m2','Modular: game 3']].map(([k,n])=>`<div class="m"><svg width="330" height="300">${flower(L[k],165,150,52,{star:true,mini:false})}</svg>${n}: best spot <span style="color:var(--gold)">${vscore(L[k],best(L[k]))}</span></div>`).join('');return}
+  ['boardC','info','note'].forEach(id=>$(id).classList.add('on'));
+  let h='';
+  if(st.explore){const e=st.explore;const lay=['Ca','Fo','Go','Mo','Hi','De','Ri'];
+    h+=flower(lay,CX,CY,R0,{down:[1,2,3,4,5,6].filter(i=>!e.up.includes(i))});
+    if(e.danger){const [x,y]=cen(CX,CY,R0,3);h+=`<polygon class="danger" points="${hexPts(x,y,R0-6)}"/>`}
+    if(e.route){h+=`<polyline class="route" points="${e.route.map(i=>cen(CX,CY,R0,i).join(',')).join(' ')}"/>`}
+    const [x,y]=cen(CX,CY,R0,e.at);h+=`<g class="ex" style="transform:translate(${x}px,${y-34}px)"><circle r="20"/><text>E</text></g>`;
+  } else h+=flower(L[st.lay],CX,CY,R0,{star:st.star,scores:st.scores,anim:anim&&st.fresh});
+  $('board').innerHTML=h;
+  const legend=st.explore?'':`<div class="legend">${['Go','Fi','Fo','Hi','De'].map(k=>`<div><i style="background:${T[k].c}"></i>${T[k].n}: ${T[k].v}</div>`).join('')}<div><svg width="22" height="22"><path class="star" d="${starPath(11,11,10)}"/></svg>Best start</div></div>`;
+  $('info').innerHTML=`<div id="bt">${st.bt}</div>${st.rule?`<div class="rule">${st.rule}</div>`:''}${legend}
+    ${st.games?`<div class="games">${st.games.map(([g,v])=>`<div><b>${v}</b>${g}</div>`).join('')}</div>`:''}<div id="infoNote">${st.infoNote}</div>`;
+  $('note').innerHTML=st.note;
+}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='board';st.lay='fixed';st.scores=true;st.bt='A fixed board';
+   st.rule='Each corner where three tiles meet is a place to start. It earns the <b>sum</b> of its three tiles.';
+   st.infoNote='The numbers show what each corner is worth. The star marks the best one: <b>7</b>, next to the Gold.';
+   st.note='Seven land tiles. The board is printed, so it is the same every game.';
+   setHeader('A board printed once','The tiles never move.')},
+ ()=>{st.scores=false;st.games=[['Game 1','7'],['Game 2','7'],['Game 3','7']];
+   st.infoNote='Every game, the first player takes the starred corner. <span class="r">The opening is solved.</span> New players lose to anyone who has memorised it.';
+   setHeader('Game 2, game 3: the same best spot','A fixed board teaches players one opening, then stops asking questions.')},
+ ()=>{st.lay='m1';st.fresh=true;st.scores=true;st.games=null;st.bt='A modular board';
+   st.rule='The seven tiles are <b>shuffled</b> and laid out fresh at the start of each game.';
+   st.infoNote='Same seven tiles, new layout. The best corner has moved, and it is worth <b>6</b> now. Players have to read the board.';
+   setHeader('Modular: shuffle the tiles','Same pieces, new arrangement.')},
+ ()=>{st.lay='m2';st.fresh=true;
+   st.infoNote='Shuffle again. The Gold is in the middle, and the best corner is in a third place, worth <b>7</b>. <span class="g">Every game starts with a fresh puzzle.</span>';
+   setHeader('Another game, another map','The best spot moves every time.')},
+ ()=>{st.fresh=false;st.scores=false;st.bt='Exploration';st.rule='Tiles start <b>face down</b>. Moving onto a hidden tile <b>flips it</b>.';
+   st.explore={up:[],at:0};
+   st.infoNote='The explorer starts at camp. Nobody knows what is out there, not even the explorer.';st.note='';
+   setHeader('Exploration: build the map during play','Some games go further and reveal the board one tile at a time.')},
+ ()=>{st.explore={up:[1,2],at:2,route:[0,1,2]};
+   st.infoNote='The explorer steps onto a hidden tile: a Forest. One more step: <b>Gold!</b> A find like this pulls every player toward this side of the map.';
+   setHeader('Flip, flip: Forest, then Gold','Discovery creates a goal.')},
+ ()=>{st.explore={up:[1,2,3],at:3,danger:true,route:[0,1,2,3]};
+   st.infoNote='Pushing on from the Gold, the explorer flips a <span class="r">Monster</span>. The plan changes: retreat to camp with the Gold before it attacks.';
+   setHeader('Flip: a Monster next to the Gold','A new tile can turn a plan upside down.')},
+ ()=>{st.explore={up:[1,2,3,4,5,6],at:0,danger:true,route:[0,1,2,3,0]};
+   st.infoNote='The whole map is known now, but only by the end of the game. Next game, the same tiles will be somewhere else.';
+   setHeader('The finished map','The players built it together without knowing the plan.')},
+ ()=>{st.view='three';setHeader('Replay value','Three games from the same seven tiles.')},
+ ()=>{st.view='end';setHeader('What designers take from this','A board that changes keeps asking new questions.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

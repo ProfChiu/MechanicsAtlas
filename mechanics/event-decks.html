@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Event Decks</title>
+<style>
+:root{--bg:#0f141c;--panel:#1b2230;--panel2:#232c3d;--ink:#eef3fa;--muted:#a9b6ca;--line:rgba(215,228,250,.14);
+  --gold:#ffcc4d;--ok:#6ee08a;--red:#ff5d5d;--calm:#6fb7a8;--gust:#7aa2ff;--storm:#b45cff;--wave:#ff8a3d}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#1d2a40 0%,#0f141c 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#strip{left:40px;right:40px;top:132px;height:152px;padding:12px 18px}
+#cards{display:flex;gap:8px;margin-top:8px;position:relative}
+.ev{width:84px;height:98px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;position:relative;
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 5px 10px rgba(0,0,0,.45);font-weight:900;font-size:17px;color:#0d1118}
+.ev b{font-family:"Fredoka",sans-serif;font-size:28px;line-height:1}
+.ev.C{background:linear-gradient(160deg,#a6e3d6,var(--calm))}
+.ev.G{background:linear-gradient(160deg,#b8ccff,var(--gust))}
+.ev.S{background:linear-gradient(160deg,#dcb4ff,var(--storm));color:#fff;box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 0 18px rgba(180,92,255,.6),0 5px 10px rgba(0,0,0,.45)}
+.ev.back{background:repeating-linear-gradient(45deg,#2b3650 0 8px,#24304a 8px 16px);border:2px solid #3b4a6b;color:transparent}
+.ev.in{animation:flip .5s ease both;animation-delay:var(--d)}
+@keyframes flip{from{transform:rotateY(90deg)}to{transform:none}}
+.ev.gap{margin-right:22px}
+.pileLbl{position:absolute;top:-4px;font-size:15px;font-weight:900;color:var(--gold)}
+
+#chartC{left:40px;top:300px;width:740px;height:310px;padding:14px 18px}
+#chart{position:absolute;left:18px;top:40px}
+.bar{rx:6}
+.ax{stroke:#56637d;stroke-width:2}
+.tick{font:800 16px "Nunito",sans-serif;fill:var(--muted);text-anchor:middle}
+.wave{fill:none;stroke:var(--wave);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.wave.draw{stroke-dasharray:1600;animation:dl 1.8s ease both}
+@keyframes dl{from{stroke-dashoffset:1600}to{stroke-dashoffset:0}}
+.ghost{fill:none;stroke-width:4;stroke-dasharray:8 7;opacity:.55}
+.lose{font:900 18px "Nunito",sans-serif;fill:var(--red);text-anchor:middle;paint-order:stroke;stroke:#0f141c;stroke-width:5px}
+
+#info{left:800px;top:300px;width:440px;height:310px;padding:18px 22px;display:flex;flex-direction:column}
+#sh{display:flex;align-items:baseline;gap:10px}
+#sh b{font-family:"Fredoka",sans-serif;font-size:48px;color:var(--gold);line-height:1}
+#sh span{font-size:19px;font-weight:800;color:var(--muted)}
+#shBar{height:14px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0 4px}
+#shBar i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--gold),var(--ok));transition:width .8s}
+#infoNote{margin-top:auto;font-size:20px;line-height:1.4}
+#infoNote b{color:var(--gold)}#infoNote .r{color:#ff9d9d}#infoNote .g{color:var(--ok)}
+#note{left:40px;right:40px;top:626px;height:40px;font-size:21px;text-align:center;color:var(--muted)}
+#note b{color:var(--gold)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:136px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--calm),var(--gust),var(--storm));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:34px;font-weight:700}
+#title .fan{display:flex;gap:14px;margin:30px 0 14px}
+#title .fan .ev{width:96px;height:120px;animation:bob 2.4s ease-in-out infinite}
+#title .fan .ev:nth-child(2){animation-delay:.2s}#title .fan .ev:nth-child(3){animation-delay:.4s}
+@keyframes bob{50%{transform:translateY(-10px) rotate(-3deg)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(9,12,18,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(215,228,250,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Event Decks</div>
+    <h2>Flip a card. The world changes.</h2>
+    <div class="fan"><div class="ev C"><b>0</b>Calm</div><div class="ev G"><b>−1</b>Gust</div><div class="ev S"><b>−3</b>Storm</div></div>
+    <div class="press">Press SPACE to flip</div>
+  </div>
+
+  <div id="strip" class="panel card"><div class="lbl" id="stripLbl">THE EVENT DECK</div><div id="cards"></div></div>
+  <div id="chartC" class="panel card"><div class="lbl" id="chartLbl">DANGER PER FLIP</div><svg id="chart" width="704" height="262"></svg></div>
+  <div id="info" class="panel card"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>An event deck is the game's storyteller.</b> Each flip changes the world, and the order of the cards sets the pace of the story.</li>
+      <li><b>A plain shuffle can ruin the pacing.</b> Storms bunched at the start ended the game in 5 flips; storms bunched at the end made 9 flips feel empty.</li>
+      <li><b>Stack the deck to shape tension.</b> One storm per third gives waves of danger; harder piles near the bottom make the waves rise, while every flip still feels like a surprise.</li>
+    </ol>
+    <div class="see">You'll see this in: Pandemic, Arkham Horror, Betrayal at House on the Hill, Dead of Winter.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const DMG={C:0,G:1,S:3},NM={C:'Calm',G:'Gust',S:'Storm'};
+const SEQ={
+ order:'CCCCCCGGGSSS',
+ A:'CSSGSCCGCCGC',
+ B:'CCGCCCGCGSSS',
+ stack:'CGSCCSCGGCCS',
+ esc:'CCSCGCSCGSGC'
+};
+const X=i=>40+i*55,BASE=210,H=d=>d*52;
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',seq:'order',shown:0,from:0,faceUp:true,piles:false,ghosts:[],lbl:'THE EVENT DECK',infoNote:'',note:''}}
+function shelter(seq,n){let s=10,lost=null;for(let i=0;i<n&&lost===null;i++){s=seq[i]==='C'?Math.min(10,s+1):s-DMG[seq[i]];if(s<=0){lost=i;s=0}}return[Math.max(0,s),lost]}
+function wavePath(seq,n){const pts=[];let t=0;for(let i=0;i<n;i++){t=t*0.55+DMG[seq[i]];pts.push([X(i)+20,BASE-t*30])}
+  return pts.map((p,i)=>(i?'L':'M')+p[0]+','+p[1]).join('')}
+function render(anim){
+  ['title','strip','chartC','info','note','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  ['strip','chartC','info','note'].forEach(id=>$(id).classList.add('on'));
+  if(st.view==='end')$('end').classList.add('on');
+  const seq=SEQ[st.seq];
+  $('stripLbl').textContent=st.lbl;
+  $('cards').innerHTML=seq.split('').map((c,i)=>{const up=st.faceUp?true:i<st.shown;const gap=st.piles&&(i===3||i===7)?'gap':'';
+    const pl='';
+    return `${pl}<div class="ev ${up?c:'back'} ${gap} ${anim&&!st.faceUp&&i<st.shown&&i>=st.from?'in':''}" style="--d:${(i-st.from)*.18}s">${up?`<b>${DMG[c]?'−'+DMG[c]:'0'}</b>${NM[c]}`:''}</div>`}).join('');
+  let h=`<line class="ax" x1="20" x2="${X(12)}" y1="${BASE}" y2="${BASE}"/>`;
+  for(let i=0;i<12;i++)h+=`<text class="tick" x="${X(i)+20}" y="${BASE+26}">${i+1}</text>`;
+  for(const g of st.ghosts)h+=`<path class="ghost" stroke="${g[1]}" d="${wavePath(SEQ[g[0]],12)}"/>`;
+  const n=st.faceUp?0:st.shown;
+  for(let i=0;i<n;i++){const d=DMG[seq[i]];if(d)h+=`<rect class="bar" x="${X(i)+6}" y="${BASE-H(d)}" width="28" height="${H(d)}" fill="${seq[i]==='S'?'var(--storm)':'var(--gust)'}" opacity=".85"/>`}
+  if(n>1)h+=`<path class="wave ${anim&&st.shown>st.from?'draw':''}" d="${wavePath(seq,n)}"/>`;
+  const [sv,lost]=shelter(seq,n);
+  if(lost!==null)h+=`<text class="lose" x="${Math.min(X(lost)+20,630)}" y="34">village lost</text>`;
+  $('chart').innerHTML=h;
+  $('info').innerHTML=`<div class="lbl">VILLAGE SHELTER</div><div id="sh"><b>${sv}</b><span>/ 10</span></div><div id="shBar"><i style="width:${sv*10}%"></i></div><div id="infoNote">${st.infoNote}</div>`;
+  $('note').innerHTML=st.note;
+}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='deck';st.seq='order';st.faceUp=true;
+   st.infoNote='The players work together to protect the village. Each turn, they flip <b>one event</b>. Calm lets them <b>repair 1</b> shelter, a Gust costs 1, a Storm costs 3.';
+   st.note='The orange line on the chart will show tension: recent danger that has not faded yet.';
+   setHeader('A co-op village and its event deck','Twelve cards: 6 Calm, 3 Gusts and 3 Storms. Shelter starts at 10.')},
+ ()=>{st.seq='A';st.faceUp=false;st.shown=2;st.from=0;st.lbl='EACH TURN: FLIP THE TOP CARD';
+   st.infoNote='Flip 1: Calm, nothing to repair yet. Flip 2: a <b>Storm</b>. Shelter drops to 7. Players cannot see what comes next.';
+   setHeader('Each turn, flip one event','The deck is shuffled and face down. The top card decides this turn.')},
+ ()=>{st.seq='A';st.faceUp=false;st.shown=5;st.from=2;st.lbl='SHUFFLE 1';
+   st.infoNote='Three Storms in the first five flips. <span class="r">The village falls on flip 5</span>, before the players could do anything at all.';
+   setHeader('A plain shuffle: storms come early','The deck is shuffled. The first five cards are flipped.')},
+ ()=>{st.seq='B';st.shown=12;st.from=0;st.lbl='SHUFFLE 2';
+   st.infoNote='Nine quiet flips, then three Storms in a row. <span class="r">Boring for most of the game, then a sudden collapse.</span>';
+   setHeader('Another shuffle: storms come late','Same twelve cards, a different random order.')},
+ ()=>{st.seq='stack';st.faceUp=true;st.piles=true;st.shown=0;st.lbl='A STACKED DECK';
+   st.infoNote='Split the deck into <b>three piles of four</b>. Put exactly one Storm in each pile. Shuffle each pile, then stack them.';
+   setHeader('The designer\'s trick: stack the deck','Shuffle within piles, not the whole deck.')},
+ ()=>{st.faceUp=false;st.shown=12;st.from=0;
+   st.infoNote='One Storm in every third of the game. Players never know <b>which</b> flip it will be, but they know it is coming. <span class="g">Danger arrives in waves, and the village survives with 3.</span>';
+   setHeader('Flipping the stacked deck','Same cards, now with a shape.')},
+ ()=>{st.seq='esc';st.shown=12;st.from=0;st.lbl='STACKED AND ESCALATING';st.ghosts=[['stack','var(--gold)']];
+   st.infoNote='Same 12 cards, but the Gusts move later: none in pile 1, one in pile 2, two in pile 3. The waves <b>rise</b> (dashed: the previous deck), and the village scrapes through with <b>2</b>.';
+   setHeader('Make the waves rise','Put harder cards in the later piles.')},
+ ()=>{st.ghosts=[['A','var(--red)'],['B','var(--gust)']];st.lbl='COMPARE: SHUFFLED (DASHED) VS ESCALATING (SOLID)';
+   st.infoNote='Shuffled decks spike at random. The stacked, escalating deck builds tension the way a story does: rising action, then a climax.';
+   setHeader('Random spikes or a story arc','Same kind of cards. Different ordering rules.')},
+ ()=>{st.view='end';setHeader('What designers take from this','The deck tells the story. The stacking writes the plot.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

@@ -818,22 +818,70 @@ window.MECHANICS = [
     brief: 'Three players, the same 6 rounds scored three ways: running score (winner clear by round 3), end-game bonuses (leader flips at the end), hidden goals (nobody knows who leads until the reveal).'
   },
   /* Chance & Risk */
-  { id: 'event-decks', family: 'chance', title: 'Event Decks', file: null,
+  {
+    id: 'event-decks', family: 'chance', title: 'Event Decks',
+    file: 'mechanics/event-decks.html', w: 1280, h: 720, minutes: 4,
     hook: 'Draw a card, and the world changes. The deck sets the story and the pace.',
+    anatomy: {
+      Procedures: 'Each turn, flip the top card of the event deck and apply what it says.',
+      Rules: 'Events range from calm to disastrous. Designers often stack the deck: shuffle it in piles so danger arrives on a rough schedule.',
+      Resources: 'Shelter, health or time that the events wear down, and the turns players get to recover.',
+      Outcome: 'The order of the deck sets the pacing; a stacked deck turns random danger into rising waves of tension.'
+    },
+    feel: ['Dread', 'Surprise', 'Story'],
+    feelText: 'Every flip is a small held breath. A well-stacked deck makes the game feel like a story that builds to a climax, even though each card is a surprise.',
     watchFor: 'Watch the event deck escalate: a stacked deck makes danger rise on a schedule that still feels surprising.',
-    examples: [{ name: 'Pandemic' }, { name: 'Arkham Horror' }, { name: 'Betrayal at House on the Hill' }, { name: 'Dead of Winter' }],
-    brief: 'A co-op village facing storms. Shuffled events vs a stacked deck (split in thirds, one big storm shuffled into each). Show a tension curve rising in waves, and why designers stack decks to control pacing.' },
+    examples: [
+      { name: 'Pandemic', note: 'Epidemic cards are shuffled one into each pile of the deck, so outbreaks come in waves.' },
+      { name: 'Arkham Horror', note: 'A mythos card each round brings new monsters, rumours and gates.' },
+      { name: 'Betrayal at House on the Hill', note: 'Omen cards bring the haunt closer each time one is drawn.' },
+      { name: 'Dead of Winter', note: 'Crossroads cards trigger story events when players do certain things.' }
+    ],
+    brief: 'A co-op village facing storms. Shuffled events vs a stacked deck (split in thirds, one big storm shuffled into each). Show a tension curve rising in waves, and why designers stack decks to control pacing.'
+  },
   /* Board & Space */
-  { id: 'hidden-movement', family: 'space', title: 'Hidden Movement', file: null,
+  {
+    id: 'hidden-movement', family: 'space', title: 'Hidden Movement',
+    file: 'mechanics/hidden-movement.html', w: 1280, h: 720, minutes: 4,
     hook: 'One player moves in secret. Everyone else hunts with clues.',
+    anatomy: {
+      Procedures: 'One player records each move in secret; the others move openly and search the map.',
+      Rules: 'The hidden player must reveal their position on set turns; searches and blocked spaces rule out locations.',
+      Resources: 'Information: the set of places the hidden player could be.',
+      Outcome: 'The hunt is a contest of deduction and bluff; reveal timing, map shape and speed decide who wins.'
+    },
+    feel: ['Tension', 'Deduction', 'Bluff'],
+    feelText: 'The hidden player feels clever and hunted; the hunters feel the cloud of possibilities tighten. Each reveal is a dramatic moment for both sides.',
     watchFor: 'Watch the possible locations shrink and grow: every reveal narrows the search, every hidden move widens it.',
-    examples: [{ name: 'Scotland Yard' }, { name: 'Fury of Dracula' }, { name: 'Letters from Whitechapel' }, { name: 'Specter Ops' }],
-    brief: 'A thief moves secretly on a 12-node map, one step per turn, written on a hidden sheet. Hunters see a reveal every 3 turns. Show the cloud of possible locations growing and shrinking until the catch.' },
-  { id: 'modular-board', family: 'space', title: 'Modular Boards & Exploration', file: null,
+    examples: [
+      { name: 'Scotland Yard', note: 'Mr. X moves through London by taxi, bus and underground, revealed on set turns.' },
+      { name: 'Fury of Dracula', note: 'Dracula moves in secret across Europe while hunters track the trail.' },
+      { name: 'Letters from Whitechapel', note: 'Jack moves through numbered streets while police search for clues.' },
+      { name: 'Specter Ops', note: 'One agent sneaks through a facility while hunters use gadgets to find them.' }
+    ],
+    brief: 'A thief moves secretly on a 12-node map, one step per turn, written on a hidden sheet. Hunters see a reveal every 3 turns. Show the cloud of possible locations growing and shrinking until the catch.'
+  },
+  {
+    id: 'modular-board', family: 'space', title: 'Modular Boards & Exploration',
+    file: 'mechanics/modular-board.html', w: 1280, h: 720, minutes: 4,
     hook: 'The map is built as you play. No two games share the same board.',
+    anatomy: {
+      Procedures: 'Lay out the board from shuffled tiles at the start, or flip tiles face up as players explore.',
+      Rules: 'Tile placement is random within limits; exploring a tile reveals its reward or danger.',
+      Resources: 'The tiles themselves, and good starting spots that move from game to game.',
+      Outcome: 'No two games share a board, so openings stay fresh and exploration creates surprises mid-game.'
+    },
+    feel: ['Discovery', 'Variety', 'Adaptation'],
+    feelText: 'A new map every game invites players to read the board instead of following a memorised plan. Flipping an unknown tile is a small thrill every time.',
     watchFor: 'Watch a new tile change everyone\'s plans. Exploration adds discovery, and variety between plays.',
-    examples: [{ name: 'Catan' }, { name: 'Betrayal at House on the Hill' }, { name: 'Mage Knight' }, { name: 'Tikal' }],
-    brief: 'A fixed board vs a modular one: random hex setup changes which spots are strong. Then exploration: an explorer flips face-down tiles to reveal resources and dangers. End with three different maps from the same tiles.' },
+    examples: [
+      { name: 'Catan', note: 'Shuffled terrain hexes and number tokens make a new island every game.' },
+      { name: 'Betrayal at House on the Hill', note: 'Rooms are drawn and placed as players explore the haunted house.' },
+      { name: 'Mage Knight', note: 'Map tiles are revealed as heroes explore, bringing new sites and enemies.' },
+      { name: 'Tikal', note: 'Jungle tiles are placed during play, revealing temples to explore.' }
+    ],
+    brief: 'A fixed board vs a modular one: random hex setup changes which spots are strong. Then exploration: an explorer flips face-down tiles to reveal resources and dangers. End with three different maps from the same tiles.'
+  },
   /* Economy & Actions */
   { id: 'resource-conversion', family: 'economy', title: 'Resource Conversion', file: null,
     hook: 'Turn wood into planks, planks into furniture, furniture into points.',
