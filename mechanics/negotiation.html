@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Negotiation &amp; Trading</title>
+<style>
+:root{--bg:#0e1a24;--panel:#17293a;--panel2:#1f3549;--line:#335171;--ink:#f1f5f9;--muted:#9fb3c8;
+  --lantern:#ffb84d;--lantern2:#c97f1f;--good:#6fdc8c;--bad:#ff6b6b;--paper:#f7ecd2;--paperInk:#3b2a14;
+  --jade:#3ccf8e;--jadeD:#1c8a5a;--amber:#ff9f43;--amberD:#c26a14;--cobalt:#4f8cff;--cobaltD:#2552b8;--rose:#ff6fa8;--roseD:#c23a72}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 70% 0%,#1d3a52 0%,#0e1a24 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 100%,rgba(255,184,77,.10),transparent 55%)}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:20px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka",sans-serif;font-weight:600;font-size:38px;letter-spacing:.3px;color:var(--lantern)}
+#header p{margin:6px 0 0;font-size:21px;color:var(--muted);max-width:1190px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+#title .big{font-family:"Fredoka",sans-serif;font-weight:700;font-size:96px;line-height:1;margin:0;
+  background:linear-gradient(90deg,var(--jade),var(--amber),var(--cobalt),var(--rose));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:32px;font-weight:700;color:var(--ink)}
+#title .shake{display:flex;gap:26px;margin:18px 0 10px;align-items:center}
+#title .shake .chip{width:58px;height:58px}
+#title .shake .chip:nth-child(1){animation:swapL 2.4s ease-in-out infinite}
+#title .shake .chip:nth-child(3){animation:swapR 2.4s ease-in-out infinite}
+#title .shake .arrows{font-size:54px;color:var(--lantern);font-weight:900}
+@keyframes swapL{0%,20%{transform:none}50%,70%{transform:translateX(168px) rotate(180deg)}100%{transform:none}}
+@keyframes swapR{0%,20%{transform:none}50%,70%{transform:translateX(-168px) rotate(-180deg)}100%{transform:none}}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* goods chips */
+.chip{display:inline-block;width:32px;height:32px;flex:none}
+.chip.jade{background:linear-gradient(160deg,#8ff0c0,var(--jade) 45%,var(--jadeD));clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)}
+.chip.amber{background:radial-gradient(circle at 35% 30%,#ffe0b0,var(--amber) 50%,var(--amberD));border-radius:50%}
+.chip.cobalt{background:linear-gradient(160deg,#b9d1ff,var(--cobalt) 45%,var(--cobaltD));clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.chip.rose{background:linear-gradient(160deg,#ffc2da,var(--rose) 45%,var(--roseD));border-radius:9px}
+.chips{display:flex;gap:8px;align-items:center;filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))}
+.chip.new{animation:arrive .5s .75s both}
+@keyframes arrive{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:none}}
+#fx{position:absolute;inset:0;pointer-events:none;z-index:40}
+#fx .chip{position:absolute;filter:drop-shadow(0 6px 6px rgba(0,0,0,.5));transition:left .8s cubic-bezier(.5,-.2,.4,1.2),top .8s cubic-bezier(.5,-.6,.4,1.4)}
+
+/* score track */
+#track{left:60px;right:60px;top:146px;height:70px}
+#track .rail{position:absolute;left:60px;right:60px;top:20px;height:8px;border-radius:4px;background:linear-gradient(90deg,#28445f,#3b6286)}
+#track .tick{position:absolute;top:36px;width:40px;margin-left:-20px;text-align:center;font-size:20px;font-weight:800;color:var(--muted)}
+#track .tick.goal{color:var(--lantern)}
+#track .flag{position:absolute;left:1124px;top:10px;font-size:18px;font-weight:900;color:#1b1206;background:var(--lantern);padding:2px 10px;border-radius:10px;
+  box-shadow:0 0 16px rgba(255,184,77,.55)}
+.mk{position:absolute;top:6px;width:36px;height:36px;margin-left:-18px;border-radius:50%;border:3px solid #0e1a24;
+  display:flex;align-items:center;justify-content:center;font-family:"Fredoka",sans-serif;font-weight:700;font-size:19px;color:#0e1a24;
+  box-shadow:0 4px 10px rgba(0,0,0,.5);transition:left .9s cubic-bezier(.3,1.4,.5,1),transform .4s}
+.mk.lift{transform:translateY(-10px)}
+
+/* seats */
+#seats{left:0;right:0;top:440px;height:240px;transition:opacity .6s,transform .6s}
+#seats.away{opacity:0!important;transform:translateY(40px)}
+.seat{position:absolute;top:0;width:285px;height:236px;border-radius:20px;padding:14px 16px;
+  background:linear-gradient(170deg,var(--panel2),var(--panel));border:2px solid var(--line);
+  box-shadow:0 14px 34px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.07);transition:box-shadow .5s,border-color .5s,opacity .5s,filter .5s}
+.seat.hl{border-color:var(--lantern);box-shadow:0 0 0 3px rgba(255,184,77,.35),0 14px 34px rgba(0,0,0,.45)}
+.seat.dim{opacity:.45;filter:saturate(.5)}
+.seat.shun{border-color:var(--bad);box-shadow:0 0 0 3px rgba(255,107,107,.35),0 14px 34px rgba(0,0,0,.45)}
+.top{display:flex;align-items:center;gap:12px;height:62px}
+.av{width:60px;height:60px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;position:relative;
+  font-family:"Fredoka",sans-serif;font-weight:700;font-size:30px;color:#0e1a24;box-shadow:inset 0 -6px 0 rgba(0,0,0,.2),0 4px 10px rgba(0,0,0,.4)}
+.av::after{content:"";position:absolute;top:-7px;left:12px;right:12px;height:12px;border-radius:8px 8px 3px 3px;background:rgba(0,0,0,.35)}
+.who{flex:1;line-height:1.1}
+.who b{display:block;font-size:27px;font-family:"Fredoka",sans-serif;font-weight:600}
+.who span{font-size:19px;color:var(--muted)}
+.vp{font-family:"Fredoka",sans-serif;font-weight:700;font-size:30px;color:var(--lantern);text-align:right;line-height:1}
+.vp small{display:block;font-size:16px;color:var(--muted);font-family:"Nunito",sans-serif;font-weight:800}
+.vp.pop{animation:pop .6s .5s ease}
+@keyframes pop{50%{transform:scale(1.35);color:#fff}}
+.goods{display:flex;align-items:center;gap:10px;height:48px;margin-top:8px}
+.goods>span{font-size:19px;color:var(--muted);width:62px}
+.order{position:relative;margin-top:10px;height:80px;border-radius:12px;background:var(--paper);color:var(--paperInk);padding:8px 12px;
+  box-shadow:0 4px 10px rgba(0,0,0,.35);opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s}
+.order.on{opacity:1;transform:none}
+.order .ot{font-size:16px;font-weight:900;letter-spacing:1.5px;color:#8a6a3a}
+.order .on2{display:flex;align-items:center;gap:8px;font-size:21px;font-weight:800;margin-top:4px}
+.order .on2 .chip{width:24px;height:24px}
+.stamp{position:absolute;right:8px;top:4px;padding:1px 8px;border:3px solid #1f8a4c;color:#1f8a4c;border-radius:8px;font-weight:900;font-size:17px;
+  transform:rotate(-10deg) scale(2);opacity:0;transition:opacity .3s,transform .45s cubic-bezier(.3,1.6,.5,1);background:rgba(247,236,210,.9)}
+.order.filled .stamp{opacity:1;transform:rotate(-6deg)}
+.order .on2{transition:opacity .4s}.order.filled .on2{opacity:.4}
+.tag{position:absolute;right:12px;bottom:-17px;padding:4px 12px;border-radius:12px;background:var(--bad);color:#fff;font-weight:900;font-size:19px;
+  box-shadow:0 4px 12px rgba(0,0,0,.4);opacity:0;transform:scale(.5);transition:opacity .4s .8s,transform .45s .8s cubic-bezier(.3,1.6,.5,1)}
+.tag.on{opacity:1;transform:none}
+
+/* speech bubbles */
+.bub{position:absolute;bottom:302px;width:270px;margin-left:-135px;min-height:64px;border-radius:20px;padding:12px 16px;
+  background:#fdfaf2;color:#1d2733;font-size:22px;font-weight:800;line-height:1.25;text-align:center;
+  box-shadow:0 8px 20px rgba(0,0,0,.45);opacity:0;transform:translateY(12px) scale(.85);transform-origin:50% 100%;
+  transition:opacity .4s,transform .45s cubic-bezier(.3,1.6,.5,1);z-index:20}
+.bub::after{content:"";position:absolute;left:50%;bottom:-16px;margin-left:-12px;border:12px solid transparent;border-top:16px solid #fdfaf2;border-bottom:0}
+.bub.on{opacity:1;transform:none}
+.bub.d1{transition-delay:.7s}.bub.d2{transition-delay:1.1s}.bub.d3{transition-delay:1.5s}
+.bub.yes{background:#dff8e6}.bub.yes::after{border-top-color:#dff8e6}
+.bub.no{background:#ffe1e1}.bub.no::after{border-top-color:#ffe1e1}
+.bub .chip{width:22px;height:22px;vertical-align:-4px}
+.bub .k{display:block;font-size:16px;letter-spacing:1.5px;font-weight:900;margin-bottom:2px}
+.bub.yes .k{color:#1f8a4c}.bub.no .k{color:#c0392b}.bub.say .k{color:#5b6b7d}
+
+/* rule card */
+#rule{left:200px;right:200px;top:250px;height:160px;border-radius:22px;padding:22px 34px;background:linear-gradient(170deg,#203a52,#152839);
+  border:2px solid var(--lantern2);box-shadow:0 18px 40px rgba(0,0,0,.5);text-align:center}
+#rule .rt{font-size:18px;font-weight:900;letter-spacing:3px;color:var(--lantern)}
+#rule .r1{font-size:27px;font-weight:800;margin-top:8px}
+#rule .r2{font-size:24px;margin-top:10px;color:var(--muted)}
+#rule .r2 b{color:var(--good)}
+
+/* IOU note */
+#iou{left:50px;top:250px;width:250px;height:150px;border-radius:6px;background:var(--paper);color:var(--paperInk);padding:14px 16px;
+  box-shadow:0 10px 24px rgba(0,0,0,.5);transform:rotate(-4deg);font-family:"IM Fell English",serif;z-index:15}
+#iou .it{font-size:28px;font-weight:700;letter-spacing:2px}
+#iou .ib{font-size:21px;line-height:1.3;margin-top:4px;font-family:"Nunito",sans-serif;font-weight:700}
+#iou .broke{position:absolute;left:30px;top:48px;padding:4px 14px;border:4px solid #c0392b;color:#c0392b;font-family:"Nunito",sans-serif;
+  font-weight:900;font-size:30px;letter-spacing:2px;border-radius:8px;background:rgba(247,236,210,.85);transform:rotate(-14deg) scale(2.2);opacity:0;
+  transition:opacity .3s .5s,transform .45s .5s cubic-bezier(.3,1.6,.5,1)}
+#iou.broken .broke{opacity:1;transform:rotate(-14deg)}
+#iou.broken .ib{opacity:.5;text-decoration:line-through}
+
+/* ledger */
+#ledger{left:50px;right:50px;top:240px;height:440px;display:flex;gap:40px;justify-content:center}
+.lc{width:560px;height:430px;border-radius:22px;padding:22px 28px;background:linear-gradient(170deg,var(--panel2),var(--panel));
+  border:2px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.5);position:relative;opacity:0;transform:translateY(20px);transition:opacity .5s,transform .5s}
+#ledger.on .lc{opacity:1;transform:none}
+#ledger.on .lc:nth-child(2){transition-delay:.9s}
+.lc h3{margin:0 0 14px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:30px}
+.lr{display:flex;align-items:center;gap:12px;font-size:23px;padding:10px 0;border-bottom:1px solid #2b4762}
+.lr .nm{width:76px;font-weight:900}
+.lr .ar{flex:1}
+.lr .ok{color:var(--good);font-weight:900}
+.lr .ko{color:var(--bad);font-weight:900}
+.verdict{position:absolute;left:28px;right:28px;bottom:22px;height:74px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+  font-family:"Fredoka",sans-serif;font-weight:700;font-size:32px;letter-spacing:1px}
+.verdict.y{background:rgba(111,220,140,.16);border:3px solid var(--good);color:var(--good)}
+.verdict.n{background:rgba(255,107,107,.16);border:3px solid var(--bad);color:var(--bad)}
+
+/* dial */
+#dial{left:40px;right:40px;top:150px;height:540px}
+#dial svg{position:absolute;left:440px;top:0;width:320px;height:190px}
+#needle{transform-origin:160px 170px;transform:rotate(-62deg);transition:transform 1.6s .5s cubic-bezier(.4,1.5,.5,1)}
+#dial.on #needle{transform:rotate(58deg)}
+.side{position:absolute;top:200px;width:520px;height:300px;border-radius:22px;padding:20px 26px;background:linear-gradient(170deg,var(--panel2),var(--panel));
+  border:2px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.5);transition:border-color .6s 1.6s,box-shadow .6s 1.6s}
+.side.l{left:40px}.side.r{right:40px}
+#dial.on .side.r{border-color:var(--lantern);box-shadow:0 0 0 3px rgba(255,184,77,.3),0 16px 40px rgba(0,0,0,.5)}
+.side h3{margin:0;font-family:"Fredoka",sans-serif;font-weight:600;font-size:32px}
+.side .sub{font-size:20px;color:var(--muted);margin:2px 0 10px}
+.side ul{margin:0;padding-left:24px}
+.side li{font-size:22px;margin:8px 0;line-height:1.3}
+.here{position:absolute;right:20px;top:18px;font-size:18px;font-weight:900;color:#1b1206;background:var(--lantern);padding:3px 10px;border-radius:10px;
+  opacity:0;transition:opacity .4s 1.9s}
+#dial.on .here{opacity:1}
+#dial .dl{position:absolute;top:150px;font-size:20px;font-weight:900;color:var(--muted)}
+
+/* end */
+#end{inset:0;background:rgba(6,12,18,.84);display:flex;align-items:center;justify-content:center;z-index:50}
+#end .card{background:linear-gradient(170deg,#1f3549,#152839);border:2px solid var(--lantern2);border-radius:24px;padding:34px 48px;width:1000px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+#end h2{margin:0 0 14px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:40px;color:var(--lantern)}
+#end li{font-size:23px;margin:14px 0;line-height:1.35}
+#end b{color:var(--lantern)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted)}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:60}
+#dots i{width:9px;height:9px;border-radius:50%;background:#2c4560;transition:background .3s,transform .3s}
+#dots i.on{background:var(--lantern);transform:scale(1.4)}
+#hint{position:absolute;bottom:6px;left:20px;font-size:13px;color:#5d7690;z-index:60}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Negotiation &amp; Trading</div>
+    <h2>Anything can be offered. Deals are made at the table.</h2>
+    <div class="shake"><i class="chip jade"></i><span class="arrows">⇄</span><i class="chip amber"></i></div>
+    <div class="press">Press SPACE to open the market</div>
+  </div>
+
+  <div id="track" class="panel"><div class="rail"></div><div class="flag">WIN</div></div>
+
+  <div id="rule" class="panel">
+    <div class="rt">THE ONE RULE OF THE MARKET</div>
+    <div class="r1">On your turn, offer anything: goods, promises, favors.</div>
+    <div class="r2">A trade happens only when <b>both</b> players say yes.</div>
+  </div>
+
+  <div id="iou" class="panel"><div class="it">I.O.U.</div><div class="ib">Rue owes Pell<br>2 Cobalt, next turn.</div><div class="broke">BROKEN</div></div>
+
+  <div id="seats" class="panel"></div>
+  <div id="bubs"></div>
+
+  <div id="ledger" class="panel">
+    <div class="lc">
+      <h3>Deal A · Ivo ⇄ Pell</h3>
+      <div class="lr"><span class="nm">Ivo</span><span class="ar">5 → 7 VP</span><span class="ok">gains</span></div>
+      <div class="lr"><span class="nm">Pell</span><span class="ar">4 → 6 VP</span><span class="ok">gains</span></div>
+      <div class="lr"><span class="nm">Mara</span><span class="ar">still the leader at 8</span><span class="ok">no win</span></div>
+      <div class="verdict y">BOTH GAIN → DEAL</div>
+    </div>
+    <div class="lc">
+      <h3>Offer B · Mara ⇄ Rue</h3>
+      <div class="lr"><span class="nm">Rue</span><span class="ar">3 → 5 VP</span><span class="ok">+2</span></div>
+      <div class="lr"><span class="nm">Mara</span><span class="ar">8 → 10 VP</span><span class="ko">wins</span></div>
+      <div class="lr"><span class="nm">Rue</span><span class="ar">real result: the game ends</span><span class="ko">loses</span></div>
+      <div class="verdict n">ONE SIDE LOSES → REFUSED</div>
+    </div>
+  </div>
+
+  <div id="dial" class="panel">
+    <svg viewBox="0 0 320 190">
+      <defs><linearGradient id="dg" x1="0" x2="1"><stop offset="0" stop-color="#4f8cff"/><stop offset="1" stop-color="#ff6b6b"/></linearGradient></defs>
+      <path d="M30 170 A130 130 0 0 1 290 170" fill="none" stroke="url(#dg)" stroke-width="22" stroke-linecap="round"/>
+      <g id="needle"><line x1="160" y1="170" x2="160" y2="62" stroke="#ffb84d" stroke-width="8" stroke-linecap="round"/></g>
+      <circle cx="160" cy="170" r="16" fill="#ffb84d" stroke="#0e1a24" stroke-width="4"/>
+    </svg>
+    <div class="dl" style="left:330px">BINDING</div>
+    <div class="dl" style="left:770px">NON-BINDING</div>
+    <div class="side l">
+      <h3>Binding deals</h3>
+      <div class="sub">The rules enforce every promise.</div>
+      <ul><li>A promise is part of the trade, paid when due.</li><li>Deals are safe and quick.</li><li>Less bluffing, calmer table.</li></ul>
+    </div>
+    <div class="side r">
+      <div class="here">THIS MARKET</div>
+      <h3>Non-binding deals</h3>
+      <div class="sub">Only goods handed over now are real.</div>
+      <ul><li>Promises can be broken, like Rue's I.O.U.</li><li>Trust and reputation become resources.</li><li>More drama, betrayal and table talk.</li></ul>
+    </div>
+  </div>
+
+  <div id="fx"></div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li><b>A trade needs two yeses.</b> Give players different goods and different needs, so that both sides can gain from the same deal.</li>
+      <li><b>Players judge a deal against the scoreboard,</b> not just their own gain. The leader gets frozen out, a catch-up system you never had to write.</li>
+      <li><b>Binding vs non-binding is a dial.</b> Enforce promises for calm, fast trading. Let them break for drama, trust and betrayal.</li>
+    </ul>
+    <div class="see">You'll see this in: Catan, Diplomacy, Bohnanza, Chinatown.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">SPACE / click ▸ next &nbsp;·&nbsp; ← back &nbsp;·&nbsp; R restart</div>
+</div>
+
+<script>
+const S=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+const dotsEl=$('dots');
+const P=[
+  {id:'ivo', name:'Ivo', good:'jade',  need:'amber',col:'var(--jade)'},
+  {id:'pell',name:'Pell',good:'amber', need:'jade', col:'var(--amber)'},
+  {id:'rue', name:'Rue', good:'cobalt',need:'rose', col:'var(--cobalt)'},
+  {id:'mara',name:'Mara',good:'rose',  need:'any',  col:'var(--rose)'}
+];
+const GN={jade:'Jade',amber:'Amber',cobalt:'Cobalt',rose:'Rose'};
+const SX=[32,342,652,962], CX=SX.map(x=>x+142);
+const chip=g=>`<i class="chip ${g}"></i>`;
+const TX=v=>60+v*104; // track x inside #track (left 60)
+
+// build seats, markers, bubbles, ticks
+$('seats').innerHTML=P.map((p,i)=>`<div class="seat" id="s-${p.id}" style="left:${SX[i]}px">
+  <div class="tag" id="tag-${p.id}">Offers: 3 · Yes: 0</div>
+  <div class="top"><div class="av" style="background:${p.col}">${p.name[0]}</div>
+    <div class="who"><b>${p.name}</b><span>makes ${GN[p.good]}</span></div>
+    <div class="vp" id="vp-${p.id}">0<small>VP</small></div></div>
+  <div class="goods"><span>Goods</span><div class="chips" id="g-${p.id}"></div></div>
+  <div class="order" id="o-${p.id}"><div class="ot">ORDER · +2 VP</div>
+    <div class="on2">${p.need==='any'?'Need any 2, not Rose':'Need 2 '+GN[p.need]+' '+chip(p.need)+chip(p.need)}</div>
+    <div class="stamp">PAID</div></div>
+</div>`).join('');
+$('bubs').innerHTML=P.map((p,i)=>`<div class="bub" id="b-${p.id}" style="left:${CX[i]}px"></div>`).join('');
+let tk='';for(let v=0;v<=10;v++)tk+=`<div class="tick${v===10?' goal':''}" style="left:${TX(v)}px">${v}</div>`;
+$('track').insertAdjacentHTML('beforeend',tk+P.map(p=>`<div class="mk" id="m-${p.id}" style="background:${p.col}">${p.name[0]}</div>`).join(''));
+
+const INIT=()=>({title:false,seats:false,away:false,track:false,orders:false,rule:false,iou:0,ledger:false,dial:false,end:false,tag:false,
+  inv:{ivo:{jade:4},pell:{amber:4},rue:{cobalt:4},mara:{rose:4}},score:{ivo:5,pell:4,rue:3,mara:8},filled:{},bub:{},hl:[],dim:[],shun:false,lift:[]});
+let st,cur=0,token=0;
+
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+const tog=(id,on)=>$(id).classList.toggle('on',!!on);
+
+function render(instant){
+  tog('title',st.title);tog('seats',st.seats);$('seats').classList.toggle('away',st.away);
+  tog('track',st.track);tog('rule',st.rule);tog('ledger',st.ledger);tog('dial',st.dial);tog('end',st.end);
+  tog('iou',st.iou>0);$('iou').classList.toggle('broken',st.iou===2);
+  P.forEach(p=>{
+    const s=$('s-'+p.id);
+    s.classList.toggle('hl',st.hl.includes(p.id));s.classList.toggle('dim',st.dim.includes(p.id));
+    s.classList.toggle('shun',p.id==='mara'&&st.shun);
+    tog('tag-'+p.id,p.id==='mara'&&st.tag);
+    // goods
+    const g=$('g-'+p.id),inv=st.inv[p.id];
+    const list=[];Object.keys(inv).forEach(k=>{for(let n=0;n<inv[k];n++)list.push(k)});
+    const key=list.join(',');
+    if(g.dataset.k!==key){
+      const old=(g.dataset.k||'').split(',').filter(Boolean),cnt={};old.forEach(k=>cnt[k]=(cnt[k]||0)+1);
+      g.innerHTML=list.map(k=>{const isNew=!(cnt[k]>0);if(!isNew)cnt[k]--;return `<i class="chip ${k}${isNew&&!instant&&g.dataset.k!==undefined?' new':''}"></i>`}).join('');
+      g.dataset.k=key;
+    }
+    // score
+    const vp=$('vp-'+p.id),val=st.score[p.id];
+    if(vp.dataset.v!==String(val)){vp.innerHTML=val+'<small>VP</small>';
+      if(!instant&&vp.dataset.v!==undefined){vp.classList.remove('pop');void vp.offsetWidth;vp.classList.add('pop')}
+      vp.dataset.v=val}
+    const o=$('o-'+p.id);o.classList.toggle('on',st.orders);o.classList.toggle('filled',!!st.filled[p.id]);
+    const m=$('m-'+p.id);m.style.left=TX(val)+'px';m.classList.toggle('lift',st.lift.includes(p.id));
+    // bubble
+    const b=$('b-'+p.id),bb=st.bub[p.id];
+    if(bb){const html=`<span class="k">${bb.k==='yes'?'YES':bb.k==='no'?'NO':'OFFER'}</span>${bb.t}`;
+      const cls='bub on '+bb.k+(bb.d?' d'+bb.d:'');
+      if(b.dataset.h!==html){b.className='bub';if(!instant)void b.offsetWidth;b.innerHTML=html;b.dataset.h=html}
+      b.className=cls;
+    }else{b.className='bub';b.dataset.h=''}
+  });
+}
+
+// flying goods: from seat goods row to a target element
+function fly(from,to,good,n,instant){
+  if(instant)return;const my=token;
+  const sr=S.getBoundingClientRect(),sc=sr.width/1280;
+  const r=el=>{const b=el.getBoundingClientRect();return{x:(b.left-sr.left)/sc,y:(b.top-sr.top)/sc,w:b.width/sc}};
+  const a=r($('g-'+from)),t=r(to);
+  for(let i=0;i<n;i++){
+    const c=document.createElement('i');c.className='chip '+good;
+    Object.assign(c.style,{left:(a.x+a.w-40-i*40)+'px',top:(a.y+8)+'px',transitionDelay:(i*90)+'ms'});
+    $('fx').appendChild(c);void c.offsetWidth;
+    Object.assign(c.style,{left:(t.x+20+i*40)+'px',top:(t.y+8)+'px'});
+    setTimeout(()=>{if(my===token)c.remove()},1100+i*90);
+  }
+}
+
+function reset(){st=INIT();$('fx').innerHTML='';setHeader('','')}
+
+const steps=[
+ ()=>{st.title=true;setHeader('','')},
+ ()=>{st.title=false;st.seats=true;
+   setHeader('Four merchants, four different goods','Ivo makes Jade, Pell makes Amber, Rue makes Cobalt, Mara makes Rose. Each starts with 4 of their own.')},
+ ()=>{st.orders=true;st.track=true;
+   setHeader('Everyone needs what someone else has','Each order pays +2 VP, but only with goods you do not make. First to 10 VP wins. Mara leads with 8.')},
+ ()=>{st.rule=true;
+   setHeader('The rule is short: anything can be offered','There is no fixed price. Players invent the deal, and either side can walk away.')},
+ ()=>{st.rule=false;st.hl=['ivo','pell'];st.bub={ivo:{k:'say',t:`2 Jade ${chip('jade')} for 2 Amber ${chip('amber')}?`}};
+   setHeader('Ivo makes an offer','Ivo needs Amber. Pell needs Jade. Each has spare goods the other wants.')},
+ (instant)=>{st.bub={ivo:{k:'say',t:`2 Jade ${chip('jade')} for 2 Amber ${chip('amber')}?`},pell:{k:'yes',t:'I need Jade. Deal!'}};
+   st.inv.ivo={jade:2,amber:2};st.inv.pell={amber:2,jade:2};
+   fly('ivo',$('g-pell'),'jade',2,instant);fly('pell',$('g-ivo'),'amber',2,instant);
+   setHeader('Both say yes, so the goods change hands','Pell checks one thing: does this help me? Yes. Ivo asks the same question. Yes again.')},
+ (instant)=>{st.bub={};st.inv.ivo={jade:2};st.inv.pell={amber:2};st.filled={ivo:1,pell:1};st.score.ivo=7;st.score.pell=6;
+   fly('ivo',$('o-ivo'),'amber',2,instant);fly('pell',$('o-pell'),'jade',2,instant);
+   setHeader('A good trade: both players gain','Ivo goes 5 → 7 VP and Pell goes 4 → 6 VP. Nobody reaches 10, so nobody at the table is hurt.')},
+ ()=>{st.hl=['mara','rue'];st.lift=['mara'];
+   st.bub={mara:{k:'say',t:`2 Rose ${chip('rose')} for 2 Cobalt ${chip('cobalt')}? You need Rose.`},rue:{k:'no',t:"And you'd hit 10 and win. No.",d:1}};
+   setHeader('Mara offers the same kind of deal, and Rue refuses','It is a fair swap that gives Rue +2 VP. But it also gives Mara her +2, and 8 + 2 = 10.')},
+ ()=>{st.hl=[];st.dim=[];st.shun=true;st.tag=true;
+   st.bub={mara:{k:'say',t:`Fine! 3 Rose ${chip('rose')} for any 2 goods. Anyone?`},
+     ivo:{k:'no',t:'Not if it wins you the game.',d:1},pell:{k:'no',t:'I am not helping the leader.',d:2},rue:{k:'no',t:'Still no.',d:3}};
+   setHeader('The leader finds no one willing to trade','Mara sweetens the offer and asks everyone. Three offers, zero takers. Her lead is now her problem.')},
+ ()=>{st.bub={};st.away=true;st.ledger=true;st.shun=false;st.tag=false;st.lift=[];
+   setHeader('A trade happens only when both sides think they gain','Same swap, opposite answers. Points are not a gain if they hand someone else the win.')},
+ (instant)=>{st.ledger=false;st.away=false;st.hl=['rue','pell'];st.iou=1;
+   st.bub={rue:{k:'say',t:`Give me 1 Amber ${chip('amber')} now. I'll pay 2 Cobalt next turn.`},pell:{k:'yes',t:'OK. I trust you.',d:1}};
+   st.inv.pell={amber:1};st.inv.rue={cobalt:4,amber:1};fly('pell',$('g-rue'),'amber',1,instant);
+   setHeader('Deals can include promises','Pell hands over 1 Amber now. Rue only promises the 2 Cobalt. The I.O.U. is just words on paper.')},
+ ()=>{st.iou=2;st.bub={rue:{k:'no',t:'Pay you? I changed my mind.'},pell:{k:'no',t:'I will never trade with you again.',d:1}};
+   setHeader('And some deals are broken','Nothing in the rules forces Rue to pay. Rue keeps 4 Cobalt plus the Amber. Pell learns who to trust.')},
+ ()=>{st.bub={};st.away=true;st.dial=true;st.track=false;st.iou=0;st.hl=[];
+   setHeader('A designer dial: binding or non-binding?','You decide whether the rules enforce promises. This market sits on the non-binding side, so betrayal was legal.')},
+ ()=>{st.end=true;setHeader('','')}
+];
+const run=(i,instant)=>{steps[i](instant);render(instant)};
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  render(true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;run(cur,false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>
