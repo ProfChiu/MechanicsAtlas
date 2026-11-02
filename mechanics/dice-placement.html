@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Dice Placement</title>
+<style>
+:root{--deep:#0c1d15;--leaf:#173826;--panel:#163024;--line:#2f5a42;--ink:#f3f1e6;--muted:#a8c4b0;
+  --cream:#f5ecd6;--cream2:#e6d6b0;--pot:#a4532f;--potd:#5c2a14;--brown:#2e1d0f;--gold:#ffc53d;
+  --rose:#e5484d;--iris:#6e6ade;--green:#30a46c}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 70% 8%,#24583a 0%,#122c1f 45%,#0c1d15 80%) fixed}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none;
+  background:linear-gradient(90deg,rgba(255,255,255,.025) 2px,transparent 2px) 0 0/160px 160px,
+             linear-gradient(rgba(255,255,255,.025) 2px,transparent 2px) 0 0/160px 160px}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:20px;z-index:40}
+#header h1{margin:0;font-size:36px;letter-spacing:.3px;font-family:"Fredoka","Nunito",sans-serif;font-weight:600}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+
+/* dice */
+.die{display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);aspect-ratio:1;border-radius:18%;padding:13%;
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.28),inset 0 3px 0 rgba(255,255,255,.25),0 4px 10px rgba(0,0,0,.4)}
+.die.r{background:var(--rose)}.die.b{background:var(--iris)}.die.w{background:#f3efe2}
+.die.w .pip{background:#2e1d0f}
+.pip{width:74%;height:74%;border-radius:50%;background:#fff;place-self:center;box-shadow:inset 0 1px 2px rgba(0,0,0,.3)}
+.die .q{grid-area:1/1/4/4;place-self:center;font-size:30px;font-weight:900;color:rgba(255,255,255,.85)}
+
+/* title */
+#title{left:0;right:0;top:120px;bottom:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:20}
+#title .big{font-size:96px;font-weight:600;margin:0;line-height:1.05;text-align:center;font-family:"Fredoka","Nunito",sans-serif;
+  background:linear-gradient(90deg,var(--cream),var(--gold),#9fe0b4);-webkit-background-clip:text;background-clip:text;color:transparent}
+#title .sub{font-size:28px;color:var(--muted);margin:0;text-align:center}
+#title .row{display:flex;gap:34px;margin:20px 0}
+#title .row .die{width:96px;animation:wob 1.6s ease-in-out infinite}
+#title .row .die:nth-child(2){animation-delay:.25s}#title .row .die:nth-child(3){animation-delay:.5s}
+@keyframes wob{0%,100%{transform:rotate(-10deg) translateY(0)}50%{transform:rotate(10deg) translateY(-16px)}}
+#title .press{color:var(--muted);font-size:22px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* action spaces */
+.space{position:absolute;width:400px;height:236px;border-radius:20px;padding:16px 18px;color:var(--brown);
+  background:linear-gradient(160deg,var(--cream),var(--cream2));border:3px solid var(--pot);
+  box-shadow:0 2px 0 #fff8e6 inset,0 -6px 0 rgba(92,42,20,.18) inset,0 12px 26px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.4);
+  opacity:0;transform:translateY(20px) scale(.92);transition:opacity .5s,transform .5s cubic-bezier(.3,1.5,.5,1),box-shadow .5s}
+.space.on{opacity:1;transform:none}
+.space .ic{font-size:40px;line-height:1}
+.space .nm{font-size:27px;font-weight:900;margin-top:6px;font-family:"Fredoka","Nunito",sans-serif;font-weight:600}
+.space .rq{display:inline-block;margin-top:8px;font-size:20px;font-weight:800;padding:3px 10px;border-radius:10px;
+  background:rgba(164,83,47,.14);border:2px solid rgba(164,83,47,.45);max-width:196px;line-height:1.25}
+.space .rw{font-size:21px;font-weight:900;margin-top:10px;color:#1f6b3f;max-width:196px;line-height:1.25}
+.space .slot{position:absolute;right:16px;top:50%;width:160px;height:96px;margin-top:-48px;border-radius:18px;
+  border:3px dashed rgba(164,83,47,.55);background:rgba(164,83,47,.08)}
+.space .shade{position:absolute;inset:0;border-radius:17px;background:rgba(12,29,21,.5);opacity:0;transition:opacity .5s .45s}
+.space .lock{position:absolute;top:-16px;right:-14px;width:46px;height:46px;border-radius:50%;background:#1b2e24;border:3px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;font-size:22px;opacity:0;transform:scale(.3);
+  transition:opacity .4s .5s,transform .45s .5s cubic-bezier(.3,1.8,.5,1);box-shadow:0 4px 10px rgba(0,0,0,.5)}
+.space.taken .shade{opacity:1}.space.taken .lock{opacity:1;transform:none}
+.space.flash{box-shadow:0 0 0 6px var(--rose),0 0 30px var(--rose);animation:shake .5s .2s 2}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.space.glow{box-shadow:0 0 0 5px var(--gold),0 0 34px rgba(255,197,61,.7)}
+.space .pts{position:absolute;right:16px;width:160px;text-align:center;top:180px;font-size:22px;font-weight:900;padding:2px 12px;border-radius:12px;color:#fff;
+  background:var(--c,#1f6b3f);opacity:0;transform:scale(.4);transition:opacity .4s .7s,transform .45s .7s cubic-bezier(.3,1.8,.5,1);z-index:3}
+.space .pts.on{opacity:1;transform:none}
+
+/* players */
+.pl{position:absolute;left:880px;width:360px;height:220px;border-radius:18px;background:linear-gradient(160deg,#1d3f2c,#132b1f);
+  border:2px solid var(--line);border-left:10px solid var(--c);box-shadow:0 8px 20px rgba(0,0,0,.4);
+  opacity:0;transform:translateX(30px);transition:opacity .5s,transform .5s}
+.pl.on{opacity:1;transform:none}
+.pl .nm{position:absolute;left:16px;top:10px;font-size:26px;font-weight:900;color:var(--c)}
+.pl .sc{position:absolute;right:16px;top:10px;font-size:26px;font-weight:900;color:var(--gold)}
+.pl .sc.pop{animation:pop .5s both}
+.pl .ph{position:absolute;top:56px;width:68px;height:68px;border-radius:14px;border:2px dashed rgba(168,196,176,.35)}
+.pl .rl{position:absolute;left:16px;top:138px;font-size:20px;color:var(--muted);font-weight:700}
+.pl .bd{position:absolute;left:16px;top:172px;right:12px;font-size:20px;font-weight:800}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:none;opacity:1}}
+
+.dd{position:absolute;width:64px;z-index:15;opacity:0;
+  transition:left .75s cubic-bezier(.5,-.2,.3,1.2),top .75s cubic-bezier(.5,-.2,.3,1.2),opacity .4s}
+.dd.on{opacity:1}
+.dd.roll .die{animation:tumble .7s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes tumble{0%{transform:rotate(-200deg) scale(.4)}100%{transform:none}}
+
+/* thought bubble */
+#bub{left:880px;top:632px;width:360px;height:54px;border-radius:30px;background:#fff;color:#222;z-index:25;
+  display:flex;align-items:center;justify-content:center;gap:8px;font-size:20px;font-weight:800;
+  box-shadow:0 8px 20px rgba(0,0,0,.45);transform:scale(.6);transition:opacity .4s .3s,transform .5s .3s cubic-bezier(.3,1.6,.5,1)}
+#bub.on{transform:none}
+#bub .want{position:relative;padding:2px 10px;border-radius:10px;background:var(--cream);border:2px solid var(--pot);color:var(--brown)}
+#bub .want::after{content:"";position:absolute;left:-6px;right:-6px;top:50%;height:5px;background:var(--rose);transform:rotate(-12deg);border-radius:3px}
+
+/* overlays */
+.ov{left:40px;right:40px;top:132px;bottom:46px;border-radius:22px;background:#0d1f16;border:2px solid var(--line);z-index:30;
+  padding:24px 40px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.ov .take{font-size:23px;line-height:1.35;text-align:center;margin-top:14px}
+.ov .take b{color:var(--gold)}
+
+#cmp{display:flex;flex-direction:column}
+#cmp .two{display:flex;gap:40px;justify-content:center}
+#cmp .side{width:520px;border-radius:16px;background:#163024;border:2px solid var(--line);padding:16px 22px}
+#cmp .side h3{margin:0;font-size:26px}
+#cmp .side .d{font-size:20px;color:var(--muted);margin:4px 0 6px;line-height:1.3;height:52px}
+#cmp .chart{position:relative;height:200px;border-bottom:3px solid #4d7a60}
+#cmp .bar{position:absolute;bottom:0;width:120px;height:0;border-radius:12px 12px 0 0;transition:height .9s cubic-bezier(.3,1.4,.5,1)}
+#cmp .bar span{position:absolute;top:-34px;left:0;right:0;text-align:center;font-size:26px;font-weight:900}
+#cmp .lab{display:flex;font-size:22px;font-weight:900;margin-top:6px}
+#cmp .lab div{width:120px;text-align:center}
+#cmp .note{font-size:20px;font-weight:800;margin-top:8px}
+
+#map table{border-collapse:separate;border-spacing:8px 5px;margin:0 auto;font-size:22px}
+#map th{font-size:20px;color:var(--muted);font-weight:800;padding:0 10px;text-align:center;line-height:1.2}
+#map td{width:150px;height:48px;text-align:center;font-weight:900;font-size:26px;border-radius:12px;background:#163024;
+  opacity:0;transform:scale(.6);transition:opacity .35s,transform .4s cubic-bezier(.3,1.6,.5,1)}
+#map td.on{opacity:1;transform:none}
+#map td.y{background:rgba(48,164,108,.3);color:#9fe8bd}
+#map td.n{color:#5e7c69}
+#map td.f{background:transparent;width:70px}
+#map td.f .die{width:44px;margin:0 auto}
+#map td.c{width:110px;background:transparent;font-size:24px}
+#map tr.weak td.c{color:var(--gold)}
+#map tr.weak td.f{box-shadow:0 0 0 3px var(--gold)}
+
+#odds .row{display:flex;align-items:center;gap:18px;margin:12px 0}
+#odds .nm{width:330px;font-size:23px;font-weight:800;text-align:right}
+#odds .trk{position:relative;flex:1;height:50px;border-radius:12px;background:#163024;border:2px solid var(--line);overflow:hidden}
+#odds .fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:10px;transition:width 1s cubic-bezier(.3,1.2,.5,1)}
+#odds .val{width:200px;font-size:23px;font-weight:900}
+#odds .row.sum .nm{color:var(--gold)}
+
+/* end */
+#end{inset:0;background:rgba(6,16,11,.86);display:flex;align-items:center;justify-content:center;z-index:50}
+#end .card{background:#163024;border:2px solid #3d6f53;border-radius:24px;padding:34px 48px;width:980px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 14px;font-size:40px;font-family:"Fredoka","Nunito",sans-serif;font-weight:600}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted)}
+
+#dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:60}
+#dots i{width:9px;height:9px;border-radius:50%;background:#2c5240;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+#hint{position:absolute;bottom:8px;left:20px;font-size:13px;color:#5d806a;z-index:60}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <p class="big">Dice Placement</p>
+    <div class="row" id="trow"></div>
+    <p class="sub">The Glasshouse Guild: roll your dice, then plant them.</p>
+    <div class="press">Click or press → to begin</div>
+  </div>
+
+  <div id="board"></div>
+  <div id="players"></div>
+  <div id="dice"></div>
+
+  <div id="bub" class="panel">💭 I wanted the <span class="want">🌱 Seedling Tray</span></div>
+
+  <div id="cmp" class="panel ov">
+    <div class="two">
+      <div class="side"><h3>Board A: only "two dice 10+"</h3>
+        <div class="d">Every space wants a high total. Same rolls as before.</div>
+        <div class="chart"><div class="bar" id="a-r" style="left:70px;background:linear-gradient(var(--rose),#8f2a2e)"><span>4</span></div>
+          <div class="bar" id="a-b" style="left:290px;background:linear-gradient(var(--iris),#3b3790)"><span>0</span></div></div>
+        <div class="lab"><div style="margin-left:70px;color:var(--rose)">Rose</div><div style="margin-left:100px;color:var(--iris)">Iris</div></div>
+        <div class="note" style="color:var(--rose)">Gap 4. Iris's whole turn is wasted.</div></div>
+      <div class="side"><h3>Our board: four kinds of space</h3>
+        <div class="d">Pair, high total, a single 1, and Compost.</div>
+        <div class="chart"><div class="bar" id="b-r" style="left:70px;background:linear-gradient(var(--rose),#8f2a2e)"><span>6</span></div>
+          <div class="bar" id="b-b" style="left:290px;background:linear-gradient(var(--iris),#3b3790)"><span>4</span></div></div>
+        <div class="lab"><div style="margin-left:70px;color:var(--rose)">Rose</div><div style="margin-left:100px;color:var(--iris)">Iris</div></div>
+        <div class="note" style="color:#9fe8bd">Gap 2. The better roll still wins, but every die counts.</div></div>
+    </div>
+    <div class="take">Same dice, same players. Only the board changed.<br>Mixed requirements turned Iris's <b>0</b> into a <b>4</b>.</div>
+  </div>
+
+  <div id="map" class="panel ov">
+    <table id="mapT"></table>
+    <div class="take">Every face has at least two homes. <b>2s and 3s</b> have the fewest,<br>so a designer might add a space that wants them.</div>
+  </div>
+
+  <div id="odds" class="panel ov">
+    <div id="oddsRows"></div>
+    <div class="take">Each special space fits <b>about 4 rolls in 10</b>. 30 of 216 rolls fit none of them.<br>Without Compost, those turns would be a total loss.</div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ul>
+      <li><b>Dice are workers with numbers.</b> The roll decides where each die may go, so luck shapes your options, not your score.</li>
+      <li><b>Mix the requirements.</b> High totals, pairs and low numbers each get their own spaces, so no roll is a total loss.</li>
+      <li><b>Keep the consolation small.</b> Compost pays 1 point, less than any real space, so a good roll still beats a bad one.</li>
+    </ul>
+    <div class="see">You'll see this in: Kingsburg, Alien Frontiers, Grand Austria Hotel, Troyes.</div>
+  </div></div>
+
+  <div id="dots"></div>
+  <div id="hint">← → to step · R restart</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), px=v=>v+'px';
+const PIPS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+const pips=v=>PIPS[v].map(p=>`<span class="pip" style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></span>`).join('');
+const dieHTML=(v,c)=>`<div class="die ${c}">${v?pips(v):'<span class="q">?</span>'}</div>`;
+
+const SP=[
+ {id:'harvest',name:'Great Harvest',icon:'🧺',rq:'Two dice, total 10+',rw:'+4 points'},
+ {id:'twin',   name:'Twin Beds',    icon:'🌷',rq:'A pair of equal dice',rw:'+3 points'},
+ {id:'seed',   name:'Seedling Tray',icon:'🌱',rq:'A single 1',rw:'+2 points'},
+ {id:'compost',name:'Compost Heap', icon:'🍂',rq:'Any one die',rw:'+1 point, always open'}
+];
+const SPX={};SP.forEach((s,i)=>{s.x=40+(i%2)*420;s.y=136+Math.floor(i/2)*262;SPX[s.id]=s});
+$('board').innerHTML=SP.map(s=>`<div class="space" id="sp-${s.id}" style="left:${s.x}px;top:${s.y}px">
+  <div class="ic">${s.icon}</div><div class="nm">${s.name}</div><div class="rq">${s.rq}</div><div class="rw">${s.rw}</div>
+  <div class="slot"></div><div class="shade"></div>${s.id==='compost'?'':'<div class="lock">🔒</div>'}<div class="pts" id="pts-${s.id}"></div></div>`).join('');
+
+const P={r:{name:'Rose',top:136,col:'var(--rose)',roll:[6,5,1]},b:{name:'Iris',top:398,col:'var(--iris)',roll:[2,2,1]}};
+$('players').innerHTML=Object.entries(P).map(([k,p])=>`<div class="pl" id="pl-${k}" style="top:${p.top}px;--c:${p.col}">
+  <div class="nm">${p.name}</div><div class="sc" id="sc-${k}">0 pts</div>
+  ${[0,1,2].map(i=>`<div class="ph" style="left:${18+i*84}px"></div>`).join('')}
+  <div class="rl" id="rl-${k}"></div><div class="bd" id="bd-${k}"></div></div>`).join('');
+const D=['r0','r1','r2','b0','b1','b2'];
+$('dice').innerHTML=D.map(d=>`<div class="dd" id="dd-${d}"></div>`).join('');
+$('trow').innerHTML=dieHTML(6,'r')+dieHTML(1,'w')+dieHTML(2,'b');
+
+// face map
+const FACE=[[1,'y','y','n','y',3],[2,'n','y','n','y',2],[3,'n','y','n','y',2],[4,'n','y','y','y',3],[5,'n','y','y','y',3],[6,'n','y','y','y',3]];
+$('mapT').innerHTML=`<tr><th>Face</th><th>🌱 Seedling<br>(a 1)</th><th>🌷 Twin Beds<br>(pair)</th><th>🧺 Harvest<br>(two dice 10+)</th><th>🍂 Compost<br>(any die)</th><th>Homes</th></tr>`+
+  FACE.map(f=>`<tr class="${f[5]===2?'wk2':''}"><td class="f">${dieHTML(f[0],'w')}</td>${f.slice(1,5).map(c=>`<td class="${c}">${c==='y'?'✓':'–'}</td>`).join('')}<td class="c">${f[5]}</td></tr>`).join('');
+
+// odds (3 dice: 216 rolls)
+const ODDS=[['🌷 A pair',96,'var(--green)'],['🌱 At least one 1',91,'var(--green)'],['🧺 Two dice total 10+',77,'var(--green)'],
+  ['Any special space',186,'var(--gold)'],['🍂 Compost Heap',216,'#c98a4b']];
+$('oddsRows').innerHTML=ODDS.map((o,i)=>`<div class="row${i===3?' sum':''}"><div class="nm">${o[0]}</div><div class="trk"><div class="fill" id="of-${i}" style="background:${o[2]}"></div></div>
+  <div class="val">${o[1]}/216 = ${(o[1]/216*100).toFixed(0)}%</div></div>`).join('');
+
+let cur=0;
+function dieAt(d,x,y){const e=$('dd-'+d);e.style.left=px(x);e.style.top=px(y)}
+function home(d){const p=d[0],k=+d[1];dieAt(d,880+10+18+k*84+2,P[p].top+2+56+2)}
+function face(d,v,roll){const e=$('dd-'+d);e.innerHTML=dieHTML(v,d[0]);e.classList.remove('roll');if(roll){void e.offsetWidth;e.classList.add('roll')}}
+function place(ds,sp,pts,who){const s=SPX[sp];
+  ds.forEach((d,j)=>dieAt(d,s.x+400-16-160+(ds.length===1?48:8+j*80),s.y+118-32));
+  if(sp!=='compost')$('sp-'+sp).classList.add('taken');
+  const t=$('pts-'+sp);t.textContent=`${P[who].name} +${pts}`;t.style.setProperty('--c',who==='r'?'#b8323a':'#4a46b8');t.classList.add('on')}
+function score(p,v,bd,pop){const e=$('sc-'+p);e.textContent=v+' pts';$('bd-'+p).innerHTML=bd;e.classList.remove('pop');if(pop){void e.offsetWidth;e.classList.add('pop')}}
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s;
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){
+  document.querySelectorAll('.panel,.space,.pl,.dd,.pts,#map td,.mapweak').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('.space').forEach(e=>e.classList.remove('taken','flash','glow'));
+  document.querySelectorAll('#map tr').forEach(e=>e.classList.remove('weak'));
+  D.forEach(d=>{home(d);face(d,0)});
+  ['r','b'].forEach(p=>{score(p,0,'');$('rl-'+p).textContent='Not rolled yet'});
+  ['a-r','a-b','b-r','b-b'].forEach(id=>$(id).style.height='0');
+  ODDS.forEach((o,i)=>$('of-'+i).style.width='0');
+}
+const show=id=>$(id).classList.add('on'), hide=id=>$(id).classList.remove('on');
+
+const steps=[
+ ()=>{show('title');
+   setHeader('Dice Placement','Roll your dice, then use them as workers. The number decides where they can go.')},
+ ()=>{hide('title');SP.forEach((s,i)=>{const e=$('sp-'+s.id);e.style.transitionDelay=(i*110)+'ms';e.classList.add('on')});
+   setHeader('The glasshouse: four action spaces','Each space asks for a certain kind of roll. The first three hold one placement each. Compost is always open.')},
+ ()=>{SP.forEach(s=>$('sp-'+s.id).style.transitionDelay='0ms');
+   ['r','b'].forEach((p,i)=>{const e=$('pl-'+p);e.style.transitionDelay=(i*140)+'ms';e.classList.add('on')});
+   D.forEach(d=>$('dd-'+d).classList.add('on'));
+   setHeader('Two players, three dice each','Rose and Iris roll at the start of the round. Then they take turns placing dice. Rose goes first.')},
+ (instant)=>{D.forEach(d=>face(d,P[d[0]].roll[+d[1]],!instant));
+   $('rl-r').textContent='Rolled 6 + 5 + 1 = 12';$('rl-b').textContent='Rolled 2 + 2 + 1 = 5';
+   setHeader('Roll! Rose totals 12, Iris totals 5','On a plain "highest total wins" board, Iris would already have lost. Watch what this board does with a low roll.')},
+ ()=>{place(['r0','r1'],'harvest',4,'r');
+   setHeader('Rose: 6 + 5 = 11 on the Great Harvest','Two dice totaling 10 or more. The high roll pays 4 points, and the space is now locked for Iris.')},
+ ()=>{place(['b0','b1'],'twin',3,'b');
+   setHeader('Iris: 2 + 2 is a pair, so Twin Beds','A pair only needs two equal dice. Low dice count as much as high ones here. Iris scores 3.')},
+ ()=>{place(['r2'],'seed',2,'r');
+   setHeader("Rose's leftover 1: the Seedling Tray",'A 1 is the worst face for totals, but this space wants exactly that. Rose takes it for 2 points.')},
+ ()=>{show('bub');$('sp-seed').classList.add('flash');place(['b2'],'compost',1,'b');
+   setHeader('Iris is blocked, like in worker placement','Iris also had a 1, but Rose got to the Seedling Tray first. The 1 goes to Compost, which takes any die.')},
+ (instant)=>{hide('bub');$('sp-seed').classList.remove('flash');
+   score('r',6,'Harvest 4 + Seedling 2 = 6',!instant);score('b',4,'Twin Beds 3 + Compost 1 = 4',!instant);
+   setHeader('Score: Rose 6, Iris 4','Iris rolled 5 against Rose\'s 12 and still scored 4. Every one of the six dice found a job.')},
+ ()=>{show('cmp');$('a-r').style.height=px(4*30);$('a-b').style.height='0';$('b-r').style.height=px(6*30);$('b-b').style.height=px(4*30);
+   setHeader('Compare two boards with the same rolls','If every space wanted a high total, the dice would decide everything. Mixed requirements keep the low roll in the game.')},
+ ()=>{hide('cmp');show('map');document.querySelectorAll('#map td').forEach((e,i)=>{e.style.transitionDelay=(i*25)+'ms';e.classList.add('on')});
+   document.querySelectorAll('#map tr.wk2').forEach(e=>e.classList.add('weak'));
+   setHeader('Where can each face go?','A 1 has its own space. A 6 helps the Harvest. Pairs and Compost take anything.')},
+ ()=>{hide('map');show('odds');ODDS.forEach((o,i)=>{const f=$('of-'+i);f.style.transitionDelay=(i*150)+'ms';f.style.width=(o[1]/216*100)+'%'});
+   setHeader('How often does each space fit? (3 dice)','There are 6 × 6 × 6 = 216 possible rolls. Count the ones each space can use.')},
+ ()=>{show('end');
+   setHeader('What designers take from this','Three ideas to carry into your own games.')}
+];
+
+const dotsEl=$('dots');
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>
