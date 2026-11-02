@@ -1,5 +1,10 @@
 # Mechanics Atlas — progress log
 
+## 2026-11-02 (final 3: all planned mechanics built)
+- Accomplished: Built Dice Placement (Market / Tower / Forge / Low Road), Negotiation & Trading (four players, a win-win deal, the leader refused, a broken promise) and Take-That (race to 15, attacks on the leader, kingmaking, elimination). Atlas now 32 mechanics, 0 planned, ~132 min. All pass the checker.
+- Decisions: Every planned brief is now built; the "Coming soon" path in index.html is kept for future additions. Invented characters are referred to by name, not pronouns.
+- Next: classroom review of the 12 new animations; consider a "Game Structure" family.
+
 ## 2026-11-02 (3 more, batch 3)
 - Accomplished: Built Pattern Building (5×5 garden, one tile finishes two goals), Pick-Up & Deliver (five towns, greedy vs chained routes) and Supply & Demand Markets (coal track 1–8, three buyers, refill). Atlas now 29 mechanics, 3 planned, ~120 min. All pass the checker.
 - Decisions: Pattern goals: line of 3 (+3), 2×2 block (+4), four corners (+5). Deliver: greedy 7 coins vs chained 13 in the same 4 turns. Market: buyers pay 4 / 8 / 13 for the same 3 coal; refill fills down from the remaining supply.

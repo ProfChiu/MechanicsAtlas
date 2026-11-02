@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Dice Placement</title>
+<style>
+:root{--bg:#131620;--panel:#1f2433;--panel2:#282f42;--ink:#f1f4fa;--muted:#aab4c9;--line:rgba(215,225,250,.14);
+  --red:#ff5d5d;--red2:#c23a3a;--blue:#4f9dff;--blue2:#2a62c4;--gold:#ffcc4d;--ok:#6ee08a;
+  --mk:#e9a23b;--tw:#8d7bff;--fg:#ff7a45;--lr:#4cc9a8}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#262d44 0%,#131620 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+.die{width:58px;height:58px;border-radius:12px;padding:9px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);flex-shrink:0;
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.22),0 5px 10px rgba(0,0,0,.45);transition:opacity .4s,transform .4s}
+.die.R{background:linear-gradient(145deg,#ff9b9b,var(--red) 50%,var(--red2))}
+.die.B{background:linear-gradient(145deg,#9cc8ff,var(--blue) 50%,var(--blue2))}
+.pip{width:72%;height:72%;border-radius:50%;background:#fff;place-self:center}
+.die.used{opacity:.18;transform:scale(.85)}
+.die.roll{animation:tumble .7s cubic-bezier(.25,.8,.35,1) both;animation-delay:var(--d)}
+@keyframes tumble{0%{transform:translateY(-80px) rotate(-220deg) scale(.5);opacity:0}70%{transform:translateY(4px) rotate(8deg);opacity:1}100%{transform:none}}
+.die.land{animation:land .55s cubic-bezier(.3,1.5,.5,1) both;animation-delay:var(--d)}
+@keyframes land{from{transform:translateY(160px) scale(.6);opacity:0}to{transform:none;opacity:1}}
+
+#spaces{left:40px;right:40px;top:134px;height:236px;display:flex;gap:18px}
+.sp{flex:1;padding:14px 16px;position:relative;display:flex;flex-direction:column;border-top:6px solid var(--c);transition:box-shadow .4s}
+.sp .nm{font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600;color:var(--c)}
+.sp .req{font-size:20px;font-weight:800;margin-top:2px}
+.sp .rew{font-size:19px;color:var(--muted);margin-top:2px}
+.sp .rew b{color:var(--gold)}
+.sp .slot{margin-top:auto;height:82px;border-radius:12px;border:2px dashed rgba(215,225,250,.2);display:flex;align-items:center;justify-content:center;gap:8px}
+.sp.full .slot{border-style:solid;border-color:rgba(215,225,250,.35);background:rgba(0,0,0,.2)}
+.sp.block{box-shadow:0 0 0 3px var(--red),0 0 24px rgba(255,93,93,.5),0 12px 32px rgba(0,0,0,.45)}
+.sp .x{position:absolute;right:12px;top:10px;font-size:19px;font-weight:900;color:var(--red);opacity:0}
+.sp.block .x{opacity:1}
+.sp.cons{background:linear-gradient(180deg,#24393a,#1d2a2e)}
+.sp .tag{position:absolute;right:12px;top:12px;font-size:15px;font-weight:900;padding:3px 9px;border-radius:10px;background:rgba(76,201,168,.2);color:var(--lr)}
+.sp.hlc{box-shadow:0 0 0 3px var(--ok),0 0 22px rgba(110,224,138,.45),0 12px 32px rgba(0,0,0,.45)}
+
+#players{left:40px;right:40px;top:388px;height:156px;display:flex;gap:24px}
+.pl{flex:1;padding:14px 20px;display:flex;flex-direction:column;transition:box-shadow .4s}
+.pl .nm{font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600}
+.pl .row{display:flex;gap:12px;margin-top:10px;align-items:center}
+.pl .gain{margin-left:auto;display:flex;gap:16px;font-size:20px;font-weight:800}
+.pl .gain b{font-family:"Fredoka",sans-serif;font-size:30px;color:var(--gold)}
+.pl .first{font-size:17px;font-weight:900;padding:3px 10px;border-radius:10px;background:var(--lr);color:#032a20;margin-left:10px}
+.pl.act{box-shadow:0 0 0 3px var(--c),0 0 24px rgba(255,255,255,.15),0 12px 32px rgba(0,0,0,.45)}
+#note{left:40px;right:40px;top:560px;height:70px;font-size:22px;line-height:1.35;text-align:center}
+#note b{color:var(--gold)}#note .r{color:#ff9d9d}#note .g{color:var(--ok)}
+
+#cov{left:40px;right:40px;top:134px;height:492px;padding:22px 30px;display:flex;gap:36px}
+#cov .c1{flex:1.2}#cov .c2{flex:1}
+#cov h3{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--gold)}
+#cov table{border-collapse:collapse;font-size:20px}
+#cov th,#cov td{padding:6px 10px;text-align:center;border-bottom:1px solid var(--line)}
+#cov th{font-size:17px;color:var(--muted)}
+#cov td.n{text-align:left;font-weight:800}
+#cov td .ok{color:var(--ok);font-weight:900}
+#cov .die{width:40px;height:40px;padding:6px;border-radius:9px;margin:auto;background:linear-gradient(145deg,#fff,#d9dde6)}
+#cov .die .pip{background:#22283a}
+#cov p{font-size:21px;line-height:1.4;margin:0 0 12px}
+#cov p b{color:var(--gold)}
+#cov .vs{display:flex;gap:14px;margin-top:6px}
+#cov .vs div{flex:1;border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:19px;line-height:1.35}
+#cov .vs b{display:block;font-family:"Fredoka",sans-serif;font-size:22px;color:var(--ink);margin-bottom:4px}
+#cov .c2>*{opacity:0;transition:opacity .5s}
+#cov.wp .c2>*{opacity:1}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:130px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--red),var(--gold),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:12px 0 0;font-size:36px;font-weight:700}
+#title .row{display:flex;gap:20px;margin:28px 0 14px}
+#title .row .die{width:80px;height:80px;padding:12px;border-radius:16px;animation:bob 2.2s ease-in-out infinite}
+#title .row .die:nth-child(2){animation-delay:.2s}#title .row .die:nth-child(3){animation-delay:.4s}#title .row .die:nth-child(4){animation-delay:.6s}
+@keyframes bob{50%{transform:translateY(-12px) rotate(8deg)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(10,12,18,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(215,225,250,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Dice Placement</div>
+    <h2>Roll your workers. The number decides where they go.</h2>
+    <div class="row" id="titleDice"></div>
+    <div class="press">Press SPACE to roll</div>
+  </div>
+
+  <div id="spaces" class="panel"></div>
+  <div id="players" class="panel"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="cov" class="panel card">
+    <div class="c1">
+      <h3>Every face has somewhere to go</h3>
+      <table id="covT"></table>
+      <p style="margin-top:14px">High dice chase the Tower and Forge. Low dice go to the Low Road. Doubles of anything fit the Market. <b>No roll is a total loss.</b></p>
+    </div>
+    <div class="c2">
+      <h3>Linked to worker placement</h3>
+      <p>Spaces still block each other, like in worker placement. The difference is that <b>the roll limits where each worker may go</b>.</p>
+      <div class="vs"><div><b>Worker</b>Any worker fits any open space. Every round looks the same.</div>
+        <div><b>Die</b>Each worker has a number. A new roll each round reshapes which spaces you want.</div></div>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>The roll sets the options, the player picks.</b> Dice decide which spaces are open to you; you decide which of them matters most.</li>
+      <li><b>Spaces still block.</b> Red's pair of 4s took the Market and pushed Blue's pair of 5s somewhere else. Turn order matters.</li>
+      <li><b>Give every roll a use.</b> A consolation space for low dice turned Blue's 1 into gold and first place next round.</li>
+    </ol>
+    <div class="see">You'll see this in: Kingsburg, Alien Frontiers, Grand Austria Hotel, Troyes.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const PIPS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+const die=(v,c,cls='',st='')=>`<div class="die ${c} ${cls}" style="${st}">${PIPS[v].map(p=>`<span class="pip" style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></span>`).join('')}</div>`;
+$('titleDice').innerHTML=die(4,'R')+die(4,'R')+die(5,'B')+die(1,'B');
+const SP=[
+ {id:'mk',nm:'Market',req:'A pair',rew:'<b>+3 gold</b>',c:'var(--mk)'},
+ {id:'tw',nm:'Tower',req:'Two dice, sum 10+',rew:'<b>+2 points</b>',c:'var(--tw)'},
+ {id:'fg',nm:'Forge',req:'A single 6',rew:'<b>+1 point</b>',c:'var(--fg)'},
+ {id:'lr',nm:'Low Road',req:'A single 1 or 2',rew:'<b>+2 gold</b>, go first next round',c:'var(--lr)',cons:1}
+];
+const ROLL={R:[4,4,6],B:[1,5,5]};
+const PN={R:{nm:'Red',c:'var(--red)'},B:{nm:'Blue',c:'var(--blue)'}};
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',rolled:false,place:{},used:{R:[],B:[]},fresh:null,block:null,act:null,gain:{R:{g:0,p:0},B:{g:0,p:0}},first:null,note:'',hlc:false,wp:false}}
+function put(who,sp,idx,g,p){st.place[sp]={who,vals:idx.map(i=>ROLL[who][i])};st.used[who].push(...idx);st.fresh=sp;st.act=who;st.gain[who].g+=g;st.gain[who].p+=p;st.block=null}
+function render(anim){
+  ['title','spaces','players','note','cov','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='cov'||st.view==='end'){$('cov').classList.add('on');$('cov').classList.toggle('wp',st.wp);if(st.view==='end')$('end').classList.add('on');return}
+  ['spaces','players','note'].forEach(id=>$(id).classList.add('on'));
+  $('spaces').innerHTML=SP.map(s=>{const p=st.place[s.id];
+    return `<div class="sp card ${p?'full':''} ${st.block===s.id?'block':''} ${s.cons?'cons':''} ${s.cons&&st.hlc?'hlc':''}" style="--c:${s.c}">
+      ${s.cons?'<span class="tag">CONSOLATION</span>':''}<span class="x">TAKEN</span>
+      <div class="nm">${s.nm}</div><div class="req">${s.req}</div><div class="rew">${s.rew}</div>
+      <div class="slot">${p?p.vals.map((v,i)=>die(v,p.who,anim&&st.fresh===s.id?'land':'',`--d:${i*.12}s`)).join(''):'<span style="color:var(--muted);font-size:18px;font-weight:800">open</span>'}</div></div>`}).join('');
+  $('players').innerHTML=['R','B'].map(w=>{const g=st.gain[w];
+    return `<div class="pl card ${st.act===w?'act':''}" style="--c:${PN[w].c}"><div class="nm" style="color:${PN[w].c}">${PN[w].nm}${w==='R'?' · places first':''}${st.first===w?'<span class="first">FIRST NEXT ROUND</span>':''}</div>
+      <div class="row">${st.rolled?ROLL[w].map((v,i)=>die(v,w,(st.used[w].includes(i)?'used ':'')+(anim&&st.fresh==='roll'?'roll':''),`--d:${i*.1+(w==='B'?.3:0)}s`)).join(''):'<span style="color:var(--muted);font-size:19px">3 dice, not rolled yet</span>'}
+      <div class="gain"><span><b>${g.g}</b> gold</span><span><b>${g.p}</b> point${g.p===1?'':'s'}</span></div></div></div>`}).join('');
+  $('note').innerHTML=st.note;
+}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='board';
+   st.note='Each space holds <b>one player</b>. Each one asks for a different kind of roll. The Low Road is there for bad rolls.';
+   setHeader('Four action spaces','Like worker placement, but your workers are dice and each space asks for certain numbers.')},
+ ()=>{st.rolled=true;st.fresh='roll';
+   st.note='Red rolled <b>4, 4, 6</b>. Blue rolled <b>1, 5, 5</b>. Both players have a pair. Only one can take the Market.';
+   setHeader('Both players roll three dice','Red places first this round.')},
+ ()=>{put('R','mk',[0,1],3,0);
+   st.note='Red puts the pair of 4s on the Market: <b>+3 gold</b>. Blue\'s pair of 5s just lost its best home.';
+   setHeader('Red takes the Market with 4·4','Placing first means choosing first.')},
+ ()=>{put('B','tw',[1,2],0,2);st.block='mk';
+   st.note='<span class="r">Market taken.</span> Blue adds 5 + 5 = 10 and takes the Tower instead: <b>+2 points</b>.';
+   setHeader('Blue is blocked, so the 5s go up the Tower','Same dice, different space. Blocking forced a new plan.')},
+ ()=>{put('R','fg',[2],0,1);
+   st.note='Red would have liked the Tower (4 + 6 = 10), but Blue got there first. The 6 still fits the <b>Forge: +1 point</b>.';
+   setHeader('Red places the 6 on the Forge','A high single die has its own space.')},
+ ()=>{put('B','lr',[0],2,0);st.first='B';st.hlc=true;
+   st.note='A <b>1</b> is usually the worst roll. Here it earns <b>+2 gold</b> and makes Blue first player next round. <span class="g">The bad roll still mattered.</span>';
+   setHeader('Blue sends the 1 down the Low Road','The consolation space turns a weak die into a real choice.')},
+ ()=>{st.act=null;st.fresh=null;
+   st.note='Red: <b>3 gold, 1 point</b>. Blue: <b>2 gold, 2 points</b> and first pick next round. All six dice did something useful.';
+   setHeader('The round is over','Neither roll was clearly better. Choices and order decided the result.')},
+ ()=>{st.view='cov';
+   $('covT').innerHTML='<tr><th>Space</th>'+[1,2,3,4,5,6].map(v=>`<th>${die(v,'')}</th>`).join('')+'</tr>'+[
+     ['Market (pair)',[1,1,1,1,1,1]],['Tower (sum 10+)',[0,0,0,1,1,1]],['Forge (a 6)',[0,0,0,0,0,1]],['Low Road (1 or 2)',[1,1,0,0,0,0]]]
+     .map(([n,a])=>`<tr><td class="n">${n}</td>${a.map(x=>`<td>${x?'<span class="ok">✓</span>':''}</td>`).join('')}</tr>`).join('');
+   setHeader('Design check: is any roll useless?','Map each die face to the spaces it can help.')},
+ ()=>{st.wp=true;setHeader('Dice placement is worker placement with numbers','The blocking stays. The roll adds a fresh puzzle each round.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Roll, choose, block, and leave no roll behind.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

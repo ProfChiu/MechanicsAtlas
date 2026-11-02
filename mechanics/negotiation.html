@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Negotiation &amp; Trading</title>
+<style>
+:root{--bg:#16121c;--panel:#251f2f;--panel2:#2f283b;--ink:#f6f2fb;--muted:#bdb3cc;--line:rgba(235,220,255,.14);
+  --gold:#ffcf4d;--ok:#6ee08a;--red:#ff6b6b;--ada:#5ba8ff;--bo:#ff9d4a;--cy:#5fd3a0;--vera:#e070ff;
+  --W:#f1ece0;--C:#d0704a;--I:#8ea4bf;--T:#9a6a3e}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#2e2340 0%,#16121c 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+.g{width:40px;height:40px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-family:"Fredoka",sans-serif;font-weight:700;font-size:20px;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 3px 6px rgba(0,0,0,.4);flex-shrink:0}
+.g.W{background:var(--W);color:#5a5040}.g.C{background:var(--C);color:#fff}.g.I{background:var(--I);color:#1e2a3a}.g.T{background:var(--T);color:#fff}
+
+.seat{position:absolute;width:300px;height:212px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;transition:box-shadow .4s}
+.seat .top{display:flex;align-items:center;gap:8px}
+.seat .nm{font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600;color:var(--c)}
+.seat .crown{font-size:16px;font-weight:900;padding:3px 9px;border-radius:10px;background:var(--gold);color:#3a2600}
+.seat .sc{margin-left:auto;font-size:18px;font-weight:800;color:var(--muted)}
+.seat .sc b{font-family:"Fredoka",sans-serif;font-size:30px;color:var(--gold)}
+.seat .bar{height:10px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden}
+.seat .bar i{display:block;height:100%;background:var(--c);transition:width .7s}
+.seat .goods{display:flex;gap:6px;min-height:40px;flex-wrap:wrap}
+.seat .need{font-size:19px;font-weight:800;display:flex;align-items:center;gap:8px;margin-top:auto}
+.seat .need .g{width:30px;height:30px;font-size:16px}
+.seat.act{box-shadow:0 0 0 3px var(--c),0 0 26px rgba(255,255,255,.12),0 12px 32px rgba(0,0,0,.45)}
+.seat.dim{opacity:.55}
+#sA{left:40px;top:134px}#sB{left:940px;top:134px}#sV{left:40px;top:362px}#sC{left:940px;top:362px}
+
+#deal{left:364px;top:134px;width:552px;height:440px;padding:18px 22px;display:flex;flex-direction:column}
+#offer{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 10px;min-height:66px;padding:10px;border-radius:14px;background:rgba(0,0,0,.22)}
+#offer .who{font-family:"Fredoka",sans-serif;font-size:22px;font-weight:600}
+#offer .side{display:flex;gap:6px;align-items:center}
+#offer .arr{font-size:26px;color:var(--muted)}
+#chat{display:flex;flex-direction:column;gap:10px;flex:1}
+.bub{position:relative;max-width:88%;padding:9px 14px;border-radius:16px;font-size:20px;line-height:1.3;background:rgba(255,255,255,.08);border:1px solid var(--line)}
+.bub b{color:var(--c)}
+.bub.r{align-self:flex-end;background:rgba(255,255,255,.12)}
+.bub.in{animation:fadeUp .45s ease both;animation-delay:var(--d)}
+#stamp{position:absolute;right:26px;bottom:22px;padding:8px 18px;border-radius:12px;border:4px solid var(--s);color:var(--s);font-family:"Fredoka",sans-serif;font-size:30px;font-weight:700;
+  transform:rotate(-8deg);opacity:0;background:rgba(0,0,0,.35)}
+#stamp.on{opacity:1}
+#stamp.go{animation:stamp .5s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d)}
+@keyframes stamp{from{transform:rotate(-8deg) scale(2.2);opacity:0}to{transform:rotate(-8deg);opacity:1}}
+#note{left:40px;right:40px;top:592px;height:50px;font-size:22px;line-height:1.35;text-align:center}
+#note b{color:var(--gold)}#note .r{color:#ff9d9d}#note .ok{color:var(--ok)}
+
+#dial{left:40px;right:40px;top:134px;height:492px;padding:24px 34px}
+#dial h3{margin:0 0 10px;font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--gold)}
+#dial .track{position:relative;height:16px;border-radius:10px;margin:34px 40px 26px;background:linear-gradient(90deg,var(--ada),var(--vera))}
+#dial .knob{position:absolute;top:-14px;width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 0 0 5px var(--gold),0 6px 14px rgba(0,0,0,.5);
+  left:calc(50% - 22px);animation:sweep 5s ease-in-out infinite alternate}
+@keyframes sweep{from{left:-22px}to{left:calc(100% - 22px)}}
+#dial .ends{display:flex;gap:30px}
+#dial .end{flex:1;padding:16px 20px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line)}
+#dial .end h4{margin:0 0 8px;font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600}
+#dial .end li{font-size:21px;line-height:1.4;margin-bottom:6px}
+#dial .end ul{margin:0;padding-left:22px}
+#dial .mid{text-align:center;font-size:21px;color:var(--muted);margin-top:18px}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:124px;font-weight:700;line-height:1;text-align:center;
+  background:linear-gradient(90deg,var(--ada),var(--gold),var(--vera));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:12px 0 0;font-size:36px;font-weight:700}
+#title .sw{display:flex;align-items:center;gap:20px;margin:30px 0 14px}
+#title .sw .g{width:64px;height:64px;font-size:30px;border-radius:14px}
+#title .sw .a{font-size:46px;color:var(--gold);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.25)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(14,10,18,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(235,220,255,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Negotiation<br>&amp; Trading</div>
+    <h2>Anything can be offered. Not every deal is kept.</h2>
+    <div class="sw"><span class="g W">W</span><span class="g W">W</span><span class="a">⇄</span><span class="g C">C</span></div>
+    <div class="press">Press SPACE to make an offer</div>
+  </div>
+
+  <div id="sA" class="seat card panel"></div>
+  <div id="sB" class="seat card panel"></div>
+  <div id="sV" class="seat card panel"></div>
+  <div id="sC" class="seat card panel"></div>
+  <div id="deal" class="panel card"><div class="lbl" id="dealLbl">THE TABLE</div><div id="offer"></div><div id="chat"></div><div id="stamp"></div></div>
+  <div id="note" class="panel"></div>
+
+  <div id="dial" class="panel card">
+    <h3>A designer dial: are deals binding?</h3>
+    <div class="track"><div class="knob"></div></div>
+    <div class="ends">
+      <div class="end"><h4 style="color:var(--ada)">Binding</h4><ul>
+        <li>An agreed deal is a <b style="color:var(--gold)">rule</b>. It must happen.</li>
+        <li>Trust is easy, so players trade more and plan further ahead.</li>
+        <li>Betrayal is impossible. The drama comes from the terms.</li></ul></div>
+      <div class="end"><h4 style="color:var(--vera)">Non-binding</h4><ul>
+        <li>A deal is only a <b style="color:var(--gold)">promise</b>. It can be broken.</li>
+        <li>Trust becomes a resource that players earn and spend.</li>
+        <li>Betrayal is part of the game, and so are grudges.</li></ul></div>
+    </div>
+    <div class="mid">Many games sit in between: trades made now are binding, promises about later turns are not.</div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>A trade needs two winners.</b> Ada and Bo both scored from one swap, which is why the swap happened.</li>
+      <li><b>The table protects itself.</b> Vera offered a great price and nobody took it, because helping the leader helps no one else.</li>
+      <li><b>Binding or not is a dial.</b> Enforced deals build trust; broken promises build drama. Pick the one your game wants.</li>
+    </ol>
+    <div class="see">You'll see this in: Catan, Diplomacy, Bohnanza, Chinatown.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const PL={A:{nm:'Ada',c:'var(--ada)'},B:{nm:'Bo',c:'var(--bo)'},C:{nm:'Cy',c:'var(--cy)'},V:{nm:'Vera',c:'var(--vera)'}};
+const GN={W:'Wool',C:'Clay',I:'Iron',T:'Timber'};
+const g=(k,st='')=>`<span class="g ${k}" style="${st}">${k}</span>`;
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',
+  P:{A:{goods:['W','W','W'],need:'C',score:4},B:{goods:['C','C'],need:'W',score:5},C:{goods:['I','I'],need:'T',score:3},V:{goods:['T','T','T'],need:'I',score:8}},
+  act:[],offer:null,chat:[],stamp:null,note:'',lbl:'THE TABLE'}}
+function render(anim){
+  ['title','sA','sB','sV','sC','deal','note','dial','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='dial'||st.view==='end'){$('dial').classList.add('on');if(st.view==='end')$('end').classList.add('on');return}
+  ['sA','sB','sV','sC','deal','note'].forEach(id=>$(id).classList.add('on'));
+  const lead=Object.keys(st.P).reduce((a,b)=>st.P[a].score>=st.P[b].score?a:b);
+  for(const k of ['A','B','C','V']){const p=st.P[k],el=$('s'+k);
+    el.style.setProperty('--c',PL[k].c);
+    el.classList.toggle('act',st.act.includes(k));el.classList.toggle('dim',st.act.length>0&&!st.act.includes(k));
+    el.innerHTML=`<div class="top"><span class="nm">${PL[k].nm}</span>${k===lead?'<span class="crown">LEADER</span>':''}<span class="sc"><b>${p.score}</b> / 10</span></div>
+      <div class="bar"><i style="width:${p.score*10}%"></i></div>
+      <div class="goods">${p.goods.map(x=>g(x)).join('')||'<span style="color:var(--muted);font-size:18px">no goods</span>'}</div>
+      <div class="need">${p.need?`Needs ${g(p.need)} ${GN[p.need]} to build (+2)`:'<span style="color:var(--ok)">Built!</span>'}</div>`}
+  $('dealLbl').textContent=st.lbl;
+  const o=st.offer;
+  $('offer').innerHTML=o?`<span class="who" style="color:${PL[o.from].c}">${PL[o.from].nm}</span><span class="side">${o.give.map(x=>g(x)).join('')}</span>
+    <span class="arr">⇄</span><span class="side">${o.get.map(x=>g(x)).join('')}</span><span class="who" style="color:${PL[o.to].c}">${PL[o.to].nm}</span>`:'<span style="color:var(--muted);font-size:19px">No offer on the table yet</span>';
+  $('chat').innerHTML=st.chat.map(([w,t,r],i)=>`<div class="bub ${r?'r':''} ${anim&&st.newChat&&i>=st.chat.length-st.newChat?'in':''}" style="--c:${PL[w].c};--d:${(i-(st.chat.length-(st.newChat||0)))*.6}s"><b>${PL[w].nm}:</b> ${t}</div>`).join('');
+  const sp=$('stamp');sp.className='';
+  if(st.stamp){sp.textContent=st.stamp[0];sp.style.setProperty('--s',st.stamp[1]);sp.classList.add('on');if(anim){sp.classList.add('go');sp.style.setProperty('--d',(st.newChat||0)*.6+'s')}}
+  $('note').innerHTML=st.note;
+}
+function say(lines){st.chat=st.chat.concat(lines);st.newChat=lines.length}
+function clearTable(lbl){st.chat=[];st.offer=null;st.stamp=null;st.newChat=0;st.lbl=lbl||'THE TABLE'}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='table';
+   st.note='Each player holds goods someone else needs. First to <b>10 points</b> wins. Vera is close: one Iron would let Vera build and win.';
+   setHeader('Four players, four different needs','Nobody can build alone. Every build needs a good that another player holds.')},
+ ()=>{st.act=['A','B'];st.offer={from:'A',to:'B',give:['W'],get:['C']};say([['A','One Wool for one Clay?'],['B','I need Wool, but Clay is scarce. Make it two Wool.',1]]);
+   st.note='Offers are open. Anything goes: amounts, timing, even promises. Bo pushes the price up.';
+   setHeader('Ada makes an offer','Trading starts with a question and a counter-offer.')},
+ ()=>{st.offer={from:'A',to:'B',give:['W','W'],get:['C']};say([['A','Deal.']]);st.stamp=['DEAL','var(--ok)'];
+   const A=st.P.A,B=st.P.B;A.goods=['W'];B.goods=['C','W','W'];A.need=null;B.need=null;A.score=6;B.score=7;
+   st.note='<span class="ok">Both players build and score +2.</span> A trade happens only when <b>both sides think they gain</b>.';
+   setHeader('A deal both sides win','Ada pays a little more than hoped, but both players move forward.')},
+ ()=>{clearTable();st.act=['V','C'];st.offer={from:'V',to:'C',give:['T','T','T'],get:['I']};
+   say([['V','Three Timber for one Iron. You only need one Timber, so that\'s a gift.']]);
+   st.note='A very generous price. Cy needs Timber, and three is more than enough.';
+   setHeader('The leader makes a generous offer','Vera offers far more than the Iron is worth.')},
+ ()=>{st.act=['V','C','A'];say([['A','Cy, don\'t. That Iron lets Vera build, and 8 + 2 is the win.',1],['C','Sorry Vera. No deal.']]);st.stamp=['REFUSED','var(--red)'];
+   st.note='<span class="r">Refused.</span> Helping the leader helps no one else. The table quietly works together to keep Vera from winning.';
+   setHeader('Nobody trades with the leader','A good price is not enough when the other side wins the game.')},
+ ()=>{clearTable('A PROMISE');st.act=['B','C'];st.offer={from:'C',to:'B',give:['I'],get:['C','C']};
+   say([['B','Give me an Iron now, and I\'ll give you two Clay next turn.'],['C','Promise? Fine, here\'s the Iron.',1]]);
+   st.P.C.goods=['I'];st.P.B.goods=['C','W','W','I'];
+   st.note='Cy pays now and trusts Bo to pay later. Nothing in the rules forces Bo to keep the promise.';
+   setHeader('A deal across two turns','Some trades are a promise about the future.')},
+ ()=>{say([['B','Changed my mind. I\'m keeping the Clay.']]);st.stamp=['BROKEN','var(--gold)'];
+   st.note='In a <b>non-binding</b> game, that is legal. Cy lost an Iron and gained a grudge. Next time, Cy will not trust Bo.';
+   setHeader('Next turn: the promise is broken','The rules allowed it. The table will remember it.')},
+ ()=>{st.view='dial';setHeader('Binding vs non-binding deals','One rule changes the whole feel of the table.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Mutual gain, table politics, and trust.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;st.newChat=0;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

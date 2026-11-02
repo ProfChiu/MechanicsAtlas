@@ -360,8 +360,9 @@ window.MECHANICS = [
       { name: 'Spirit Island', note: 'A heavier co-op against colonizing invaders.' }
     ]
   },
-  /* ================= PLANNED (scaffolding, not built yet) =================
-     file: null → shown on the hub as "Coming soon".
+  /* ================= Second wave (built from briefs, 2026-11-02) =================
+     Each keeps its original `brief`. To plan a new one, add an entry with file: null
+     (shown on the hub as "Coming soon").
      To build one: write mechanics/<id>.html per ANIMATION_CONTRACT.md from its `brief`,
      add anatomy / feel / feelText / minutes / w / h, then set `file`. */
 
@@ -601,23 +602,71 @@ window.MECHANICS = [
     ],
     brief: 'A resource market track priced 1–8 with tokens in the cheap slots first. Three players buy coal in turn order; the price climbs. Refill phase brings prices down. Show the cost each player paid.'
   },
-  { id: 'dice-placement', family: 'economy', title: 'Dice Placement', file: null,
+  {
+    id: 'dice-placement', family: 'economy', title: 'Dice Placement',
+    file: 'mechanics/dice-placement.html', w: 1280, h: 720, minutes: 4,
     hook: 'Roll your dice, then use them as workers. The number decides where they can go.',
+    anatomy: {
+      Procedures: 'Roll your dice, then take turns placing them on action spaces as workers.',
+      Rules: 'Each space asks for certain numbers (a pair, a sum of 10+, a single 6) and holds one player. A consolation space takes low dice.',
+      Resources: 'Your dice and their numbers, and the open action spaces.',
+      Outcome: 'The roll limits your options, blocking limits them further, and a good design gives every roll some use.'
+    },
+    feel: ['Puzzle', 'Adaptation', 'Fair luck'],
+    feelText: 'The dice hand you a puzzle each round instead of a verdict. Finding a good home for a bad roll feels clever rather than unlucky.',
     watchFor: 'Watch high rolls and low rolls both find uses: good design makes no roll a total loss.',
-    examples: [{ name: 'Kingsburg' }, { name: 'Alien Frontiers' }, { name: 'Grand Austria Hotel' }, { name: 'Troyes' }],
-    brief: 'Two players roll 3 dice each; action spaces ask for a pair, a sum of 10+, or any 1. Show placements blocking each other (link to worker placement) and a "low roll" consolation space.' },
+    examples: [
+      { name: 'Kingsburg', note: 'Place dice on advisors whose numbers match the sum you offer.' },
+      { name: 'Alien Frontiers', note: 'Roll ships and place them on orbital stations that want certain values.' },
+      { name: 'Grand Austria Hotel', note: 'Draft dice from a shared pool; the number of dice decides the action\'s strength.' },
+      { name: 'Troyes', note: 'Use dice on city buildings, and buy other players\' dice to use as your own.' }
+    ],
+    brief: 'Two players roll 3 dice each; action spaces ask for a pair, a sum of 10+, or any 1. Show placements blocking each other (link to worker placement) and a "low roll" consolation space.'
+  },
 
   /* Player Interaction */
-  { id: 'negotiation', family: 'people', title: 'Negotiation & Trading', file: null,
+  {
+    id: 'negotiation', family: 'people', title: 'Negotiation & Trading',
+    file: 'mechanics/negotiation.html', w: 1280, h: 720, minutes: 4,
     hook: 'Anything can be offered. Deals are made at the table, and some are broken.',
+    anatomy: {
+      Procedures: 'Players make open offers to each other; any good, amount or promise can be part of a deal.',
+      Rules: 'A trade happens only when both sides agree. The designer decides whether deals are binding or just promises.',
+      Resources: 'Goods, needs and, in non-binding games, other players\' trust.',
+      Outcome: 'Trades that help both sides happen; trades that help the leader do not; broken promises shape later deals.'
+    },
+    feel: ['Social', 'Persuasion', 'Suspicion'],
+    feelText: 'The game moves from the board to the people. A good deal feels like teamwork; a broken promise is remembered long after the game.',
     watchFor: 'A trade happens only when both sides think they gain. Watch how the leader finds no one willing to trade.',
-    examples: [{ name: 'Catan' }, { name: 'Diplomacy' }, { name: 'Bohnanza' }, { name: 'Chinatown' }],
-    brief: 'Four players with different goods and needs; offers in speech bubbles; one deal both sides win; one refused because it helps the leader. Show binding vs non-binding deals as a designer dial.' },
-  { id: 'take-that', family: 'people', title: 'Take-That', file: null,
+    examples: [
+      { name: 'Catan', note: 'Trade resources at the table to build roads, settlements and cities.' },
+      { name: 'Diplomacy', note: 'Every deal is non-binding; alliances form and break between written orders.' },
+      { name: 'Bohnanza', note: 'You must give away cards you cannot plant, so trading is constant and friendly.' },
+      { name: 'Chinatown', note: 'Swap buildings and shops to complete businesses; nearly everything is negotiable.' }
+    ],
+    brief: 'Four players with different goods and needs; offers in speech bubbles; one deal both sides win; one refused because it helps the leader. Show binding vs non-binding deals as a designer dial.'
+  },
+  {
+    id: 'take-that', family: 'people', title: 'Take-That',
+    file: 'mechanics/take-that.html', w: 1280, h: 720, minutes: 4,
     hook: 'Cards that hurt someone else. Who you target is the whole game.',
+    anatomy: {
+      Procedures: 'On your turn, play cards that attack another player: steal points, skip their turn, knock them out.',
+      Rules: 'The attacker chooses the target. Some games limit who can be attacked or offer defences.',
+      Resources: 'Attack cards in hand, points, and turns.',
+      Outcome: 'Attacks tend to flow to the leader and keep the race close, but can turn into dogpiles, kingmaking or elimination.'
+    },
+    feel: ['Mischief', 'Revenge', 'Table drama'],
+    feelText: 'Playing an attack card is a loud, social moment: groans, laughs and promises of revenge. Being the target too often stops being fun.',
     watchFor: 'Watch the attacks pile onto the leader. Take-that is a built-in catch-up system, until it targets someone unfairly.',
-    examples: [{ name: 'Munchkin' }, { name: 'Exploding Kittens' }, { name: 'Unstable Unicorns' }, { name: 'Love Letter' }],
-    brief: 'Four players, attack cards ("steal 2", "skip a turn"). Score bars show the leader attacked and pulled back. Then a beat on kingmaking and player elimination as the risks designers must manage.' },
+    examples: [
+      { name: 'Munchkin', note: 'Kick open doors, then help or hurt the player fighting the monster.' },
+      { name: 'Exploding Kittens', note: 'Draw cards until someone explodes; attack cards push the danger onto others.' },
+      { name: 'Unstable Unicorns', note: 'Build a stable of unicorns while destroying and stealing from rivals.' },
+      { name: 'Love Letter', note: 'A tiny deck where each card targets someone, and a wrong guess knocks you out.' }
+    ],
+    brief: 'Four players, attack cards ("steal 2", "skip a turn"). Score bars show the leader attacked and pulled back. Then a beat on kingmaking and player elimination as the risks designers must manage.'
+  },
   {
     id: 'deduction', family: 'people', title: 'Deduction',
     file: 'mechanics/deduction.html', w: 1280, h: 720, minutes: 4,

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Take-That</title>
+<style>
+:root{--bg:#1a1012;--panel:#2a1c20;--panel2:#352328;--ink:#fbf1f2;--muted:#cdb3b8;--line:rgba(255,220,225,.14);
+  --gold:#ffcc4d;--ok:#6ee08a;--red:#ff5a5a;--ada:#5ba8ff;--bo:#ff9d4a;--cy:#5fd3a0;--dee:#e070ff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#3c2026 0%,#1a1012 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#race{left:40px;top:134px;width:740px;height:440px;padding:18px 24px}
+.row{position:relative;height:88px;display:flex;align-items:center;gap:14px;margin-top:6px;transition:opacity .5s}
+.row .nm{width:70px;font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600;color:var(--c)}
+.row .tr{position:relative;flex:1;height:34px;border-radius:10px;background:rgba(255,255,255,.07)}
+.row .fill{position:absolute;left:0;top:0;bottom:0;border-radius:10px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 55%,#000),var(--c));transition:width .8s cubic-bezier(.3,1.2,.5,1)}
+.row .v{width:56px;text-align:right;font-family:"Fredoka",sans-serif;font-size:32px;font-weight:700;color:var(--gold)}
+.row .tag{position:absolute;left:84px;top:-2px;font-size:16px;font-weight:900;padding:2px 9px;border-radius:9px;opacity:0;transition:opacity .4s}
+.row .tag.on{opacity:1}
+.row .tag.hit{background:var(--red);color:#fff}.row .tag.skip{background:#665;color:#fff}.row .tag.lead{background:var(--gold);color:#3a2600}
+.row .tag.out{background:#555;color:#ddd}.row .tag.dead{background:#433;color:#ccc}
+.row .dmg{position:absolute;top:-30px;font-size:22px;font-weight:900;color:var(--red);animation:dmg 1s ease both;animation-delay:var(--d)}
+@keyframes dmg{0%{opacity:0;transform:translateY(10px)}25%{opacity:1;transform:none}100%{opacity:1}}
+.row.out{opacity:.35;filter:grayscale(1)}
+.fin{position:absolute;top:-6px;bottom:-6px;width:4px;background:repeating-linear-gradient(#fff 0 6px,#000 6px 12px);right:-2px;border-radius:2px}
+#ticks{position:absolute;left:108px;right:94px;bottom:16px;display:flex;justify-content:space-between;font-size:17px;color:var(--muted);font-weight:800}
+#gap{position:absolute;right:26px;top:16px;font-size:20px;font-weight:800}
+#gap b{font-family:"Fredoka",sans-serif;font-size:28px;color:var(--gold)}
+
+#play{left:810px;top:134px;width:430px;height:440px;padding:18px 22px;display:flex;flex-direction:column;align-items:center}
+.ac{width:220px;height:300px;margin-top:14px;border-radius:18px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px;
+  background:linear-gradient(170deg,#3a1a20,#24100f);border:3px solid var(--red);box-shadow:0 0 28px rgba(255,90,90,.35),0 14px 30px rgba(0,0,0,.5)}
+.ac .t{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:700;color:#ffb3b3;text-align:center}
+.ac .ic{width:110px;height:110px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"Fredoka",sans-serif;font-size:56px;font-weight:700;
+  background:radial-gradient(circle at 40% 35%,#ff8a8a,var(--red) 55%,#8a1f1f);color:#fff;box-shadow:inset 0 -6px 0 rgba(0,0,0,.25)}
+.ac .d{font-size:20px;font-weight:700;text-align:center;line-height:1.3}
+.ac.in{animation:slap .55s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes slap{from{transform:translateY(-80px) rotate(-14deg) scale(.6);opacity:0}to{transform:none;opacity:1}}
+.ac.gold{border-color:var(--gold);background:linear-gradient(170deg,#3a2f1a,#221a0e)}
+.ac.gold .ic{background:radial-gradient(circle at 40% 35%,#ffe08a,var(--gold) 55%,#8a6a10);color:#3a2600}
+.ac.gold .t{color:#ffe7a8}
+.who{margin-top:16px;font-size:24px;font-weight:800;display:flex;gap:12px;align-items:center}
+.who .arr{color:var(--red);font-size:30px}
+#note{left:40px;right:40px;top:592px;height:50px;font-size:22px;line-height:1.35;text-align:center}
+#note b{color:var(--gold)}#note .r{color:#ff9d9d}#note .ok{color:var(--ok)}
+
+#fix{left:40px;right:40px;top:134px;height:492px;padding:24px 34px}
+#fix h3{margin:0 0 16px;font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--gold)}
+#fix .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#fix .it{padding:16px 20px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line);opacity:0;transform:translateY(12px);transition:opacity .45s,transform .45s}
+#fix.on .it{opacity:1;transform:none}
+#fix .it b{display:block;font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;color:var(--ok);margin-bottom:4px}
+#fix .it span{font-size:20px;line-height:1.35}
+#fix .it em{font-style:normal;color:var(--muted);font-size:18px;display:block;margin-top:4px}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:140px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--gold),var(--red),var(--dee));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:12px 0 0;font-size:36px;font-weight:700}
+#title .ac{margin:26px 0 12px;width:150px;height:200px;animation:wig 1.8s ease-in-out infinite}
+#title .ac .ic{width:80px;height:80px;font-size:40px}#title .ac .t{font-size:22px}
+@keyframes wig{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg) translateY(-8px)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(16,9,10,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,220,225,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Take-That</div>
+    <h2>Cards that hurt someone else. Who do you pick?</h2>
+    <div class="ac"><div class="t">Steal 2</div><div class="ic">−2</div></div>
+    <div class="press">Press SPACE to play a card</div>
+  </div>
+
+  <div id="race" class="panel card"><div class="lbl">RACE TO 15 POINTS</div><div id="gap"></div><div id="rows"></div>
+    <div id="ticks"><span>0</span><span>5</span><span>10</span><span>15</span></div></div>
+  <div id="play" class="panel card"><div class="lbl" id="playLbl">CARD PLAYED</div><div id="acard"></div><div class="who" id="who"></div></div>
+  <div id="note" class="panel"></div>
+
+  <div id="fix" class="panel card">
+    <h3>How designers keep take-that fair</h3>
+    <div class="grid">
+      <div class="it" style="transition-delay:.05s"><b>Limit the targets</b><span>Attack only the leader, or only the player to your left.</span><em>Stops dogpiles and grudges.</em></div>
+      <div class="it" style="transition-delay:.2s"><b>Give a defence</b><span>Shield or counter cards let a target fight back.</span><em>Being attacked becomes a decision, not just bad news.</em></div>
+      <div class="it" style="transition-delay:.35s"><b>Hurt resources, not players</b><span>Steal points or cards; never knock anyone out of the game.</span><em>Everyone keeps playing to the end.</em></div>
+      <div class="it" style="transition-delay:.5s"><b>Keep it short</b><span>A 15-minute game shrugs off a bad round.</span><em>Long games make attacks feel personal.</em></div>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Attacks flow to the leader.</b> Three players hit Dee in one round and the gap shrank from 7 to 2. Take-that is a built-in catch-up system.</li>
+      <li><b>Targeting is the real decision.</b> Who you hit, and when, matters more than which card you hold.</li>
+      <li><b>Manage the risks.</b> Dogpiles, kingmaking and player elimination can sour a game. Limit targets, offer defences, and keep everyone playing.</li>
+    </ol>
+    <div class="see">You'll see this in: Munchkin, Exploding Kittens, Unstable Unicorns, Love Letter.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const PL={A:{nm:'Ada',c:'var(--ada)'},B:{nm:'Bo',c:'var(--bo)'},C:{nm:'Cy',c:'var(--cy)'},D:{nm:'Dee',c:'var(--dee)'}};
+const CARDS={steal:{t:'Steal 2',ic:'−2',d:'Take 2 points from any player.'},skip:{t:'Skip a Turn',ic:'⏸',d:'Any player loses their next turn.'},
+  ko:{t:'Knockout',ic:'✕',d:'Any player is out of the game.'},none:null};
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={custom:'',view:'title',sc:{A:6,B:9,C:5,D:12},tag:{},dmg:{},card:null,from:null,to:null,gold:false,out:[],note:'',lbl:'CARD PLAYED',gap:true}}
+function render(anim){
+  ['title','race','play','note','fix','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='fix'||st.view==='end'){$('fix').classList.add('on');if(st.view==='end')$('end').classList.add('on');return}
+  ['race','play','note'].forEach(id=>$(id).classList.add('on'));
+  const lead=Object.keys(st.sc).filter(k=>!st.out.includes(k)).reduce((a,b)=>st.sc[a]>=st.sc[b]?a:b);
+  $('rows').innerHTML=['A','B','C','D'].map(k=>{const t=st.tag[k]||(k===lead?['lead','LEADER']:null),dm=st.dmg[k];
+    return `<div class="row ${st.out.includes(k)?'out':''}" style="--c:${PL[k].c}"><span class="nm">${PL[k].nm}</span>
+      <div class="tr"><div class="fill" style="width:${st.sc[k]/15*100}%"></div><div class="fin"></div>${dm&&anim?`<span class="dmg" style="left:${st.sc[k]/15*100}%;--d:.4s">${dm}</span>`:''}</div>
+      <span class="v">${st.sc[k]}</span>${t?`<span class="tag on ${t[0]}">${t[1]}</span>`:''}</div>`}).join('');
+  const live=Object.keys(st.sc).filter(k=>!st.out.includes(k)).map(k=>st.sc[k]);
+  $('gap').innerHTML=st.gap?`Gap first to last: <b>${Math.max(...live)-Math.min(...live)}</b>`:'';
+  $('playLbl').textContent=st.lbl;
+  const c=st.card&&CARDS[st.card];
+  $('acard').innerHTML=st.custom?st.custom:c?`<div class="ac ${st.gold?'gold':''} ${anim?'in':''}"><div class="t">${c.t}</div><div class="ic">${c.ic}</div><div class="d">${c.d}</div></div>`:'';
+  $('who').innerHTML=st.from?`<span style="color:${PL[st.from].c}">${PL[st.from].nm}</span><span class="arr">→</span>${st.to.split('').map(t=>t==='?'?'<span style="color:var(--gold)">?</span>':`<span style="color:${PL[t].c}">${PL[t].nm}</span>`).join(' / ')}`:'';
+  $('note').innerHTML=st.note;
+}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='race';st.lbl='YOUR HAND';st.card='steal';st.gold=true;
+   st.note='Each turn you score a little, then you may play an attack card <b>on anyone</b>. Dee is in the lead with 12.';
+   setHeader('Four players race to 15','Everyone holds cards that hurt someone else. The only question is who.')},
+ ()=>{st.gold=false;st.lbl='CARD PLAYED';st.sc.A=8;st.sc.D=10;st.dmg={D:'−2'};st.tag={D:['hit','HIT']};st.from='A';st.to='D';
+   st.note='Ada could have hit anyone. Hitting the leader helps Ada <b>and</b> slows the player most likely to win.';
+   setHeader('Ada steals 2 from Dee','The obvious target is the player in front.')},
+ ()=>{st.card='skip';st.dmg={};st.tag={D:['skip','SKIPS NEXT TURN']};st.from='B';st.to='D';
+   st.note='Bo is closer to Dee than anyone. Taking away Dee\'s turn keeps Dee from scoring at all.';
+   setHeader('Bo makes Dee skip a turn','A second attack, the same target.')},
+ ()=>{st.card='steal';st.sc.C=7;st.sc.D=8;st.dmg={D:'−2'};st.tag={D:['hit','HIT AGAIN']};st.from='C';st.to='D';
+   st.note='Three attacks, all on Dee. The leader is pulled back into the pack. <b>Gap: 7 → 2.</b>';
+   setHeader('Cy steals 2 from Dee','The whole table aims at the leader.')},
+ ()=>{st.card=null;st.from=null;st.dmg={};st.tag={D:['dead','3 ATTACKS, NO TURN']};st.lbl='FROM DEE\'S SIDE';
+   st.custom='<div style="margin-top:18px;font-size:22px;line-height:1.7;width:100%"><div>Ada: <b style="color:var(--red)">−2</b></div><div>Bo: <b style="color:var(--red)">skip</b></div><div>Cy: <b style="color:var(--red)">−2</b></div><div style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px">Dee this round: <b style="color:var(--gold)">−4 points, 0 turns</b></div><div style="color:var(--muted);font-size:20px;margin-top:8px">Nothing Dee could do about it.</div></div>';
+   st.note='<span class="ok">Good for the race:</span> nobody runs away with it. <span class="r">Bad for Dee:</span> three hits in a row and no way to answer. A dogpile feels personal.';
+   setHeader('Catch-up, or dogpile?','The same round looks very different from the leader\'s chair.')},
+ ()=>{st.custom='';st.sc={A:14,B:14,C:3,D:10};st.tag={C:['out','CANNOT WIN']};st.card='steal';st.from='C';st.to='AB';st.lbl='LATE GAME';
+   st.note='Cy cannot win any more but still holds Steal 2. Whoever Cy hits loses the race. <span class="r">The last-place player picks the winner.</span> That is <b>kingmaking</b>.';
+   setHeader('Risk 1: kingmaking','Near the end, a player with no chance decides who wins.')},
+ ()=>{st.sc={A:8,B:9,C:7,D:8};st.tag={D:['out','OUT: WAITS 30 MIN']};st.out=['D'];st.card='ko';st.from='B';st.to='D';st.lbl='ANOTHER GAME';
+   st.note='A Knockout card removes Dee entirely. The game goes on for 30 more minutes while Dee <span class="r">watches</span>. <b>Player elimination</b> costs fun, not just points.';
+   setHeader('Risk 2: player elimination','When an attack removes a player, that person stops playing.')},
+ ()=>{st.view='fix';setHeader('Designers tune the attacks','Keep the catch-up, lose the bad feelings.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Who you hit is the game.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>
