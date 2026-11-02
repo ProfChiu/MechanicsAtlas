@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Simultaneous Action Selection</title>
+<style>
+:root{--bg:#0d1419;--panel:#18232b;--panel2:#1f2d37;--ink:#eef6fa;--muted:#a6bccb;--line:rgba(210,235,250,.14);
+  --gold:#ffcc4d;--ok:#6ee08a;--red:#ff6b6b;--reef:#ff7aa8;--bay:#4fb3ff;--sh:#7fe0c4;--ada:#ffb84d;--bo:#b48cff;--cy:#5fd38a;--sea:#123447}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#173246 0%,#0d1419 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#spots{left:40px;width:820px;top:132px;height:220px;display:flex;gap:14px}
+.spot{flex:1;border-radius:20px;padding:12px 16px;position:relative;overflow:hidden;
+  background:radial-gradient(circle at 50% 120%,var(--c) -40%,var(--sea) 70%);border:2px solid var(--c);box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.spot .nm{font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--c)}
+.spot .fish{font-size:19px;font-weight:800}
+.spot .fish b{font-family:"Fredoka",sans-serif;font-size:34px;color:var(--gold)}
+.spot .boats{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.boat{padding:5px 10px;border-radius:12px;font-weight:900;font-size:18px;color:#111;background:var(--c);box-shadow:0 4px 8px rgba(0,0,0,.4)}
+.boat.in{animation:sail .55s cubic-bezier(.3,1.4,.5,1) both;animation-delay:var(--d)}
+@keyframes sail{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+.spot .split{position:absolute;left:16px;right:16px;bottom:12px;font-size:19px;font-weight:800;color:var(--gold)}
+.spot.crowd{box-shadow:0 0 0 3px var(--red),0 12px 30px rgba(0,0,0,.45)}
+
+#caps{left:40px;width:820px;top:366px;height:244px;display:flex;gap:14px}
+.cap{flex:1;padding:12px 16px;display:flex;flex-direction:column;gap:8px;border-top:5px solid var(--c);position:relative}
+.cap .nm{font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600;color:var(--c)}
+.cap .tot{position:absolute;right:14px;top:10px;text-align:right;font-size:15px;font-weight:800;color:var(--muted)}
+.cap .tot b{display:block;font-family:"Fredoka",sans-serif;font-size:32px;color:var(--gold);line-height:1}
+.cap .pick{height:58px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;color:#111}
+.cap .pick.down{background:repeating-linear-gradient(45deg,#2b3d4a 0 8px,#24343f 8px 16px);border:2px solid #3e5566;color:transparent}
+.cap .pick.flip{animation:flip .5s ease both;animation-delay:var(--d)}
+@keyframes flip{from{transform:rotateX(90deg)}to{transform:none}}
+.cap .pick.none{background:transparent;border:2px dashed var(--line)}
+.cap .th{font-size:18px;line-height:1.32;font-style:italic;color:#dfe5ff}
+
+#side{left:880px;top:132px;width:360px;height:478px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+#side h3{margin:0;font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600;color:var(--gold)}
+#side p,#side li{font-size:19px;line-height:1.38;margin:0}
+#side ul{margin:0;padding-left:22px}
+#side li{margin-bottom:6px}
+#side b{color:var(--gold)}
+.win{padding:12px 14px;border-radius:14px;background:rgba(255,204,77,.1);border:2px solid var(--gold);font-size:20px;line-height:1.4}
+#scoreT{width:100%;border-collapse:collapse;font-size:19px}
+#scoreT th{font-size:15px;color:var(--muted);padding:4px;border-bottom:2px solid var(--line)}
+#scoreT td{padding:6px 4px;text-align:center;border-bottom:1px solid var(--line);font-weight:800}
+#scoreT td.t{font-family:"Fredoka",sans-serif;font-size:24px;color:var(--gold)}
+#note{left:40px;right:40px;top:626px;height:40px;font-size:21px;text-align:center;color:var(--muted)}
+#note b{color:var(--gold)}
+
+#mx{left:40px;right:40px;top:132px;height:478px;padding:22px 30px;z-index:15}
+#mx h3{margin:0 0 6px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--ada)}
+#mx table{width:100%;border-collapse:collapse;font-size:21px;margin-top:10px}
+#mx th{font-size:17px;color:var(--muted);padding:8px;border-bottom:2px solid var(--line)}
+#mx td{padding:12px 8px;text-align:center;border-bottom:1px solid var(--line);font-family:"Fredoka",sans-serif;font-size:28px}
+#mx td.k{text-align:left;font-size:22px}
+#mx .col{background:rgba(255,184,77,.1)}
+#mx .best{color:var(--ok);box-shadow:inset 0 0 0 3px var(--ok);border-radius:10px}
+#mx p{font-size:21px;line-height:1.4;margin:14px 0 0}
+#mx p b{color:var(--gold)}
+
+#cmp{left:40px;right:40px;top:132px;height:478px;padding:22px 30px}
+#cmp h3{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--gold)}
+#cmp .cols{display:flex;gap:20px}
+#cmp .k{flex:1;padding:14px 18px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:20px;line-height:1.4}
+#cmp .k b{display:block;font-family:"Fredoka",sans-serif;font-size:23px;color:var(--ink);margin-bottom:4px}
+#cmp p{font-size:21px;line-height:1.4;margin:16px 0 0}
+#cmp p b{color:var(--gold)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:110px;font-weight:700;line-height:1;text-align:center;
+  background:linear-gradient(90deg,var(--sh),var(--bay),var(--reef));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:34px;font-weight:700}
+#title .row{display:flex;gap:18px;margin:30px 0 14px}
+#title .row i{width:90px;height:60px;border-radius:12px;background:repeating-linear-gradient(45deg,#2b3d4a 0 8px,#24343f 8px 16px);border:2px solid #3e5566;animation:bob 2s ease-in-out infinite}
+#title .row i:nth-child(2){animation-delay:.25s}#title .row i:nth-child(3){animation-delay:.5s}
+@keyframes bob{50%{transform:translateY(-10px) rotate(-3deg)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(8,12,15,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(210,235,250,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Simultaneous<br>Action Selection</div>
+    <h2>Everyone chooses in secret. Then all reveal at once.</h2>
+    <div class="row"><i></i><i></i><i></i></div>
+    <div class="press">Press SPACE to set sail</div>
+  </div>
+
+  <div id="spots" class="panel"></div>
+  <div id="caps" class="panel"></div>
+  <div id="side" class="panel card"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="mx" class="panel card">
+    <h3>Ada's decision, morning 3</h3>
+    <div style="font-size:21px;line-height:1.4">Ada's catch depends on where the other two go. Rows: Ada's choice. Columns: what Bo and Cy might do.</div>
+    <table>
+      <tr><th style="text-align:left">ADA PICKS</th><th class="col">BOTH GO TO THE REEF</th><th>ONE REEF, ONE BAY</th><th>BOTH GO TO THE BAY</th></tr>
+      <tr><td class="k" style="color:var(--reef)">Reef (8)</td><td class="col">2</td><td>4</td><td>8</td></tr>
+      <tr><td class="k" style="color:var(--bay)">Bay (5)</td><td class="col best">5</td><td>2</td><td>1</td></tr>
+      <tr><td class="k" style="color:var(--sh)">Shallows (2)</td><td class="col">2</td><td>2</td><td>2</td></tr>
+    </table>
+    <p>No choice is best in every column. Ada must <b>predict</b>. Both rivals are behind and both just saw the Reef pay 8, so Ada bets on the highlighted column: <b>both at the Reef</b>. Then the Bay, alone, is worth 5.</p>
+  </div>
+
+  <div id="cmp" class="panel card">
+    <h3>What made this game work</h3>
+    <div class="cols">
+      <div class="k"><b>The best action depends on others</b>The Reef paid 2, 8 and 4 on different mornings. Its value was set by the crowd, not the card.</div>
+      <div class="k"><b>No waiting</b>All three captains decide at once. Nobody sits through other players' turns.</div>
+      <div class="k"><b>The collision rule is a dial</b>Here a crowded spot splits the catch. Other games let nobody get it, or give it to whoever is first in turn order.</div>
+    </div>
+    <p>Ada won with <b>15 fish</b> while sitting at the Reef only once. Each morning, Ada predicted where the others would go better than they predicted Ada.</p>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Secret, simultaneous choices turn actions into guesses.</b> The question is not "what is best?" but "what will the others pick?"</li>
+      <li><b>Crowding is the core tension.</b> The richest spot paid the least when everyone went there. The empty spot often paid the most.</li>
+      <li><b>Collisions need a clear rule.</b> Split, cancel or priority: each choice changes how risky the best action feels.</li>
+    </ol>
+    <div class="see">You'll see this in: Libertalia, Race for the Galaxy, Diplomacy, Colt Express.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const SP={R:{nm:'Reef',f:8,c:'var(--reef)'},B:{nm:'Bay',f:5,c:'var(--bay)'},H:{nm:'Shallows',f:2,c:'var(--sh)'}};
+const CP={A:{nm:'Ada',c:'var(--ada)'},B:{nm:'Bo',c:'var(--bo)'},C:{nm:'Cy',c:'var(--cy)'}};
+const ROUNDS=[{A:'R',B:'R',C:'R'},{A:'R',B:'B',C:'H'},{A:'B',B:'R',C:'R'}];
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',m:0,phase:'none',th:{},side:'',note:'',fresh:false}}
+function catchOf(r,k){const s=r[k],n=Object.values(r).filter(x=>x===s).length;return Math.floor(SP[s].f/n)}
+function totals(upto){const t={A:0,B:0,C:0},rows=[];for(let i=0;i<upto;i++){const r={};for(const k of 'ABC'){r[k]=catchOf(ROUNDS[i],k);t[k]+=r[k]}rows.push(r)}return[t,rows]}
+function render(anim){
+  ['title','spots','caps','side','note','mx','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='cmp'||st.view==='end'){$('cmp').classList.add('on');if(st.view==='end')$('end').classList.add('on');return}
+  ['spots','caps','side','note'].forEach(id=>$(id).classList.add('on'));
+  if(st.view==='mx')$('mx').classList.add('on');
+  const r=st.m?ROUNDS[st.m-1]:null,shown=st.phase==='reveal';
+  const done=st.m?(shown?st.m:st.m-1):0;const [tot]=totals(done);
+  $('spots').innerHTML=Object.entries(SP).map(([s,p])=>{const who=shown?Object.keys(r).filter(k=>r[k]===s):[];
+    return `<div class="spot ${who.length>1?'crowd':''}" style="--c:${p.c}"><div class="nm">${p.nm}</div><div class="fish"><b>${p.f}</b> fish</div>
+      <div class="boats">${who.map((k,i)=>`<span class="boat ${anim&&st.fresh?'in':''}" style="--c:${CP[k].c};--d:${i*.2+.3}s">${CP[k].nm}</span>`).join('')}</div>
+      ${who.length?`<div class="split">${who.length>1?`${p.f} ÷ ${who.length} = ${Math.floor(p.f/who.length)} each`:`all ${p.f} to ${CP[who[0]].nm}`}</div>`:''}</div>`}).join('');
+  $('caps').innerHTML=Object.entries(CP).map(([k,p],i)=>{
+    let pk='<div class="pick none"></div>';
+    if(r&&st.phase==='secret')pk='<div class="pick down">?</div>';
+    if(r&&shown)pk=`<div class="pick ${anim&&st.fresh?'flip':''}" style="background:${SP[r[k]].c};--d:${i*.15}s">${SP[r[k]].nm}${'' }</div>`;
+    return `<div class="cap card" style="--c:${p.c}"><span class="nm">${p.nm}</span><span class="tot"><b>${tot[k]}</b>fish</span>${pk}<span class="th">${st.th[k]?'"'+st.th[k]+'"':''}</span></div>`}).join('');
+  $('side').innerHTML=st.side+(st.score?scoreTable():'');
+  $('note').innerHTML=st.note;
+}
+function scoreTable(){const done=st.phase==='reveal'?st.m:st.m-1;const [t,rows]=totals(done);
+  return `<table id="scoreT"><tr><th></th>${[1,2,3].map(m=>`<th>M${m}</th>`).join('')}<th>TOTAL</th></tr>${'ABC'.split('').map(k=>`<tr><td style="color:${CP[k].c};text-align:left">${CP[k].nm}</td>${[0,1,2].map(i=>`<td>${rows[i]?rows[i][k]:''}</td>`).join('')}<td class="t">${t[k]}</td></tr>`).join('')}</table>`}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='sea';
+   st.side=`<h3>The setting</h3><p>Three fishing captains share one harbour. Each morning, every captain sails to <b>one</b> fishing ground.</p><ul><li><b>Reef:</b> 8 fish</li><li><b>Bay:</b> 5 fish</li><li><b>Shallows:</b> 2 fish</li></ul>`;
+   st.note='The Reef is the obvious choice. That is exactly the problem.';
+   setHeader('The game: three captains, three fishing grounds','Each ground holds a fixed number of fish every morning.')},
+ ()=>{st.side=`<h3>The rules</h3><ul><li>Each captain picks a ground <b>in secret</b>, face down.</li><li>All picks are <b>revealed at once</b>.</li><li>Captains at the same ground <b>split</b> its fish, rounded down. Leftover fish swim away.</li></ul>`;
+   st.note='There are no turns. Everyone decides at the same moment.';
+   setHeader('The rules: choose in secret, reveal together','Your catch depends on where the others go.')},
+ ()=>{st.side=`<h3>How you win</h3><div class="win">Three mornings. The captain with the <b>most fish</b> after morning 3 wins.</div>
+   <ul style="margin-top:8px"><li>Fish never run out between mornings: each ground refills.</li><li>What you caught yesterday tells the others how you think.</li></ul>`;
+   setHeader('Winning: most fish after 3 mornings','Every morning is a new guess about the others.')},
+ ()=>{st.m=1;st.phase='secret';st.score=true;TH({A:'The Reef has the most fish.',B:'Reef, obviously.',C:'8 fish? Reef.'});
+   st.side=`<h3>Morning 1: secret picks</h3><p>Each captain looks only at the fish counts.</p>`;st.note='Cards are face down. Nobody knows what the others chose.';
+   setHeader('Morning 1: everyone thinks the same thing','Each captain picks the best-looking ground.')},
+ ()=>{st.phase='reveal';st.fresh=true;
+   st.side=`<h3>Morning 1: reveal</h3><p>All three went to the Reef. 8 fish split three ways: <b>2 each</b>, and 2 fish lost.</p>`;
+   st.note='The best ground gave the worst result. Even the Shallows would have paid 2.';
+   setHeader('Reveal: all three at the Reef','The best action, crowded, pays almost nothing.')},
+ ()=>{st.m=2;st.phase='secret';TH({A:'They got burned at the Reef. They\'ll avoid it, so I\'ll take it.',B:'The Bay is the safe middle.',C:'Everyone will run to the Bay. I\'ll have the Shallows alone.'});
+   st.side=`<h3>Morning 2: secret picks</h3><p>Now each captain is thinking about <b>the others</b>, not just the fish.</p>`;st.note='Read each captain\'s reasoning before the reveal.';
+   setHeader('Morning 2: second-guessing begins','Yesterday\'s crowd changes today\'s choices.')},
+ ()=>{st.phase='reveal';st.fresh=true;
+   st.side=`<h3>Morning 2: reveal</h3><p>Ada guessed right and gets the Reef alone: <b>8</b>. Bo: 5. Cy guessed wrong about the Bay crowd: 2.</p>`;
+   st.note='Same grounds, same fish. The difference was who predicted the others best.';
+   setHeader('Reveal: everyone spread out','Ada read the table correctly.')},
+ ()=>{st.m=3;st.phase='secret';TH({A:'(Still deciding...)',B:'Ada got 8 at the Reef. I want that.',C:'I\'m last. Only the Reef can catch me up.'});
+   st.side=`<h3>Morning 3: the last pick</h3><p>Ada leads 10 to 7 to 4. Bo and Cy both need a big catch to win.</p>`;st.note='Bo and Cy have decided. What should Ada do?';
+   setHeader('Morning 3: the trailing captains need a big catch','Their position tells Ada what they are likely to do.')},
+ ()=>{st.view='mx';setHeader('Ada\'s decision: predict, then choose','Every option is good in some world and bad in another.')},
+ ()=>{st.view='sea';st.phase='reveal';st.fresh=true;TH({A:'They both need the Reef. The Bay is mine.',B:'Ada got 8 at the Reef. I want that.',C:'I\'m last. Only the Reef can catch me up.'});
+   st.side=`<h3>Morning 3: reveal</h3><p>Bo and Cy crowd the Reef: <b>4 each</b>. Ada takes the Bay alone: <b>5</b>. Final: Ada 15, Bo 11, Cy 8.</p>`;
+   st.note='Ada chose the "worse" ground and caught more, because nobody else was there.';
+   setHeader('Reveal: the prediction pays','Ada wins by going where the others did not.')},
+ ()=>{st.view='cmp';setHeader('Why simultaneous choice works','Guessing, crowding and a clear collision rule.')},
+ ()=>{st.view='end';setHeader('What designers take from this','The best move is the one the others did not make.')}
+];
+function TH(o){st.th=o}
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;st.fresh=false;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

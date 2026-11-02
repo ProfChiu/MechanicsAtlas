@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Resource Conversion</title>
+<style>
+:root{--bg:#15110c;--panel:#251e16;--panel2:#30271c;--ink:#f8f2e8;--muted:#c9b99f;--line:rgba(255,235,205,.14);
+  --wood:#a0662f;--plank:#e0b36a;--furn:#b48cff;--pts:#ffd166;--ok:#6ee08a;--red:#ff7a6b;--sell:#5fd3c0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#3a2c1c 0%,#15110c 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#diag{left:40px;top:134px;width:760px;height:200px;padding:12px 18px}
+#dsvg{position:absolute;left:10px;top:30px}
+.node rect{stroke:rgba(0,0,0,.35);stroke-width:3}
+.node text{font:700 22px "Fredoka",sans-serif;fill:#1b140c;text-anchor:middle;dominant-baseline:central}
+.ar{fill:none;stroke:#6d5a42;stroke-width:6;stroke-linecap:round;transition:stroke .4s}
+.ar.lit{stroke:var(--pts);filter:drop-shadow(0 0 6px rgba(255,209,102,.7))}
+.ar.sell.lit{stroke:var(--sell);filter:drop-shadow(0 0 6px rgba(95,211,192,.7))}
+.al{font:800 17px "Nunito",sans-serif;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:#251e16;stroke-width:5px}
+.al.boom{fill:var(--sell)}
+
+#track{left:40px;top:348px;width:760px;height:118px;padding:12px 18px}
+#slots{display:flex;gap:10px;margin-top:10px}
+.slot{flex:1;height:62px;border-radius:12px;border:2px dashed rgba(255,235,205,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;color:var(--muted);font-weight:800}
+.slot.f{border-style:solid;color:#1b140c;font-family:"Fredoka",sans-serif;font-size:21px;font-weight:600;background:var(--c);border-color:rgba(0,0,0,.25)}
+.slot.f.in{animation:pop .45s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d)}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.slot.nx{border-color:var(--pts);color:var(--pts)}
+.slot.dead{border-color:var(--red);color:var(--red)}
+
+#res{left:40px;top:480px;width:760px;height:128px;padding:12px 18px;display:flex;gap:14px;align-items:center}
+.ct{flex:1;height:96px;border-radius:14px;background:rgba(0,0,0,.22);display:flex;flex-direction:column;align-items:center;justify-content:center;border-top:5px solid var(--c)}
+.ct b{font-family:"Fredoka",sans-serif;font-size:40px;line-height:1;color:var(--c)}
+.ct span{font-size:17px;font-weight:800;color:var(--muted)}
+
+#side{left:820px;top:134px;width:420px;height:474px;padding:18px 22px;display:flex;flex-direction:column;gap:10px}
+#side h3{margin:0;font-family:"Fredoka",sans-serif;font-size:27px;font-weight:600;color:var(--pts)}
+#side ul{margin:0;padding-left:22px}
+#side li{font-size:19px;line-height:1.35;margin-bottom:7px}
+#side b{color:var(--pts)}
+.opt{display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:12px;background:rgba(0,0,0,.2);border:2px solid transparent;font-size:18px;line-height:1.3}
+.opt .n{font-family:"Fredoka",sans-serif;font-size:20px;font-weight:600;width:96px;flex-shrink:0}
+.opt .v{margin-left:auto;font-family:"Fredoka",sans-serif;font-size:21px;white-space:nowrap}
+.opt.pick{border-color:var(--pts);background:rgba(255,209,102,.1)}
+.think{margin-top:auto;padding:12px 14px;border-radius:14px;background:rgba(201,212,255,.08);border-left:5px solid #c9d4ff;font-size:19px;line-height:1.4;font-style:italic;color:#dfe5ff}
+.win{padding:12px 14px;border-radius:14px;background:rgba(255,209,102,.1);border:2px solid var(--pts);font-size:20px;line-height:1.4}
+#note{left:40px;right:40px;top:626px;height:40px;font-size:21px;text-align:center;color:var(--muted)}
+#note b{color:var(--pts)}
+
+#cmp{left:40px;right:40px;top:134px;height:492px;padding:22px 30px}
+#cmp h3{margin:0 0 10px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--pts)}
+#cmp table{width:100%;border-collapse:collapse;font-size:20px}
+#cmp th{text-align:left;font-size:16px;color:var(--muted);padding:6px 8px;border-bottom:2px solid var(--line)}
+#cmp td{padding:11px 8px;border-bottom:1px solid var(--line)}
+#cmp td.n{font-family:"Fredoka",sans-serif;font-size:28px;text-align:center}
+#cmp .chips span{display:inline-block;padding:2px 8px;border-radius:7px;margin-right:4px;font-size:15px;font-weight:900;color:#1b140c;background:var(--c)}
+#cmp p{font-size:21px;line-height:1.4;margin:14px 0 0}
+#cmp p b{color:var(--pts)}
+#cmp tr.best td{background:rgba(255,209,102,.08)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:118px;font-weight:700;line-height:1;text-align:center;
+  background:linear-gradient(90deg,var(--wood),var(--plank),var(--furn),var(--pts));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:34px;font-weight:700}
+#title .chain{display:flex;align-items:center;gap:14px;margin:30px 0 14px;font-size:30px;color:var(--muted)}
+#title .chain i{width:70px;height:70px;border-radius:16px;animation:bob 2.4s ease-in-out infinite}
+#title .chain i:nth-of-type(2){animation-delay:.2s}#title .chain i:nth-of-type(3){animation-delay:.4s}#title .chain i:nth-of-type(4){animation-delay:.6s}
+@keyframes bob{50%{transform:translateY(-10px)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(14,11,8,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--pts)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--pts)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,235,205,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--pts);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Resource Conversion</div>
+    <h2>Turn this into that, and that into points.</h2>
+    <div class="chain"><i style="background:var(--wood)"></i>→<i style="background:var(--plank)"></i>→<i style="background:var(--furn)"></i>→<i style="background:var(--pts)"></i></div>
+    <div class="press">Press SPACE to open the yard</div>
+  </div>
+
+  <div id="diag" class="panel card"><div class="lbl">WHAT TURNS INTO WHAT</div><svg id="dsvg" width="740" height="165"></svg></div>
+  <div id="track" class="panel card"><div class="lbl">YOUR 6 TURNS (ONE ACTION EACH)</div><div id="slots"></div></div>
+  <div id="res" class="panel card"></div>
+  <div id="side" class="panel card"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="cmp" class="panel card"></div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Conversion chains turn simple goods into big rewards.</b> Four wood sold made 2 points; the same four wood sawn and crafted made 6.</li>
+      <li><b>Count actions, not just goods.</b> A long chain only pays if there are enough turns left to finish it. Half-built chains score nothing.</li>
+      <li><b>Exchange rates are the balance knobs.</b> One changed rate flipped the best plan. Longer chains must pay more per action, or nobody builds them.</li>
+    </ol>
+    <div class="see">You'll see this in: Agricola, Le Havre, Puerto Rico.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const ACT={Chop:'var(--wood)',Saw:'var(--plank)',Craft:'var(--furn)',Sell:'var(--sell)'};
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'yard',turns:[],from:0,res:{w:0,p:0,f:0,pts:0},lit:[],boom:false,side:'',note:'',dead:[]}}
+function diag(){
+  const N=[['Wood',95,'var(--wood)'],['Planks',300,'var(--plank)'],['Furniture',505,'var(--furn)'],['Points',680,'var(--pts)']];
+  const lit=k=>st.lit.includes(k)?'lit':'';
+  let h=`<defs><marker id="ah" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="10" refY="8" orient="auto"><path d="M0,0 L16,8 L0,16 z" fill="#8a7458"/></marker></defs>`;
+  h+=`<path class="ar ${lit('saw')}" d="M160,112 L230,112" marker-end="url(#ah)"/><text class="al" x="195" y="148">Saw 2 : 1</text>`;
+  h+=`<path class="ar ${lit('craft')}" d="M365,112 L435,112" marker-end="url(#ah)"/><text class="al" x="400" y="148">Craft 2 : 1</text>`;
+  h+=`<path class="ar ${lit('score')}" d="M570,112 L622,112" marker-end="url(#ah)"/><text class="al" x="596" y="148">= 6 pts</text>`;
+  h+=`<path class="ar sell ${lit('sell')}" d="M95,82 C95,10 680,10 680,74" marker-end="url(#ah)"/><text class="al ${st.boom?'boom':''}" x="388" y="16">Sell: ${st.boom?'1 wood → 1 point (market boom!)':'2 wood → 1 point'}</text>`;
+  for(const [n,x,c] of N)h+=`<g class="node"><rect x="${x-62}" y="84" width="124" height="56" rx="12" fill="${c}"/><text x="${x}" y="112">${n}</text></g>`;
+  return h}
+function render(anim){
+  ['title','diag','track','res','side','note','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='cmp'||st.view==='end'){$('cmp').classList.add('on');$('cmp').innerHTML=st.cmp;if(st.view==='end')$('end').classList.add('on');return}
+  ['diag','track','res','side','note'].forEach(id=>$(id).classList.add('on'));
+  $('dsvg').innerHTML=diag();
+  $('slots').innerHTML=[0,1,2,3,4,5].map(i=>{const a=st.turns[i];
+    if(a)return `<div class="slot f ${anim&&i>=st.from?'in':''}" style="--c:${ACT[a]};--d:${(i-st.from)*.3}s">${a}</div>`;
+    return `<div class="slot ${i===st.turns.length?'nx':''} ${st.dead.includes(i)?'dead':''}">Turn ${i+1}</div>`}).join('');
+  const r=st.res;
+  $('res').innerHTML=[['Wood',r.w,'var(--wood)'],['Planks',r.p,'var(--plank)'],['Furniture',r.f,'var(--furn)'],['Points',r.pts,'var(--pts)']].map(([n,v,c])=>`<div class="ct" style="--c:${c}"><b>${v}</b><span>${n}</span></div>`).join('');
+  $('side').innerHTML=st.side;$('note').innerHTML=st.note;
+}
+const opt=(n,txt,v,pick)=>`<div class="opt ${pick?'pick':''}"><span class="n">${n}</span><span>${txt}</span><span class="v">${v}</span></div>`;
+const RULES=`<h3>The Carpenter's Yard</h3><ul>
+  <li><b>Chop:</b> +2 wood.</li><li><b>Saw:</b> turn up to 4 wood into planks, 2 wood per plank.</li>
+  <li><b>Craft:</b> turn 2 planks into 1 piece of furniture, sold at once for <b>6 points</b>.</li>
+  <li><b>Sell:</b> sell any amount of wood at 2 wood per point.</li></ul>`;
+const ROUTES=(boom)=>{
+  const sp=boom?1:2;
+  const rows=[
+    ['Only chop and sell',['Chop','Chop','Chop','Chop','Chop','Sell'],boom?10:5,'10 wood sold'],
+    ['Chain first, then shortcut',['Chop','Chop','Saw','Craft','Chop','Sell'],6+(boom?2:1),'furniture + 2 wood sold'],
+    ['Chain, then a half chain',['Chop','Chop','Saw','Craft','Chop','Chop'],6,'4 wood left over: 0 points']];
+  const best=Math.max(...rows.map(r=>r[2]));
+  return `<h3>${boom?'After the market boom: sell at 1 wood per point':'Three routes through the same 6 turns'}</h3><table><tr><th>ROUTE</th><th>ACTIONS</th><th style="text-align:center">POINTS</th><th>WHERE THE POINTS CAME FROM</th></tr>`+
+    rows.map(r=>`<tr class="${r[2]===best?'best':''}"><td><b>${r[0]}</b></td><td class="chips">${r[1].map(a=>`<span style="--c:${ACT[a]}">${a}</span>`).join('')}</td><td class="n" style="color:${r[2]===best?'var(--pts)':'var(--ink)'}">${r[2]}</td><td>${r[3]}</td></tr>`).join('')+'</table>'+
+    (boom?'<p>One number changed. Now each wood sold is worth as much as the chain pays, and the chain takes more actions. <b>The shortcut wins: 10 to 8.</b> Every player will switch to chopping and selling.</p>'
+         :'<p>The chain pays <b>3 points per action</b> (6 points for Saw + Craft); selling pays 2 at best. But the chain only pays if you finish it: the last route wasted its final turns on wood that never became anything.</p>')};
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='yard';st.side=RULES;
+   st.note='Wood is easy to get. Points are what you want. The actions in between are the game.';
+   setHeader('The game: a carpenter\'s yard','You chop wood and turn it into things worth more than wood. Four actions, one route to points, and one shortcut.')},
+ ()=>{st.side=`<h3>How you win</h3><div class="win">The game lasts <b>6 turns</b>. Each turn you take <b>one action</b>. Most points at the end wins.</div>
+   <ul style="margin-top:8px"><li>Wood, planks and furniture <b>score nothing</b> at the end. Only points count.</li><li>Your neighbour only chops and sells. That scores <b>5 points</b>. Can you beat it?</li></ul>
+   <div class="think">"Six actions in total. Every action has to move me closer to points."</div>`;
+   setHeader('Winning: most points after 6 turns','Actions are the scarce resource, not wood.')},
+ ()=>{st.turns=['Chop','Chop'];st.from=0;st.res={w:4,p:0,f:0,pts:0};st.lit=[];
+   st.side=`<h3>Turns 1 and 2</h3>${opt('Chop','+2 wood, twice','4 wood',1)}<div class="think">"Every route starts with wood, and I have none. Nothing to decide yet: chop twice."</div>`;
+   setHeader('Turns 1 and 2: gather the raw material','Two chops: 4 wood.')},
+ ()=>{st.from=2;st.lit=['sell','saw','craft','score'];
+   st.side=`<h3>Turn 3: what do I do with 4 wood?</h3>
+   ${opt('Sell','4 wood → 2 points now. 1 action.','2 pts')}
+   ${opt('Saw + Craft','4 wood → 2 planks → 1 furniture. 2 actions.','6 pts',1)}
+   ${opt('Chop again','More wood, still 0 points.','0 pts')}
+   <div class="think">"Selling pays 2 points for 1 action. Saw and Craft pay 6 for 2 actions: that's 3 per action. And I still have 4 turns, enough to finish."</div>`;
+   setHeader('Turn 3: the first real decision','Cash in now, or invest two actions in the chain?')},
+ ()=>{st.turns=['Chop','Chop','Saw','Craft'];st.from=2;st.res={w:0,p:0,f:0,pts:6};st.lit=['saw','craft','score'];
+   st.side=`<h3>Turns 3 and 4</h3>${opt('Saw','4 wood → 2 planks','',1)}${opt('Craft','2 planks → furniture','+6 pts',1)}<div class="think">"Six points from four wood. My neighbour needs 12 wood to match that."</div>`;
+   setHeader('Turns 3 and 4: run the chain','Saw, then Craft. The furniture sells for 6 points.')},
+ ()=>{st.from=4;st.lit=['sell'];
+   st.side=`<h3>Turn 5: 2 turns left, no goods</h3>
+   ${opt('Start the chain','Needs Chop, Chop, Saw, Craft: 4 actions.','won\'t finish')}
+   ${opt('Chop + Sell','2 wood → 1 point. 2 actions.','1 pt',1)}
+   <div class="think">"The chain is better per action, but I can't finish it in 2 turns. Unfinished, it's worth zero. Take the shortcut."</div>`;
+   setHeader('Turn 5: is there time for another chain?','Count the actions left before you start.')},
+ ()=>{st.turns=['Chop','Chop','Saw','Craft','Chop','Sell'];st.from=4;st.res={w:0,p:0,f:0,pts:7};st.lit=[];
+   st.side=`<h3>Final score: 7 points</h3><div class="win">You: <b>7</b>. The neighbour who only sold wood: <b>5</b>.</div><div class="think">"The chain did the heavy lifting. The shortcut used up the last two turns that the chain couldn't."</div>`;
+   setHeader('Turns 5 and 6: the shortcut to finish','Chop, then Sell: one more point.')},
+ ()=>{st.view='cmp';st.cmp=ROUTES(false);setHeader('Compare the routes','Same 6 turns, same actions available.')},
+ ()=>{st.view='yard';st.boom=true;st.lit=['sell'];st.res={w:0,p:0,f:0,pts:0};st.turns=[];
+   st.side=`<h3>A designer changes one rate</h3><div class="win">Selling now pays <b>1 point per wood</b> instead of 1 per 2 wood.</div>
+   <div class="think">"Each Chop now makes 2 points just by selling. Is the chain still worth 2 actions?"</div>`;
+   st.note='Nothing else in the game changes.';
+   setHeader('What if the market pays more for wood?','The designer\'s knob: one exchange rate.')},
+ ()=>{st.view='cmp';st.cmp=ROUTES(true);setHeader('The best route flips','One number changed, and the whole strategy changed with it.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Chains, actions and exchange rates.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

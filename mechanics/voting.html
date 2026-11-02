@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Voting</title>
+<style>
+:root{--bg:#141218;--panel:#231f2a;--panel2:#2d2836;--ink:#f6f3fa;--muted:#bfb6cc;--line:rgba(235,225,250,.14);
+  --gold:#ffcc4d;--yes:#6ee08a;--no:#ff6b6b;--ada:#e070ff;--bo:#5ba8ff;--cy:#ff9d4a;--dee:#5fd3a0;--eli:#f2d45c}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#2f2540 0%,#141218 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:18px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+#seats{left:40px;right:40px;top:132px;height:214px;display:flex;gap:14px}
+.seat{flex:1;padding:12px 14px;position:relative;display:flex;flex-direction:column;gap:6px;border-top:5px solid var(--c);transition:box-shadow .4s}
+.seat .nm{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;color:var(--c)}
+.seat .ds{font-size:16px;font-weight:800;color:var(--muted)}
+.seat .co{display:flex;align-items:baseline;gap:6px;font-size:16px;font-weight:800;color:var(--muted)}
+.seat .co b{font-family:"Fredoka",sans-serif;font-size:30px;color:var(--gold)}
+.seat .bar{height:9px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden}
+.seat .bar i{display:block;height:100%;background:var(--c);transition:width .8s}
+.seat .th{font-size:17px;line-height:1.3;font-style:italic;color:#dfe5ff;min-height:44px}
+.seat .vote{position:absolute;right:10px;top:10px;padding:3px 10px;border-radius:10px;font-weight:900;font-size:17px;color:#111}
+.seat .vote.y{background:var(--yes)}.seat .vote.n{background:var(--no)}
+.seat .vote.in{animation:pop .45s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d)}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+.seat .lead{position:absolute;right:10px;bottom:10px;font-size:14px;font-weight:900;padding:2px 8px;border-radius:8px;background:var(--gold);color:#3a2600}
+.seat.act{box-shadow:0 0 0 3px var(--c),0 0 22px rgba(255,255,255,.12),0 12px 32px rgba(0,0,0,.45)}
+.seat.dim{opacity:.5}
+
+#prop{left:40px;top:362px;width:600px;height:248px;padding:16px 20px;position:relative}
+#prop .who{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;padding-right:170px;line-height:1.15}
+#prop .eff{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+#prop .eff span{padding:4px 10px;border-radius:10px;font-weight:900;font-size:18px;background:rgba(255,255,255,.07);border:2px solid var(--c)}
+#prop .tally{display:flex;gap:6px;height:30px;margin-top:8px}
+#prop .tally i{flex:1;border-radius:6px;background:rgba(255,255,255,.08)}
+#prop .tally i.y{background:var(--yes)}#prop .tally i.n{background:var(--no)}
+#prop .res{font-size:20px;font-weight:800;margin-top:8px}
+#stamp{position:absolute;right:18px;top:14px;padding:6px 16px;border-radius:12px;border:4px solid var(--s);color:var(--s);font-family:"Fredoka",sans-serif;font-size:30px;font-weight:700;transform:rotate(-8deg);background:rgba(0,0,0,.35)}
+#stamp.go{animation:stamp .5s cubic-bezier(.3,1.6,.5,1) both;animation-delay:1.2s}
+@keyframes stamp{from{transform:rotate(-8deg) scale(2);opacity:0}to{transform:rotate(-8deg);opacity:1}}
+#side{left:660px;top:362px;width:580px;height:248px;padding:16px 20px;display:flex;flex-direction:column;gap:8px}
+#side h3{margin:0;font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;color:var(--gold)}
+#side p,#side li{font-size:19px;line-height:1.35;margin:0}
+#side ul{margin:0;padding-left:22px}
+#side b{color:var(--gold)}
+.think{padding:10px 14px;border-radius:12px;background:rgba(201,212,255,.08);border-left:5px solid #c9d4ff;font-size:19px;line-height:1.38;font-style:italic;color:#dfe5ff}
+.buy{display:flex;gap:8px}
+.buy div{flex:1;padding:6px 8px;border-radius:10px;background:rgba(0,0,0,.22);font-size:16px;font-weight:800;text-align:center;border:2px solid transparent}
+.buy div b{display:block;font-family:"Fredoka",sans-serif;font-size:20px}
+.buy div.pk{border-color:var(--yes)}.buy div.x{opacity:.55}
+#note{left:40px;right:40px;top:626px;height:40px;font-size:21px;text-align:center;color:var(--muted)}
+#note b{color:var(--gold)}
+
+#cmp{left:40px;right:40px;top:134px;height:492px;padding:24px 32px}
+#cmp h3{margin:0 0 12px;font-family:"Fredoka",sans-serif;font-size:28px;font-weight:600;color:var(--gold)}
+#cmp table{width:100%;border-collapse:collapse;font-size:20px}
+#cmp th{text-align:left;font-size:16px;color:var(--muted);padding:6px 10px;border-bottom:2px solid var(--line)}
+#cmp td{padding:12px 10px;border-bottom:1px solid var(--line);line-height:1.3}
+#cmp td.s{font-family:"Fredoka",sans-serif;font-size:22px;font-weight:600;color:var(--gold);white-space:nowrap}
+#cmp p{font-size:21px;line-height:1.4;margin:16px 0 0}
+#cmp p b{color:var(--gold)}
+
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:140px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--bo),var(--gold),var(--ada));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:14px 0 0;font-size:34px;font-weight:700}
+#title .hands{display:flex;gap:16px;margin:30px 0 14px}
+#title .hands i{width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font:700 22px "Fredoka";color:#111;animation:bob 2s ease-in-out infinite}
+#title .hands i:nth-child(2){animation-delay:.2s}#title .hands i:nth-child(3){animation-delay:.4s}#title .hands i:nth-child(4){animation-delay:.6s}#title .hands i:nth-child(5){animation-delay:.8s}
+@keyframes bob{50%{transform:translateY(-12px)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(12,10,15,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(235,225,250,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Voting</div>
+    <h2>Majority rules. So every vote has a price.</h2>
+    <div class="hands"><i style="background:var(--yes)">YES</i><i style="background:var(--no)">NO</i><i style="background:var(--yes)">YES</i><i style="background:var(--yes)">YES</i><i style="background:var(--no)">NO</i></div>
+    <div class="press">Press SPACE to call the meeting</div>
+  </div>
+
+  <div id="seats" class="panel"></div>
+  <div id="prop" class="panel card"></div>
+  <div id="side" class="panel card"></div>
+  <div id="note" class="panel"></div>
+
+  <div id="cmp" class="panel card">
+    <h3>What actually moved the votes</h3>
+    <table>
+      <tr><th>FORCE</th><th>WHAT HAPPENED</th><th>THE DESIGN LESSON</th></tr>
+      <tr><td class="s">Self-interest</td><td>Bo's bridge helped only Bo: 1 vote.</td><td>Proposals that help one player fail.</td></tr>
+      <tr><td class="s">Sharing the gain</td><td>Giving Cy and Dee +2 each bought their votes.</td><td>Votes become a currency you pay for.</td></tr>
+      <tr><td class="s">Fear of the leader</td><td>Eli refused +2 because it let Ada win.</td><td>A built-in brake on runaway leaders.</td></tr>
+      <tr><td class="s">Secret ballots</td><td>Dee broke a promise and nobody could prove it.</td><td>Hidden votes turn deals into trust games.</td></tr>
+    </table>
+    <p>Every voter asked the same two questions: <b>"Does this help me?"</b> and <b>"Does this help the leader?"</b></p>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>A majority is a price.</b> To pass anything, a player must share the gain with enough others. Votes become a currency.</li>
+      <li><b>The table protects itself.</b> Nobody votes to let the leader win, so voting games pull leaders back on their own.</li>
+      <li><b>Open or secret is a dial.</b> Open votes keep promises honest; secret votes add bluffing and betrayal.</li>
+    </ol>
+    <div class="see">You'll see this in: Twilight Imperium, Secret Hitler, Junta, The Resistance.</div>
+  </div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const S=document.getElementById('stage');const $=id=>document.getElementById(id);const dotsEl=$('dots');
+const P={A:{nm:'Ada',ds:'Harbour',c:'var(--ada)'},B:{nm:'Bo',ds:'North',c:'var(--bo)'},C:{nm:'Cy',ds:'East',c:'var(--cy)'},D:{nm:'Dee',ds:'South',c:'var(--dee)'},E:{nm:'Eli',ds:'West',c:'var(--eli)'}};
+const K=['A','B','C','D','E'];
+let cur=0,st;
+function setHeader(t,s){const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim')}
+function reset(){st={view:'title',sc:{A:9,B:6,C:5,D:5,E:4},votes:{},th:{},act:[],prop:null,side:'',note:'',fresh:false}}
+function render(anim){
+  ['title','seats','prop','side','note','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='cmp'||st.view==='end'){$('cmp').classList.add('on');if(st.view==='end')$('end').classList.add('on');return}
+  ['seats','prop','side','note'].forEach(id=>$(id).classList.add('on'));
+  const top=Math.max(...K.map(k=>st.sc[k]));
+  $('seats').innerHTML=K.map((k,i)=>{const p=P[k],v=st.votes[k];
+    return `<div class="seat card ${st.act.includes(k)?'act':''} ${st.act.length&&!st.act.includes(k)&&!v?'dim':''}" style="--c:${p.c}">
+      <span class="nm">${p.nm}</span><span class="ds">${p.ds} district</span>
+      <span class="co"><b>${st.sc[k]}</b>/ 12 coins</span><div class="bar"><i style="width:${st.sc[k]/12*100}%"></i></div>
+      <span class="th">${st.th[k]?'"'+st.th[k]+'"':''}</span>
+      ${v?`<span class="vote ${v} ${anim&&st.fresh?'in':''}" style="--d:${i*.18}s">${v==='y'?'YES':'NO'}</span>`:''}
+      ${st.sc[k]===top?'<span class="lead">LEADER</span>':''}</div>`}).join('');
+  const pr=st.prop;
+  if(pr){const ys=K.filter(k=>st.votes[k]==='y').length,ns=K.filter(k=>st.votes[k]==='n').length,done=ys+ns===5;
+    $('prop').innerHTML=`<div class="lbl">PROPOSAL${pr.tag?' · '+pr.tag:''}</div><div class="who" style="color:${P[pr.by].c}">${P[pr.by].nm}: ${pr.title}</div>
+      <div class="eff">${pr.eff.map(([k,t])=>`<span style="--c:${P[k].c}">${P[k].ds} ${t}</span>`).join('')}</div>
+      ${done?`<div class="tally">${K.map(k=>`<i class="${st.votes[k]}"></i>`).join('')}</div><div class="res">${ys} yes, ${ns} no. Needs 3.</div>
+      <div id="stamp" class="${anim&&st.fresh?'go':''}" style="--s:${ys>=3?'var(--yes)':'var(--no)'}">${ys>=3?'PASSED':'FAILED'}</div>`:'<div class="res" style="color:var(--muted)">Everyone votes at once: yes or no.</div>'}`;
+  } else $('prop').innerHTML=st.propHtml||'';
+  $('side').innerHTML=st.side;$('note').innerHTML=st.note;
+}
+const TH=o=>{st.th=o};
+function vote(o){st.votes=o;st.fresh=true}
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='council';st.propHtml=`<div class="lbl">THE SETTING</div><p style="font-size:21px;line-height:1.45;margin:10px 0 0">The village treasury is shared. Each meeting, one member <b style="color:var(--gold)">proposes</b> how to spend some of it: coins for a district. If the council agrees, the coins go to that district's member.</p>`;
+   st.side=`<h3>The players</h3><p>Five council members, each speaking for one district. Coins handed to your district are <b>your</b> coins.</p><div class="think">"Every proposal moves coins. The only question is: to whom?"</div>`;
+   st.note='Five players around one table. Nothing happens unless enough of them agree.';
+   setHeader('The game: a village council','Five members share one treasury. They decide together where the money goes.')},
+ ()=>{st.side=`<h3>How you win</h3><p>The first member to reach <b>12 coins</b> wins the game.</p><ul><li>Ada leads with <b>9</b>. Two good proposals and Ada wins.</li><li>Eli is last with 4.</li></ul><div class="think">"I can't win alone. I need other votes, and the leader needs them most of all."</div>`;
+   setHeader('Winning: first to 12 coins','Look at the scores before every vote.')},
+ ()=>{st.propHtml=`<div class="lbl">HOW A VOTE WORKS</div><ol style="font-size:21px;line-height:1.5;margin:10px 0 0;padding-left:26px"><li>One member proposes who gets coins.</li><li>Everyone votes <b style="color:var(--yes)">YES</b> or <b style="color:var(--no)">NO</b> at the same time.</li><li><b style="color:var(--gold)">3 of 5</b> votes pass it. Otherwise nothing happens.</li></ol>`;
+   st.side=`<h3>Every voter's two questions</h3><ul><li><b>Does this help me?</b> If not, why say yes?</li><li><b>Does this help the leader?</b> Helping the leader brings everyone closer to losing.</li></ul><div class="think">"A yes vote is something I give away. What do I get for it?"</div>`;
+   setHeader('The rule: a majority of 3','Watch how each member decides.')},
+ ()=>{st.prop={by:'B',title:'Build a North bridge',eff:[['B','+3']]};st.act=['B'];
+   TH({A:'Nothing for me.',B:'My district, my coins.',C:'Why help Bo?',D:'Nothing for me.',E:'Nothing for me.'});vote({A:'n',B:'y',C:'n',D:'n',E:'n'});
+   st.side=`<h3>Proposal 1: Bo asks for 3 coins</h3><p>Only Bo gains. Every other member asks "does this help me?" and gets the answer <b>no</b>.</p><div class="think">"Bo forgot that a yes vote has to be paid for."</div>`;
+   setHeader('Proposal 1: Bo\'s bridge','A proposal that helps only the proposer.')},
+ ()=>{st.prop=null;st.votes={};st.th={};st.act=['B'];st.fresh=false;
+   st.propHtml=`<div class="lbl">BO PLANS A BETTER PROPOSAL</div><p style="font-size:20px;line-height:1.4;margin:8px 0">Bo needs <b style="color:var(--gold)">2 more yes votes</b>. Who is cheapest to win over?</p>
+     <div class="buy"><div class="x" style="color:var(--ada)"><b>Ada</b>leader: helping Ada is risky</div><div class="pk" style="color:var(--cy)"><b>Cy</b>+2 coins, not a threat</div><div class="pk" style="color:var(--dee)"><b>Dee</b>+2 coins, not a threat</div><div style="color:var(--eli)"><b>Eli</b>also possible</div></div>`;
+   st.side=`<h3>Bo's thinking</h3><div class="think">"I'll give away 4 coins of the treasury to get my 3. Cy and Dee are behind, so helping them doesn't put anyone near 12. And it pulls me level with Ada."</div>`;
+   setHeader('Bo rethinks: buy two votes','To pass anything, share the gain with enough others.')},
+ ()=>{st.prop={by:'B',title:'Bridge and roads',eff:[['B','+3'],['C','+2'],['D','+2']]};st.act=['B','C','D'];
+   TH({A:'Bo catches up to me.',B:'Worth sharing.',C:'+2 for me. Yes.',D:'+2 for me. Yes.',E:'Nothing for me.'});vote({A:'n',B:'y',C:'y',D:'y',E:'n'});
+   st.sc={A:9,B:9,C:7,D:7,E:4};
+   st.side=`<h3>Proposal 2 passes, 3 to 2</h3><p>Bo, Cy and Dee all gain. Ada votes no because Bo draws level; Eli gets nothing.</p><div class="think">Bo paid 4 coins of shared money for 3 coins of personal gain, <b>and</b> caught the leader.</div>`;
+   setHeader('Proposal 2: the bridge, with something for everyone who votes yes','Same bridge, now with partners.')},
+ ()=>{st.prop={by:'A',title:'Harbour docks, plus a gift for the West',eff:[['A','+4'],['E','+2']]};st.act=['A','E'];
+   TH({A:'13 coins: I win.',B:'Ada would win.',C:'Ada would win.',D:'Ada would win.',E:'+2 is nice, but Ada wins.'});vote({A:'y',B:'n',C:'n',D:'n',E:'n'});
+   st.side=`<h3>Proposal 3: Ada tries to buy Eli</h3><p>Eli is offered +2, the same price that bought Cy and Dee.</p><div class="think">Eli: "Two coins don't matter if the game ends. If Ada reaches 13, <b>I lose</b>. No."</div>`;
+   setHeader('Proposal 3: the leader makes an offer','Some votes cannot be bought at any price.')},
+ ()=>{st.prop={by:'E',title:'Tax the leaders',eff:[['A','−2'],['B','−2'],['C','+1'],['D','+1'],['E','+2']]};st.act=['E','C','D'];
+   TH({A:'Aimed at me.',B:'Aimed at me.',C:'+1, and the leaders slow down.',D:'+1, and the leaders slow down.',E:'+2 for me.'});vote({A:'n',B:'n',C:'y',D:'y',E:'y'});
+   st.sc={A:7,B:7,C:8,D:8,E:6};
+   st.side=`<h3>Proposal 4 passes, 3 to 2</h3><p>The three trailing members team up. The race is now 6 to 8: anyone can win.</p><div class="think">Eli: "Three of us are behind. Together, we are the majority."</div>`;
+   setHeader('Proposal 4: the trailing players team up','A coalition against the leaders.')},
+ ()=>{st.sc={A:9,B:6,C:5,D:5,E:4};st.prop={by:'B',title:'Bridge and roads',eff:[['B','+3'],['C','+2'],['D','+2']],tag:'SECRET BALLOT'};st.act=['B','D'];
+   TH({A:'Bo catches up to me.',B:'Dee promised yes.',C:'+2 for me. Yes.',D:'(Promised yes.) If Bo stays low, I\'m safer.',E:'Nothing for me.'});vote({A:'n',B:'y',C:'y',D:'n',E:'n'});
+   st.side=`<h3>Replay proposal 2, but votes are secret</h3><p>Dee promised Bo a yes. In secret, Dee votes no. It fails 2 to 3, and <b>nobody can prove</b> who broke the deal.</p><div class="think">With open votes, the table would have seen it. Secret votes turn every promise into a guess.</div>`;
+   setHeader('A designer dial: open or secret ballots','Same proposal, same players. Only the ballot changes.')},
+ ()=>{st.view='cmp';setHeader('What moved the votes?','Four forces, four lessons.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Votes are a currency, and the leader is everyone\'s target.')}
+];
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+function goTo(n){S.classList.add('instant');reset();for(let i=0;i<=n;i++)steps[i](true);render(false);cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots()}
+function next(){if(cur<steps.length-1){cur++;st.fresh=false;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

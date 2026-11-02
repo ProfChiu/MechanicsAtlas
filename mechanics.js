@@ -883,20 +883,67 @@ window.MECHANICS = [
     brief: 'A fixed board vs a modular one: random hex setup changes which spots are strong. Then exploration: an explorer flips face-down tiles to reveal resources and dangers. End with three different maps from the same tiles.'
   },
   /* Economy & Actions */
-  { id: 'resource-conversion', family: 'economy', title: 'Resource Conversion', file: null,
+  {
+    id: 'resource-conversion', family: 'economy', title: 'Resource Conversion',
+    file: 'mechanics/resource-conversion.html', w: 1280, h: 720, minutes: 5,
     hook: 'Turn wood into planks, planks into furniture, furniture into points.',
+    anatomy: {
+      Procedures: 'Spend actions to gather a basic good, convert it step by step into better goods, and turn the best goods into points.',
+      Rules: 'Each conversion has a fixed exchange rate (2 wood → 1 plank, 2 planks → 1 furniture), and a shortcut sells raw goods at a poorer rate.',
+      Resources: 'Actions (turns), raw goods, and the half-finished goods in between.',
+      Outcome: 'Long chains pay more per action but only if finished; exchange rates decide which route every player chases.'
+    },
+    feel: ['Planning', 'Efficiency', 'Craft'],
+    feelText: 'Watching a pile of wood become a 6-point piece of furniture feels like building something. Running out of turns with a half-finished chain feels like waste.',
     watchFor: 'Watch the exchange rates: one changed number decides which chain every player chases.',
-    examples: [{ name: 'Agricola' }, { name: 'Le Havre' }, { name: 'Puerto Rico' }],
-    brief: 'A three-step chain (wood → planks 2:1 → furniture → points) beside a shortcut (sell wood for 1 point each). Show turns and points for each route, then change one rate and watch the best route flip.' },
+    examples: [
+      { name: 'Agricola', note: 'Turn grain into bread, clay into ovens, animals into food to feed your family.' },
+      { name: 'Le Havre', note: 'A long chain of buildings converts fish, clay and coal into ships and steel.' },
+      { name: 'Puerto Rico', note: 'Plantations grow crops, buildings process them into goods, and ships turn goods into points.' }
+    ],
+    brief: 'A three-step chain (wood → planks 2:1 → furniture → points) beside a shortcut (sell wood for 1 point each). Show turns and points for each route, then change one rate and watch the best route flip.'
+  },
   /* Player Interaction */
-  { id: 'voting', family: 'people', title: 'Voting', file: null,
+  {
+    id: 'voting', family: 'people', title: 'Voting',
+    file: 'mechanics/voting.html', w: 1280, h: 720, minutes: 5,
     hook: 'Majority rules, so votes become the currency of the table.',
+    anatomy: {
+      Procedures: 'One player makes a proposal; everyone votes yes or no at once; a majority passes it.',
+      Rules: 'A proposal needs 3 of 5 votes. Votes can be traded or promised; ballots may be open or secret.',
+      Resources: 'Votes, the shared treasury, and trust between players.',
+      Outcome: 'Proposals pass only when they share the gain, leaders are voted down, and secret ballots invite broken promises.'
+    },
+    feel: ['Politics', 'Persuasion', 'Suspicion'],
+    feelText: 'Every proposal turns into a small negotiation. Being refused by everyone, or betrayed in a secret vote, is felt personally.',
     watchFor: 'Watch a vote get bought: a proposal that helps one player passes only when it offers something to others.',
-    examples: [{ name: 'Twilight Imperium' }, { name: 'Secret Hitler' }, { name: 'Junta' }, { name: 'The Resistance' }],
-    brief: 'Five players vote on proposals ("+2 coins to the north", "tax the leader"). Show self-interest, vote trading and a coalition against the leader. Then compare open and secret ballots.' },
-  { id: 'simultaneous-selection', family: 'people', title: 'Simultaneous Action Selection', file: null,
+    examples: [
+      { name: 'Twilight Imperium', note: 'An agenda phase where players vote on laws that change the rules for everyone.' },
+      { name: 'Secret Hitler', note: 'Players vote on each government; hidden roles mean every vote is a clue.' },
+      { name: 'Junta', note: 'Vote on the budget proposed by the president, then fight over the money.' },
+      { name: 'The Resistance', note: 'The team votes to approve each mission team; a single traitor can sink it.' }
+    ],
+    brief: 'Five players vote on proposals ("+2 coins to the north", "tax the leader"). Show self-interest, vote trading and a coalition against the leader. Then compare open and secret ballots.'
+  },
+  {
+    id: 'simultaneous-selection', family: 'people', title: 'Simultaneous Action Selection',
+    file: 'mechanics/simultaneous-selection.html', w: 1280, h: 720, minutes: 5,
     hook: 'Everyone chooses in secret, then all reveal at once.',
+    anatomy: {
+      Procedures: 'Every player picks an action in secret; all choices are revealed at the same moment and resolved together.',
+      Rules: 'Players who pick the same action share it (or collide); an action nobody else picked pays in full.',
+      Resources: 'Your hidden choice, and what you know about how the others think.',
+      Outcome: 'The best action depends on the others; reading the table beats picking the obvious option.'
+    },
+    feel: ['Mind games', 'Suspense', 'No waiting'],
+    feelText: 'The reveal is a shared moment of surprise. Guessing right about everyone else feels clever; colliding with them feels like being read.',
     watchFor: 'Watch players guess what others will pick. Picking what nobody else picks is often worth more than picking the best action.',
-    examples: [{ name: 'Libertalia' }, { name: 'Race for the Galaxy' }, { name: 'Diplomacy' }, { name: 'Colt Express' }],
-    brief: 'Three players secretly pick one of three actions; players who pick the same action split its reward. Show the reveal, a crowded "best" action paying little, and an empty action paying in full.' }
+    examples: [
+      { name: 'Libertalia', note: 'Everyone plays a pirate card at once; card ranks decide the order they act in.' },
+      { name: 'Race for the Galaxy', note: 'Each player secretly picks a phase; only chosen phases happen this round.' },
+      { name: 'Diplomacy', note: 'All orders are written in secret and resolved at the same time.' },
+      { name: 'Colt Express', note: 'Players plan their bandit\'s moves in secret, then carry them out in order.' }
+    ],
+    brief: 'Three players secretly pick one of three actions; players who pick the same action split its reward. Show the reveal, a crowded "best" action paying little, and an empty action paying in full.'
+  }
 ];

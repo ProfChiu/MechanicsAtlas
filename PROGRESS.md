@@ -1,5 +1,10 @@
 # Mechanics Atlas — progress log
 
+## 2026-11-02 (Phase 4: all 44 mechanics built)
+- Accomplished: Built Resource Conversion, Voting and Simultaneous Action Selection in the new style Wan asked for: several opening steps on the game's background and winning condition, then each decision shown with options and a "Think:" line. Atlas now 44 of 44 built, ~187 min. All pass the checker.
+- Decisions: Carpenter's Yard (6 turns; chain Saw 2:1 → Craft 2:1 = 6 pts; Sell 2 wood → 1 pt): chain-then-shortcut scores 7 vs 5; a 1:1 market boom flips the best route (10 vs 8). Village council (5 members, first to 12 coins, 3 of 5 to pass): a self-serving bill fails, a shared bill passes, the leader cannot buy a vote, a coalition taxes the leaders, a secret ballot hides a broken promise. Harbour fishing (Reef 8 / Bay 5 / Shallows 2, shared grounds split): Ada wins 15–11–8 by predicting the others, with a payoff matrix for the last decision.
+- Next: Phase 5 ("Pairs well with" links), Phase 6 (printable handouts), Phase 7 (final check). Consider giving older walkthroughs the same background/decision treatment.
+
 ## 2026-11-02 (rework: Tableau Building and Multi-Use Cards)
 - Accomplished: Both animations now explain the game before it starts and show the reasoning behind each decision (15 steps each, ~6 min).
 - Tableau Building: setup beat (hand of six, 6 turns, +2 acorns, acorns score nothing); turn 1 and turn 2 decision tables with payback math; rule of thumb (value = effect × turns left); new play order Shed → Lantern → Bridge → Lookout → Owl → Treehouse scores 10, compared with the old order (triggers late) at 7.
