@@ -32,6 +32,7 @@
 const built = MECHANICS.filter(m => m.file);
 document.getElementById('heroMeta').innerHTML =
   `<span><b>${built.length}</b> mechanics ready</span><span><b>${FAMILIES.length}</b> families</span>` +
+  (MECHANICS.length > built.length ? `<span><b>${MECHANICS.length - built.length}</b> coming soon</span>` : '') +
   `<span><b>${built.reduce((t, m) => t + (m.minutes || 0), 0)}</b> minutes of viewing</span>` +
   `<a class="btn primary" href="watch.html?id=${built[0].id}&tour=1&auto=1">▶ Watch them all in order</a>`;
 
@@ -45,7 +46,8 @@ document.getElementById('families').innerHTML = FAMILIES.map(f => {
 
 function card(m) {
   if (!m.file) return `<div class="card soon"><span class="tag">Coming soon</span>
-      <h3>${m.title}</h3><p>${m.hook}</p></div>`;
+      <h3>${m.title}</h3><p>${m.hook}</p>
+      ${m.examples ? `<p class="games">${m.examples.slice(0, 3).map(e => e.name).join(' · ')}</p>` : ''}</div>`;
   const games = m.examples.slice(0, 3).map(e => e.name).join(' · ');
   return `<a class="card" href="watch.html?id=${m.id}">
       <span class="tag">${m.minutes} min</span>

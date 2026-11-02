@@ -359,5 +359,94 @@ window.MECHANICS = [
       { name: 'Hanabi', note: 'Co-op with hidden information: you see everyone\'s cards but yours.' },
       { name: 'Spirit Island', note: 'A heavier co-op against colonizing invaders.' }
     ]
-  }
+  },
+  /* ================= PLANNED (scaffolding, not built yet) =================
+     file: null → shown on the hub as "Coming soon".
+     To build one: write mechanics/<id>.html per ANIMATION_CONTRACT.md from its `brief`,
+     add anatomy / feel / feelText / minutes / w / h, then set `file`. */
+
+  /* Chance & Risk */
+  { id: 'dice-pools', family: 'chance', title: 'Dice Pools & Successes', file: null,
+    hook: 'Roll a handful of dice and count the hits. More dice, better odds, never a sure thing.',
+    watchFor: 'Each extra die moves the chance of at least one success less than the one before it.',
+    examples: [{ name: 'King of Tokyo' }, { name: 'Vampire: The Masquerade (V5)' }, { name: 'Shadowrun' }, { name: 'Yahtzee' }],
+    brief: 'Pools of 1–6 d6 where 5–6 is a hit. Show the chance of at least one hit per pool size as a bar chart (33%, 56%, 70%, 80%, 87%, 91%): diminishing returns. Then rerolls as a second lever.' },
+  { id: 'roll-and-write', family: 'chance', title: 'Roll & Write', file: null,
+    hook: 'Everyone uses the same roll, then writes it onto their own sheet.',
+    watchFor: 'Same dice, different sheets: identical luck for all, so the score gap is pure decision-making.',
+    examples: [{ name: 'Qwixx' }, { name: "That's Pretty Clever!" }, { name: 'Railroad Ink' }, { name: 'Welcome To…' }],
+    brief: 'Three players, one shared roll per turn, three paper sheets filling in differently. Show a crossed-off box that can never be used again. End with sheets side by side and different scores.' },
+  { id: 'bag-building', family: 'chance', title: 'Bag Building', file: null,
+    hook: 'Put better tokens in your bag, then draw blind. You control the odds, not the draw.',
+    watchFor: 'Watch the chance of drawing a good token rise as the bag improves, and fall again when junk goes in.',
+    examples: [{ name: 'Orléans' }, { name: 'The Quacks of Quedlinburg' }, { name: 'Dungeon Alliance' }],
+    brief: 'A cloth bag with 10 tokens (7 weak, 3 strong). Each round add strong tokens and draw 4. A pie of bag contents updates each round; contrast with deck-building (bag = reshuffle every draw).' },
+
+  /* Card Systems */
+  { id: 'multi-use-cards', family: 'cards', title: 'Multi-Use Cards', file: null,
+    hook: 'One card, several ways to play it. Choosing one means giving up the rest.',
+    watchFor: 'Every play is a trade: the action you take is paid for with the actions printed beside it.',
+    examples: [{ name: 'Glory to Rome' }, { name: 'Twilight Struggle' }, { name: 'Race for the Galaxy' }, { name: 'Gloomhaven' }],
+    brief: 'A card with three uses (build it, spend it as money, or use its action). Show the same card played each way and what is lost each time. Then a hand of 4 where every choice blocks another.' },
+  { id: 'ladder-climbing', family: 'cards', title: 'Ladder Climbing', file: null,
+    hook: 'Beat the last play with a higher set of the same shape, or pass.',
+    watchFor: 'Notice when everyone passes: the player on top leads anything, so holding the highest card is power.',
+    examples: [{ name: 'Big Two' }, { name: 'Tichu' }, { name: 'The Great Dalmuti' }, { name: 'Scout' }],
+    brief: 'Four players; a pair is led, beaten by higher pairs, players pass, the leader resets with a run. Track hands shrinking; first to empty wins. Highlight bombs or special beats as the designer\'s spice.' },
+  { id: 'tableau-building', family: 'cards', title: 'Tableau Building', file: null,
+    hook: 'The cards you play stay in front of you and change what you can do next.',
+    watchFor: 'Watch each new card change the rules for its owner. A tableau is a personal rulebook built during play.',
+    examples: [{ name: 'Wingspan' }, { name: 'Everdell' }, { name: '7 Wonders' }, { name: 'Res Arcana' }],
+    brief: 'One player\'s table fills with 6 cards over 6 turns; each card adds an ability (discounts, triggers). Show a trigger chain on the last turn. Contrast with hand cards that disappear after use.' },
+
+  /* Board & Space */
+  { id: 'grid-movement', family: 'space', title: 'Grid Movement & Line of Sight', file: null,
+    hook: 'Squares and hexes turn distance, cover and facing into decisions.',
+    watchFor: 'Compare a square grid and a hex grid: diagonals break squares, hexes keep every neighbour equal.',
+    examples: [{ name: 'Chess' }, { name: 'Gloomhaven' }, { name: 'Descent' }, { name: 'Memoir \'44' }],
+    brief: 'A hero moves 3 spaces on a square grid, then the same move on hexes. Show line of sight blocked by a wall, cover reducing a hit, and why movement points make terrain matter.' },
+  { id: 'pattern-building', family: 'space', title: 'Pattern Building', file: null,
+    hook: 'Arrange pieces into the shapes the scoring rules reward.',
+    watchFor: 'Each goal card names a shape. Watch one placement serve two patterns at once: that overlap is the skill.',
+    examples: [{ name: 'Azul' }, { name: 'Cascadia' }, { name: 'Patchwork' }, { name: 'Sagrada' }],
+    brief: 'A 5×5 personal grid; goal cards ask for a line of 3, a 2×2 block, and corners. Pieces placed one by one; a single piece completes two goals at once with a double score pop.' },
+  { id: 'pick-up-deliver', family: 'space', title: 'Pick-Up & Deliver', file: null,
+    hook: 'Load goods here, carry them there, get paid on arrival.',
+    watchFor: 'Watch the route planning: the best delivery is not the richest one, it is the one on the way to the next.',
+    examples: [{ name: 'Istanbul' }, { name: 'Merchants & Marauders' }, { name: 'Firefly: The Game' }, { name: 'Steam' }],
+    brief: 'A small map with 5 towns; a cart with 2 cargo slots; order cards ("salt to Ridge, 4 coins"). Plan two trips and compare: greedy biggest order first vs a chained route. Show coins per turn.' },
+
+  /* Economy & Actions */
+  { id: 'action-points', family: 'economy', title: 'Action Points', file: null,
+    hook: 'You get a budget of actions each turn. Spend them however you like.',
+    watchFor: 'Watch the cost menu: making one action cost 2 points instead of 1 changes how often anyone takes it.',
+    examples: [{ name: 'Pandemic' }, { name: 'Tikal' }, { name: 'Forbidden Island' }, { name: 'Through the Ages' }],
+    brief: 'A turn with 4 AP and a menu (move 1, search 1, build 2, heal 3). Two players spend the same 4 points differently. Then raise "build" to 3 and show how plans change.' },
+  { id: 'supply-demand', family: 'economy', title: 'Supply & Demand Markets', file: null,
+    hook: 'The more players buy something, the more it costs the next buyer.',
+    watchFor: 'Watch the price track: buying first is cheap, buying last is expensive, so turn order becomes money.',
+    examples: [{ name: 'Power Grid' }, { name: 'Brass' }, { name: 'Food Chain Magnate' }],
+    brief: 'A resource market track priced 1–8 with tokens in the cheap slots first. Three players buy coal in turn order; the price climbs. Refill phase brings prices down. Show the cost each player paid.' },
+  { id: 'dice-placement', family: 'economy', title: 'Dice Placement', file: null,
+    hook: 'Roll your dice, then use them as workers. The number decides where they can go.',
+    watchFor: 'Watch high rolls and low rolls both find uses: good design makes no roll a total loss.',
+    examples: [{ name: 'Kingsburg' }, { name: 'Alien Frontiers' }, { name: 'Grand Austria Hotel' }, { name: 'Troyes' }],
+    brief: 'Two players roll 3 dice each; action spaces ask for a pair, a sum of 10+, or any 1. Show placements blocking each other (link to worker placement) and a "low roll" consolation space.' },
+
+  /* Player Interaction */
+  { id: 'negotiation', family: 'people', title: 'Negotiation & Trading', file: null,
+    hook: 'Anything can be offered. Deals are made at the table, and some are broken.',
+    watchFor: 'A trade happens only when both sides think they gain. Watch how the leader finds no one willing to trade.',
+    examples: [{ name: 'Catan' }, { name: 'Diplomacy' }, { name: 'Bohnanza' }, { name: 'Chinatown' }],
+    brief: 'Four players with different goods and needs; offers in speech bubbles; one deal both sides win; one refused because it helps the leader. Show binding vs non-binding deals as a designer dial.' },
+  { id: 'take-that', family: 'people', title: 'Take-That', file: null,
+    hook: 'Cards that hurt someone else. Who you target is the whole game.',
+    watchFor: 'Watch the attacks pile onto the leader. Take-that is a built-in catch-up system, until it targets someone unfairly.',
+    examples: [{ name: 'Munchkin' }, { name: 'Exploding Kittens' }, { name: 'Unstable Unicorns' }, { name: 'Love Letter' }],
+    brief: 'Four players, attack cards ("steal 2", "skip a turn"). Score bars show the leader attacked and pulled back. Then a beat on kingmaking and player elimination as the risks designers must manage.' },
+  { id: 'deduction', family: 'people', title: 'Deduction', file: null,
+    hook: 'The answer is hidden. Every clue rules something out.',
+    watchFor: 'Watch the grid of possibilities shrink with each clue. A good clue cuts the space in half.',
+    examples: [{ name: 'Clue' }, { name: 'Mastermind' }, { name: 'Cryptid' }, { name: 'Codenames' }],
+    brief: 'A hidden answer among 12 suspects (3 traits each). Questions and answers cross off rows in a deduction grid; show how many remain after each clue (12 → 6 → 3 → 1). Compare a weak and a strong question.' }
 ];
