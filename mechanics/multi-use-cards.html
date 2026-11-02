@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Multi-Use Cards</title>
+<style>
+:root{--bg:#0f1524;--panel:#1b2338;--panel2:#232d47;--ink:#f1f4fb;--muted:#a9b4cf;--line:rgba(210,225,255,.14);
+  --build:#5b8cff;--build2:#2f5bd1;--coin:#ffc94a;--coin2:#d39a12;--act:#3ed1b0;--act2:#17907a;--red:#ff6b6b;--good:#7ee08a;
+  --paper:#f5ecd9;--paper2:#e4d6b8;--inkd:#2a2416}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#1f2b4a 0%,#0f1524 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+
+/* game cards */
+.gc{position:absolute;border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:7px;color:var(--inkd);
+  background:linear-gradient(170deg,var(--paper),var(--paper2));
+  box-shadow:0 0 0 3px #b9a57c inset,0 14px 30px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.4);
+  transition:transform .6s cubic-bezier(.3,1.3,.5,1),opacity .6s,filter .6s,box-shadow .6s}
+.gc .nm{font-family:"Fredoka",sans-serif;font-weight:700;font-size:24px;text-align:center;line-height:1.1}
+.gc .art{border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:"Fredoka",sans-serif;font-weight:700;color:rgba(255,255,255,.9);
+  box-shadow:inset 0 -6px 12px rgba(0,0,0,.25)}
+.band{position:relative;border-radius:10px;padding:6px 10px;font-size:20px;font-weight:800;line-height:1.15;color:#fff;
+  display:flex;align-items:center;flex:1;transition:filter .5s,opacity .5s,box-shadow .5s,transform .5s}
+.band.b{background:linear-gradient(90deg,var(--build),var(--build2))}
+.band.c{background:linear-gradient(90deg,var(--coin),var(--coin2));color:#3a2a00}
+.band.a{background:linear-gradient(90deg,var(--act),var(--act2))}
+.band .k{font-size:15px;font-weight:900;letter-spacing:.8px;opacity:.85;margin-right:8px;min-width:46px}
+.band.chosen{box-shadow:0 0 0 3px #fff,0 0 22px rgba(255,255,255,.7);transform:scale(1.04);z-index:2}
+.band.lost{filter:grayscale(1) brightness(.75);opacity:.5}
+.band.lost::after{content:"";position:absolute;left:8px;right:8px;top:50%;height:3px;background:var(--red);border-radius:2px;transform:rotate(-3deg)}
+
+/* big single card */
+#one .gc{left:110px;top:150px;width:330px;height:440px}
+#one .gc .art{height:118px;font-size:64px}
+#one .gc .band{font-size:22px}
+#result{left:500px;top:160px;width:700px;height:410px;padding:28px 34px}
+#result h3{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600}
+#result .ln{font-size:23px;line-height:1.4;margin:10px 0;display:flex;gap:12px;align-items:flex-start;opacity:0;transform:translateX(16px);transition:opacity .45s,transform .45s}
+#result.go .ln{opacity:1;transform:none}
+#result .ln i{font-style:normal;font-weight:900;min-width:30px;text-align:center}
+#result .g i{color:var(--good)}#result .x i{color:var(--red)}
+#result .x span{color:#ffc2c2}
+#result .foot{position:absolute;left:34px;right:34px;bottom:24px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+#result .foot b{color:var(--coin)}
+
+/* three ways */
+#three{left:40px;right:40px;top:140px;height:470px}
+#three .col{position:absolute;top:0;width:380px;height:470px}
+#three .gc{left:85px;top:0;width:210px;height:290px}
+#three .gc .art{height:56px;font-size:34px}
+#three .gc .band{font-size:18px}
+#three .gc .band .k{font-size:13px;min-width:40px}
+#three .cap{position:absolute;left:0;right:0;top:308px;text-align:center;font-size:21px;line-height:1.35}
+#three .cap .t{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:600;margin-bottom:4px}
+#three .cap .g{color:var(--good)}#three .cap .x{color:#ffb0b0}
+
+/* hand */
+#hand{inset:0}
+#hand .gc{top:138px;width:218px;height:318px}
+#hand .gc .art{height:64px;font-size:36px}
+#hand .gc .band{font-size:19px}
+#hand .gc .band .k{font-size:13px;min-width:40px}
+#hand .gc.build{transform:translateY(-8px);box-shadow:0 0 0 3px #b9a57c inset,0 0 0 4px var(--build),0 0 30px rgba(91,140,255,.75),0 14px 30px rgba(0,0,0,.5)}
+#hand .gc.spend{opacity:.6;filter:saturate(.5);transform:translateY(14px) scale(.97)}
+#hand .gc.act{box-shadow:0 0 0 3px #b9a57c inset,0 0 0 4px var(--act),0 0 30px rgba(62,209,176,.7),0 14px 30px rgba(0,0,0,.5)}
+.rib{position:absolute;left:-6px;right:-6px;top:58px;padding:6px 0;text-align:center;font-family:"Fredoka",sans-serif;font-size:21px;font-weight:700;
+  color:#fff;border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.5);z-index:5;opacity:0;transform:scale(.6) rotate(-6deg);transition:opacity .4s .25s,transform .45s .25s cubic-bezier(.3,1.6,.5,1)}
+.rib.on{opacity:1;transform:rotate(-6deg)}
+.rib.rb{background:var(--build2)}.rib.rc{background:var(--coin2);color:#2a1d00}.rib.ra{background:var(--act2)}
+#side{left:990px;top:138px;width:250px;height:318px;padding:20px 22px}
+#side .r{display:flex;justify-content:space-between;align-items:baseline;font-size:21px;font-weight:700;padding:9px 0;border-bottom:1px solid var(--line)}
+#side .r:last-child{border:none}
+#side .r b{font-family:"Fredoka",sans-serif;font-size:30px;color:var(--coin)}
+#side h4{margin:0 0 6px;font-size:18px;letter-spacing:.8px;color:var(--muted)}
+#plan{left:40px;right:40px;top:490px;height:150px;padding:18px 26px;font-size:22px;line-height:1.4}
+#plan .t{font-family:"Fredoka",sans-serif;font-size:26px;font-weight:600;color:var(--coin);margin-bottom:4px}
+#plan .x{color:#ffb0b0}#plan .g{color:var(--good)}
+
+/* table */
+#cmp{left:90px;right:90px;top:150px;padding:24px 30px}
+#cmp table{width:100%;border-collapse:collapse;font-size:22px}
+#cmp th{text-align:left;font-size:18px;letter-spacing:.8px;color:var(--muted);padding:8px 12px;border-bottom:2px solid var(--line)}
+#cmp td{padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.3}
+#cmp td.n{font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600;color:var(--coin);text-align:center}
+#cmp td.x{color:#ffc2c2}
+#cmp tr{opacity:0;transform:translateY(10px);transition:opacity .45s,transform .45s}
+#cmp.on tr{opacity:1;transform:none}
+#cmp .foot{margin-top:18px;font-size:22px;line-height:1.4}
+#cmp .foot b{color:var(--coin)}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title .big{font-family:"Fredoka",sans-serif;font-size:124px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--build),var(--coin),var(--act));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:12px 0 0;font-size:36px;font-weight:700}
+#title .fan{position:relative;width:560px;height:290px;margin-top:22px}
+#title .fan .gc{width:150px;height:210px;top:20px;left:205px;padding:8px;gap:5px}
+#title .fan .gc .nm{font-size:18px}#title .fan .gc .art{height:40px;font-size:26px}
+#title .fan .gc .band{font-size:13px;padding:3px 7px}
+#title .fan .gc:nth-child(1){transform:translate(-175px,24px) rotate(-12deg)}
+#title .fan .gc:nth-child(3){transform:translate(175px,24px) rotate(12deg)}
+#title .fan .gc:nth-child(2){animation:lift 2.4s ease-in-out infinite}
+@keyframes lift{50%{transform:translateY(-12px)}}
+#title .press{font-size:20px;color:var(--muted);margin-top:6px}
+
+/* end */
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(9,12,22,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--coin)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--coin)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(210,225,255,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--coin);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Multi-Use Cards</div>
+    <h2>One card. Three uses. Pick one.</h2>
+    <div class="fan" id="fan"></div>
+    <div class="press">Press SPACE to play a card</div>
+  </div>
+
+  <div id="one" class="panel"><div id="bigCard"></div></div>
+  <div id="result" class="panel card"></div>
+
+  <div id="three" class="panel"></div>
+
+  <div id="hand" class="panel"><div id="handCards"></div></div>
+  <div id="side" class="panel card"></div>
+  <div id="plan" class="panel card"></div>
+
+  <div id="cmp" class="panel card">
+    <table>
+      <tr><th>PLAN</th><th style="text-align:center">POINTS NOW</th><th style="text-align:center">CARDS LEFT</th><th>WHAT IT COST</th></tr>
+      <tr style="transition-delay:.1s"><td><b>A</b> · Spend Ferry, build Lighthouse</td><td class="n">3</td><td class="n">2</td><td class="x">The Ferry, the best building in hand</td></tr>
+      <tr style="transition-delay:.3s"><td><b>B</b> · Spend three, build Ferry</td><td class="n">5</td><td class="n">0</td><td class="x">Every other card and all four actions</td></tr>
+      <tr style="transition-delay:.5s"><td><b>C</b> · Spend Lighthouse, build Market</td><td class="n">1</td><td class="n">2</td><td class="x">Points now, for +1 coin every turn</td></tr>
+    </table>
+    <div class="foot">No plan is free. Each card you spend is a building you will never own. That is the whole mechanic: <b>every card in your hand is paying for another one.</b></div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>One card, several uses</b> turns every play into a trade. The real price of an action is the best use you gave up.</li>
+      <li><b>Cards as money</b> means you pay for good cards with other good cards. A hand of four is a puzzle, not a list.</li>
+      <li><b>Fewer cards, more decisions.</b> A small deck stays interesting because each card can mean many things. Balance each use against the others on the same card.</li>
+    </ol>
+    <div class="see">You'll see this in: Glory to Rome, Twilight Struggle, Race for the Galaxy, Gloomhaven.</div>
+  </div></div>
+
+  <div id="dots"></div>
+</div>
+
+<script>
+const S=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+const dotsEl=$('dots');
+const CARDS={
+  L:{nm:'Lighthouse',col:'linear-gradient(160deg,#ff9b6a,#d1493a)',ic:'L',b:'Build 3 → 3 pts',c:'Worth 2',a:'Draw 2 cards',cv:2,cost:3},
+  F:{nm:'Ferry',col:'linear-gradient(160deg,#6fb6ff,#2c62c7)',ic:'F',b:'Build 4 → 5 pts',c:'Worth 3',a:'Draw 3, keep 1',cv:3,cost:4},
+  M:{nm:'Market',col:'linear-gradient(160deg,#c48bff,#7a3fc8)',ic:'M',b:'Build 2 → 1 pt + income',c:'Worth 1',a:'Swap a card',cv:1,cost:2},
+  W:{nm:'Well',col:'linear-gradient(160deg,#7fe0c4,#2b9a80)',ic:'W',b:'Build 1 → 1 pt',c:'Worth 1',a:'Draw 1 card',cv:1,cost:1}
+};
+const ORDER=['L','F','M','W'];
+function gc(id,mode,extra){
+  const c=CARDS[id];
+  const cls=k=>mode?(mode===k?'chosen':'lost'):'';
+  return `<div class="gc" ${extra||''}><div class="nm">${c.nm}</div><div class="art" style="background:${c.col}">${c.ic}</div>
+    <div class="band b ${cls('b')}"><span class="k">BUILD</span>${c.b}</div>
+    <div class="band c ${cls('c')}"><span class="k">COIN</span>${c.c}</div>
+    <div class="band a ${cls('a')}"><span class="k">ACTION</span>${c.a}</div></div>`;
+}
+$('fan').innerHTML=gc('F')+gc('L')+gc('M');
+
+let cur=0,st;
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+function reset(){st={view:'title',mode:'',result:'',hand:{},rib:{},side:null,plan:''}}
+
+const RES={
+  '':{h:'Three bands, one card',g:[],x:[],foot:'Most turns you play exactly <b>one</b> band. The other two leave with the card.'},
+  b:{h:'Build it',g:['The Lighthouse stays in front of you: <b>3 points</b> for the rest of the game'],
+     x:['<span>Paid 3 coins, from other cards</span>','<span>Its coin value (2) is gone</span>','<span>Its action (draw 2) is gone</span>'],foot:'Building keeps the card but spends the most.'},
+  c:{h:'Spend it as money',g:['<b>2 coins</b> right now, to pay for something else'],
+     x:['<span>The Lighthouse is discarded: no 3 points, ever</span>','<span>No 2 extra cards either</span>'],foot:'Spending is how you afford a build. The card itself is the price.'},
+  a:{h:'Use its action',g:['Draw <b>2 cards</b>: more options next turn'],
+     x:['<span>The Lighthouse is discarded: no 3 points</span>','<span>No 2 coins this turn</span>'],foot:'Actions buy flexibility. You pay with the card\'s other two lives.'}
+};
+
+function render(anim){
+  ['title','one','result','three','hand','side','plan','cmp','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='one'){
+    $('one').classList.add('on');$('result').classList.add('on');
+    $('bigCard').innerHTML=gc('L',st.mode);
+    const r=RES[st.mode];
+    $('result').innerHTML=`<h3>${r.h}</h3>`+
+      (st.mode?r.g.map((t,i)=>`<div class="ln g" style="transition-delay:${i*.15}s"><i>+</i><div>${t}</div></div>`).join('')+
+        r.x.map((t,i)=>`<div class="ln x" style="transition-delay:${(i+1)*.18+.1}s"><i>✕</i><div>${t}</div></div>`).join('')
+      :`<div class="ln g"><i style="color:var(--build)">■</i><div><b style="color:#9dbaff">Build</b>: pay coins to keep it and score.</div></div>
+        <div class="ln g" style="transition-delay:.15s"><i style="color:var(--coin)">■</i><div><b style="color:var(--coin)">Coin</b>: discard it as money.</div></div>
+        <div class="ln g" style="transition-delay:.3s"><i style="color:var(--act)">■</i><div><b style="color:var(--act)">Action</b>: discard it for an effect.</div></div>`)+
+      `<div class="foot">${r.foot}</div>`;
+    const R=$('result');R.classList.remove('go');if(anim){void R.offsetWidth}R.classList.add('go');
+  }
+  if(st.view==='three'){
+    $('three').classList.add('on');
+    const W=[['b','Build','+3 points','−2 coins, −2 cards'],['c','Spend','+2 coins','−3 points, −2 cards'],['a','Action','+2 cards','−3 points, −2 coins']];
+    $('three').innerHTML=W.map((w,i)=>`<div class="col" style="left:${i*400}px">${gc('L',w[0])}
+      <div class="cap"><div class="t">${w[1]}</div><div class="g">${w[2]}</div><div class="x">${w[3]}</div></div></div>`).join('');
+  }
+  if(st.view==='hand'){
+    ['hand','side','plan'].forEach(id=>$(id).classList.add('on'));
+    $('handCards').innerHTML=ORDER.map((id,i)=>{
+      const h=st.hand[id]||'',mode=h==='build'?'b':h==='spend'?'c':h==='act'?'a':'';
+      const r=st.rib[id];
+      return gc(id,mode,`style="left:${40+i*236}px" data-k="${id}"`).replace('</div></div>',`</div>${r?`<div class="rib ${r[0]} on">${r[1]}</div>`:''}</div>`);
+    }).join('');
+    ORDER.forEach(id=>{const el=$('handCards').querySelector(`[data-k="${id}"]`);if(st.hand[id])el.classList.add(st.hand[id])});
+    if(anim)$('handCards').querySelectorAll('.rib').forEach(r=>{r.classList.remove('on');void r.offsetWidth;r.classList.add('on')});
+    const s=st.side;
+    $('side').innerHTML=`<h4>THIS TURN</h4>
+      <div class="r">Coins<b>${s.coins}</b></div><div class="r">Built<b style="font-size:22px;color:var(--ink)">${s.built}</b></div>
+      <div class="r">Points<b>${s.pts}</b></div><div class="r">Cards left<b>${s.left}</b></div>`;
+    $('plan').innerHTML=st.plan;
+  }
+  if(st.view==='cmp'){$('cmp').classList.add('on')}
+  if(st.view==='end'){$('cmp').classList.add('on');$('end').classList.add('on')}
+}
+
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='one';st.mode='';
+   setHeader('Meet the Lighthouse','Every card in this game has three bands. Each band is a different way to play the same card.')},
+ ()=>{st.mode='b';setHeader('Way 1: build it','Pay its cost and keep it on the table. The other two bands are crossed out.')},
+ ()=>{st.mode='c';setHeader('Way 2: spend it as money','Throw it away for its coin value. Now the building is the thing you lose.')},
+ ()=>{st.mode='a';setHeader('Way 3: use its action','Discard it for the effect. Points and coins both leave with it.')},
+ ()=>{st.view='three';
+   setHeader('Same card, three trades','Whatever you pick, you pay for it with the two things you did not pick.')},
+ ()=>{st.view='hand';st.hand={};st.rib={};st.side={coins:0,built:'none',pts:0,left:4};
+   st.plan='<div class="t">Your turn: you have 0 coins</div>Four cards, no money. To build any card you must spend others as coins. Watch what each plan blocks.';
+   setHeader('Now a hand of four','Lighthouse, Ferry, Market and Well. Every card is a building, a coin and an action.')},
+ ()=>{st.hand={F:'spend',L:'build'};st.rib={F:['rc','+3 coins'],L:['rb','BUILT']};st.side={coins:'3 → 0',built:'Lighthouse',pts:3,left:2};
+   st.plan='<div class="t">Plan A: spend the Ferry, build the Lighthouse</div><span class="g">3 points, and Market and Well stay in hand.</span> <span class="x">But the Ferry was worth 5 points. It just became 3 coins.</span>';
+   setHeader('Plan A: a quick build','The Ferry\'s coin band pays exactly for the Lighthouse.')},
+ ()=>{st.hand={L:'spend',M:'spend',W:'spend',F:'build'};st.rib={L:['rc','+2'],M:['rc','+1'],W:['rc','+1'],F:['rb','BUILT']};
+   st.side={coins:'4 → 0',built:'Ferry',pts:5,left:0};
+   st.plan='<div class="t">Plan B: spend three cards, build the Ferry</div><span class="g">The best building: 5 points.</span> <span class="x">Three cards gone, hand empty, and not one action used this turn.</span>';
+   setHeader('Plan B: go big','Three cards together make 4 coins, enough for the Ferry.')},
+ ()=>{st.hand={L:'spend',M:'build'};st.rib={L:['rc','+2 coins'],M:['rb','BUILT']};st.side={coins:'2 → 0',built:'Market',pts:1,left:2};
+   st.plan='<div class="t">Plan C: spend the Lighthouse, build the Market</div><span class="g">Only 1 point, but +1 coin every turn from now on.</span> <span class="x">You give up 3 points today for money later.</span>';
+   setHeader('Plan C: invest','A small building that pays coins each turn. Slower now, stronger later.')},
+ ()=>{st.view='cmp';
+   setHeader('Every plan blocks another','Same four cards, three very different turns. None of them gets everything.')},
+ ()=>{st.view='end';setHeader('What designers take from this','The cost of a card is the card it could have been.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  render(false);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

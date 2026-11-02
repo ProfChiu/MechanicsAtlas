@@ -366,11 +366,27 @@ window.MECHANICS = [
      add anatomy / feel / feelText / minutes / w / h, then set `file`. */
 
   /* Chance & Risk */
-  { id: 'dice-pools', family: 'chance', title: 'Dice Pools & Successes', file: null,
+  {
+    id: 'dice-pools', family: 'chance', title: 'Dice Pools & Successes',
+    file: 'mechanics/dice-pools.html', w: 1280, h: 720, minutes: 4,
     hook: 'Roll a handful of dice and count the hits. More dice, better odds, never a sure thing.',
+    anatomy: {
+      Procedures: 'Roll a pool of plain dice at once and count how many show a hit (here, a 5 or 6).',
+      Rules: 'Only the number of hits matters, never the total. Some effects let you reroll the misses.',
+      Resources: 'Dice in the pool and rerolls: both are what players earn, spend or lose.',
+      Outcome: 'The pool sets the odds, the roll sets the result. Bigger pools help less and less.'
+    },
+    feel: ['Hope', 'Momentum', 'Gamble'],
+    feelText: 'A fistful of dice feels powerful, and a big pool that whiffs is a story players retell. Rerolls give a second breath of hope.',
     watchFor: 'Each extra die moves the chance of at least one success less than the one before it.',
-    examples: [{ name: 'King of Tokyo' }, { name: 'Vampire: The Masquerade (V5)' }, { name: 'Shadowrun' }, { name: 'Yahtzee' }],
-    brief: 'Pools of 1–6 d6 where 5–6 is a hit. Show the chance of at least one hit per pool size as a bar chart (33%, 56%, 70%, 80%, 87%, 91%): diminishing returns. Then rerolls as a second lever.' },
+    examples: [
+      { name: 'King of Tokyo', note: 'Six dice and up to two rerolls a turn, keeping the faces you want.' },
+      { name: 'Vampire: The Masquerade (V5)', note: 'Attribute + skill sets the pool; 6 or higher is a success.' },
+      { name: 'Shadowrun', note: 'Huge pools of d6; 5s and 6s are hits, and too many 1s is a glitch.' },
+      { name: 'Yahtzee', note: 'Five dice and two rerolls, chasing patterns instead of hits.' }
+    ],
+    brief: 'Pools of 1–6 d6 where 5–6 is a hit. Show the chance of at least one hit per pool size as a bar chart (33%, 56%, 70%, 80%, 87%, 91%): diminishing returns. Then rerolls as a second lever.'
+  },
   {
     id: 'roll-and-write', family: 'chance', title: 'Roll & Write',
     file: 'mechanics/roll-and-write.html', w: 1280, h: 720, minutes: 4,
@@ -392,18 +408,49 @@ window.MECHANICS = [
     ],
     brief: 'Three players, one shared roll per turn, three paper sheets filling in differently. Show a crossed-off box that can never be used again. End with sheets side by side and different scores.'
   },
-  { id: 'bag-building', family: 'chance', title: 'Bag Building', file: null,
+  {
+    id: 'bag-building', family: 'chance', title: 'Bag Building',
+    file: 'mechanics/bag-building.html', w: 1280, h: 720, minutes: 4,
     hook: 'Put better tokens in your bag, then draw blind. You control the odds, not the draw.',
+    anatomy: {
+      Procedures: 'Each round, draw a few tokens blind from your bag, use them, then put them all back.',
+      Rules: 'Bought tokens go straight into the bag. Some effects force junk tokens in.',
+      Resources: 'The tokens in your bag; their mix is your odds.',
+      Outcome: 'A better bag draws better on average, but any single draw can still disappoint.'
+    },
+    feel: ['Anticipation', 'Ownership', 'Lucky dip'],
+    feelText: 'Every hand in the bag is a small lottery you rigged yourself. A great draw feels earned; a bad one feels like the bag betrayed you.',
     watchFor: 'Watch the chance of drawing a good token rise as the bag improves, and fall again when junk goes in.',
-    examples: [{ name: 'Orléans' }, { name: 'The Quacks of Quedlinburg' }, { name: 'Dungeon Alliance' }],
-    brief: 'A cloth bag with 10 tokens (7 weak, 3 strong). Each round add strong tokens and draw 4. A pie of bag contents updates each round; contrast with deck-building (bag = reshuffle every draw).' },
+    examples: [
+      { name: 'Orléans', note: 'Recruit followers into your bag, then draw them to take actions.' },
+      { name: 'The Quacks of Quedlinburg', note: 'Draw ingredients one at a time and stop before the pot explodes.' },
+      { name: 'Dungeon Alliance', note: 'Heroes draw cards and tokens from a shared pool built up over the dungeon.' }
+    ],
+    brief: 'A cloth bag with 10 tokens (7 weak, 3 strong). Each round add strong tokens and draw 4. A pie of bag contents updates each round; contrast with deck-building (bag = reshuffle every draw).'
+  },
 
   /* Card Systems */
-  { id: 'multi-use-cards', family: 'cards', title: 'Multi-Use Cards', file: null,
+  {
+    id: 'multi-use-cards', family: 'cards', title: 'Multi-Use Cards',
+    file: 'mechanics/multi-use-cards.html', w: 1280, h: 720, minutes: 4,
     hook: 'One card, several ways to play it. Choosing one means giving up the rest.',
+    anatomy: {
+      Procedures: 'Play a card for one of its uses: build it, spend it as money, or trigger its action.',
+      Rules: 'A card used one way is gone for its other uses. Spent cards pay for the card you keep.',
+      Resources: 'Cards in hand, which are also your money and your actions.',
+      Outcome: 'Every turn is a trade-off; the real price of a play is the best use you gave up.'
+    },
+    feel: ['Tension', 'Clever', 'Regret'],
+    feelText: 'Every card in hand is something you want to keep. Spending one to pay for another stings, and that sting is the decision.',
     watchFor: 'Every play is a trade: the action you take is paid for with the actions printed beside it.',
-    examples: [{ name: 'Glory to Rome' }, { name: 'Twilight Struggle' }, { name: 'Race for the Galaxy' }, { name: 'Gloomhaven' }],
-    brief: 'A card with three uses (build it, spend it as money, or use its action). Show the same card played each way and what is lost each time. Then a hand of 4 where every choice blocks another.' },
+    examples: [
+      { name: 'Glory to Rome', note: 'Cards are buildings, materials, workers and roles all at once.' },
+      { name: 'Twilight Struggle', note: 'Play a card for its event or for its operations points, and maybe trigger your rival\'s event.' },
+      { name: 'Race for the Galaxy', note: 'Cards are worlds to place and the money you discard to pay for them.' },
+      { name: 'Gloomhaven', note: 'Each card has a top and bottom action; you play one half of two cards a turn.' }
+    ],
+    brief: 'A card with three uses (build it, spend it as money, or use its action). Show the same card played each way and what is lost each time. Then a hand of 4 where every choice blocks another.'
+  },
   { id: 'ladder-climbing', family: 'cards', title: 'Ladder Climbing', file: null,
     hook: 'Beat the last play with a higher set of the same shape, or pass.',
     watchFor: 'Notice when everyone passes: the player on top leads anything, so holding the highest card is power.',

@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Dice Pools &amp; Successes</title>
+<style>
+:root{--bg:#0d181d;--panel:#18272e;--panel2:#1f323a;--ink:#eef7f5;--muted:#a3bfbd;--line:rgba(200,240,235,.14);
+  --ember:#ff8a3d;--ember2:#ffc35a;--teal:#3cc9b4;--teal2:#1f8f80;--ivory:#f4f3ea;--pip:#22323a;--red:#ef5a52}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#1d3540 0%,#0d181d 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+
+/* dice */
+.die{width:110px;height:110px;border-radius:22px;padding:17px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);
+  background:linear-gradient(145deg,#ffffff,#d8dcd2);position:relative;
+  box-shadow:inset 0 -6px 0 rgba(0,0,0,.16),0 9px 18px rgba(0,0,0,.45);transition:filter .5s,opacity .5s}
+.pip{width:72%;height:72%;border-radius:50%;background:var(--pip);place-self:center;box-shadow:inset 0 2px 2px rgba(0,0,0,.4)}
+.die.hit{background:linear-gradient(145deg,var(--ember2),var(--ember) 55%,#d4521d);
+  box-shadow:inset 0 -6px 0 rgba(0,0,0,.18),0 0 0 3px #ffe0a8,0 0 30px rgba(255,138,61,.8),0 9px 18px rgba(0,0,0,.45)}
+.die.hit .pip{background:#fff;box-shadow:0 0 6px rgba(255,255,255,.8)}
+.die.miss{filter:brightness(.62) saturate(.5)}
+.die.roll{animation:tumble .75s cubic-bezier(.25,.8,.35,1) both}
+@keyframes tumble{0%{transform:translate(-180px,-120px) rotate(-260deg) scale(.5);opacity:0}
+  65%{transform:translate(0,8px) rotate(12deg) scale(1.04);opacity:1}100%{transform:none;opacity:1}}
+.die .tag{position:absolute;left:-8px;right:-8px;bottom:-34px;text-align:center;font-size:18px;font-weight:900}
+.die.hit .tag{color:var(--ember2)}.die.miss .tag{color:#c3d6d4}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#title .big{font-family:"Fredoka",sans-serif;font-size:140px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--teal),var(--ember2),var(--ember));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:36px;font-weight:700}
+#title .row{display:flex;gap:26px;margin:26px 0 10px}
+#title .row .die{width:92px;height:92px;padding:14px;border-radius:18px;animation:bob 2.2s ease-in-out infinite}
+#title .row .die:nth-child(2){animation-delay:.2s}#title .row .die:nth-child(3){animation-delay:.4s}
+#title .row .die:nth-child(4){animation-delay:.6s}#title .row .die:nth-child(5){animation-delay:.8s}
+@keyframes bob{0%,100%{transform:rotate(-6deg)}50%{transform:translateY(-14px) rotate(6deg)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+/* tray view */
+#tray{left:40px;top:150px;width:800px;height:430px;
+  background:radial-gradient(ellipse at 50% 40%,#21584f 0%,#153a35 60%,#0f2a27 100%);border:10px solid #4a3424;border-radius:26px;
+  box-shadow:inset 0 0 50px rgba(0,0,0,.55),0 14px 34px rgba(0,0,0,.5)}
+#tray .lbl{position:absolute;left:24px;top:14px;font-size:20px;font-weight:800;color:rgba(230,255,248,.7);letter-spacing:.5px}
+#dice{position:absolute;left:20px;right:20px;top:60px;bottom:40px;display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:46px 40px}
+#dice.six{gap:46px 22px}
+#dice.six .die{width:98px;height:98px;padding:15px}
+#tally{left:870px;top:150px;width:370px;height:430px;padding:26px 28px;display:flex;flex-direction:column}
+#tally .k{font-size:20px;color:var(--muted);font-weight:700}
+#tally .n{font-family:"Fredoka",sans-serif;font-size:96px;font-weight:700;line-height:1.05;color:var(--ember2);transition:color .4s}
+#tally .n.zero{color:#7f9b9a}
+#tally .u{font-size:26px;font-weight:800;margin-bottom:18px}
+#tally .rule{margin-top:auto;font-size:20px;line-height:1.4;border-top:1px solid var(--line);padding-top:16px}
+#tally .rule b{color:var(--ember2)}
+#tally .rr{display:inline-block;margin-top:10px;padding:6px 14px;border-radius:30px;font-size:19px;font-weight:900;
+  background:rgba(60,201,180,.16);border:2px solid var(--teal);color:var(--teal);transition:opacity .4s,filter .4s}
+#tally .rr.used{opacity:.45;filter:grayscale(1);text-decoration:line-through}
+#note{left:40px;right:40px;top:604px;font-size:22px;line-height:1.35;text-align:center;color:var(--ink)}
+#note b{color:var(--ember2)}#note .t{color:var(--teal)}
+
+/* chart view */
+#chart{left:40px;top:140px;width:1200px;height:520px;padding:0}
+.bar{position:absolute;bottom:90px;width:68px;height:0;border-radius:10px 10px 0 0;transition:height .9s cubic-bezier(.3,1.3,.5,1),box-shadow .5s,outline-color .5s;
+  outline:4px solid transparent;outline-offset:3px}
+.bar.a{background:linear-gradient(180deg,var(--ember2),var(--ember) 40%,#b9461a)}
+.bar.b{background:linear-gradient(180deg,#8ff2e2,var(--teal) 40%,var(--teal2))}
+.bar .pct{position:absolute;left:-16px;right:-16px;top:-34px;text-align:center;font-size:22px;font-weight:900;opacity:0;transition:opacity .4s .6s}
+.bar.a .pct{color:var(--ember2)}.bar.b .pct{color:#8ff2e2}
+.bar.up .pct{opacity:1}
+.bar.hl{outline-color:#fff;box-shadow:0 0 34px rgba(255,255,255,.45)}
+.xl{position:absolute;bottom:50px;width:150px;text-align:center;font-size:21px;font-weight:800}
+.axis{position:absolute;left:60px;right:40px;bottom:88px;height:3px;background:#5f7c80;border-radius:2px}
+.full{position:absolute;left:60px;right:40px;border-top:3px dashed rgba(255,255,255,.35);opacity:0;transition:opacity .6s}
+.full span{position:absolute;left:6px;top:6px;font-size:19px;font-weight:800;color:rgba(255,255,255,.7)}
+.full.on{opacity:1}
+.gain{position:absolute;padding:4px 12px;border-radius:20px;background:#0c1519;border:2px solid var(--ember);color:var(--ember2);
+  font-size:20px;font-weight:900;opacity:0;transform:translateY(10px);transition:opacity .4s,transform .4s}
+.gain.on{opacity:1;transform:none}
+.legend{position:absolute;left:70px;top:100px;display:flex;gap:26px;font-size:20px;font-weight:800}
+.legend i{display:inline-block;width:18px;height:18px;border-radius:5px;margin-right:8px;vertical-align:-2px}
+.legend .lb{opacity:0;transition:opacity .5s}.legend .lb.on{opacity:1}
+#chartNote{position:absolute;left:60px;right:40px;top:0;padding:14px 22px;font-size:21px;line-height:1.4;opacity:0;transition:opacity .5s}
+#chartNote.on{opacity:1}
+#chartNote b{color:var(--ember2)}#chartNote .t{color:#8ff2e2}
+
+/* end */
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(8,14,17,.88);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--ember2)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--ember2)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(220,255,250,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--ember2);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Dice Pools</div>
+    <h2>Roll a handful. Count the hits.</h2>
+    <div class="row" id="titleDice"></div>
+    <div class="press">Press SPACE to roll on</div>
+  </div>
+
+  <div id="tray" class="panel"><div class="lbl" id="trayLbl">THE POOL</div><div id="dice"></div></div>
+  <div id="tally" class="panel card">
+    <div class="k" id="tK">Pool size</div>
+    <div class="n" id="tN">0</div>
+    <div class="u" id="tU">hits</div>
+    <div id="tRR"></div>
+    <div class="rule">A die showing <b>5 or 6</b> is a <b>hit</b>. Everything else is a miss. You count hits, you never add the faces.</div>
+  </div>
+  <div id="note" class="panel"></div>
+
+  <div id="chart" class="panel">
+    <div class="legend"><span><i style="background:var(--ember)"></i>Chance of at least one hit</span>
+      <span class="lb" id="lgB"><i style="background:var(--teal)"></i>Same pool, with one reroll of the misses</span></div>
+    <div id="chartNote" class="card"></div>
+    <div class="full" id="full"><span>100%: never reached</span></div>
+    <div class="axis"></div>
+    <div id="bars"></div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>More dice, better odds</b>, but each extra die adds less than the one before (+23, +14, +10, +7, +4 points). Big pools stop feeling different.</li>
+      <li><b>Never a sure thing.</b> Even six dice miss 9% of the time. The pool sets the odds, not the result.</li>
+      <li><b>Rerolls are a second lever.</b> One reroll of the misses made 3 dice as strong as 6. Rerolls let you reward skill or spending without growing the pool.</li>
+    </ol>
+    <div class="see">You'll see this in: King of Tokyo, Vampire: The Masquerade (V5), Shadowrun, Yahtzee.</div>
+  </div></div>
+
+  <div id="dots"></div>
+</div>
+
+<script>
+const S=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+const PIPS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+const pips=v=>PIPS[v].map(p=>`<span class="pip" style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></span>`).join('');
+const isHit=v=>v>=5;
+
+const A=[33,56,70,80,87,91];   // 1-(2/3)^n
+const B=[56,80,91,96,98,99];   // 1-(4/9)^n : each die rerolled once if it misses
+const SCALE=2.9, GX=n=>110+n*180;   // px per %, group x
+const dotsEl=$('dots');
+let cur=0,st,shownKey='';
+
+$('titleDice').innerHTML=[2,6,3,5,1].map(v=>`<div class="die ${isHit(v)?'hit':''}">${pips(v)}</div>`).join('');
+
+// chart scaffolding (static)
+(function(){
+  const bars=$('bars');let h='';
+  for(let n=0;n<6;n++){
+    h+=`<div class="bar a" id="ba${n}" style="left:${GX(n)}px"><div class="pct">${A[n]}%</div></div>`;
+    h+=`<div class="bar b" id="bb${n}" style="left:${GX(n)+74}px"><div class="pct">${B[n]}%</div></div>`;
+    h+=`<div class="xl" style="left:${GX(n)-4}px">${n+1} ${n?'dice':'die'}</div>`;
+    if(n) h+=`<div class="gain" id="g${n}" style="left:${GX(n)-58}px;bottom:${90+A[n]*SCALE+48}px">+${A[n]-A[n-1]}</div>`;
+  }
+  bars.innerHTML=h;
+  $('full').style.bottom=(90+100*SCALE)+'px';
+})();
+
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+
+function reset(){
+  st={view:'title',dice:[],roll:null,showHits:true,tags:false,trayLbl:'THE POOL',
+      tally:{k:'',n:'',u:''},rr:'',note:'',chart:{a:false,gain:false,full:false,b:false,hl:false},cnote:''};
+  shownKey='';
+}
+
+function render(anim){
+  ['title','tray','tally','note','chart','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='end'){$('chart').classList.add('on');$('end').classList.add('on')}
+  if(st.view==='tray'){
+    ['tray','tally','note'].forEach(id=>$(id).classList.add('on'));
+    $('trayLbl').textContent=st.trayLbl;
+    $('dice').classList.toggle('six',st.dice.length>5);
+    const key=st.dice.join(',')+'|'+st.showHits+st.tags;
+    if(key!==shownKey){
+      shownKey=key;
+      $('dice').innerHTML=st.dice.map((v,i)=>{
+        const cls=st.showHits?(isHit(v)?'hit':'miss'):'';
+        const roll=anim&&(st.roll===null||st.roll.includes(i));
+        const tag=st.tags?`<div class="tag">${isHit(v)?'HIT':'miss'}</div>`:'';
+        return `<div class="die ${cls} ${roll?'roll':''}" style="animation-delay:${roll?i*90:0}ms">${pips(v)}${tag}</div>`;
+      }).join('');
+    }
+    $('tK').textContent=st.tally.k;$('tN').textContent=st.tally.n;$('tU').textContent=st.tally.u;
+    $('tN').classList.toggle('zero',st.tally.n==='0');
+    $('tRR').innerHTML=st.rr;
+    $('note').innerHTML=st.note;
+  }
+  if(st.view==='chart'||st.view==='end'){
+    $('chart').classList.add('on');
+    const c=st.chart;
+    for(let n=0;n<6;n++){
+      const a=$('ba'+n),b=$('bb'+n);
+      a.style.height=c.a?(A[n]*SCALE)+'px':'0px';a.classList.toggle('up',c.a);
+      b.style.height=c.b?(B[n]*SCALE)+'px':'0px';b.classList.toggle('up',c.b);
+      a.style.transitionDelay=b.style.transitionDelay=(n*110)+'ms';
+      a.classList.toggle('hl',c.hl&&n===5);b.classList.toggle('hl',c.hl&&n===2);
+      if(n)$('g'+n).classList.toggle('on',c.gain&&!c.b);
+    }
+    $('full').classList.toggle('on',c.full);
+    $('lgB').classList.toggle('on',c.b);
+    $('chartNote').innerHTML=st.cnote;$('chartNote').classList.toggle('on',!!st.cnote);
+  }
+}
+
+function pool(d,k){const h=d.filter(isHit).length;return{k:k||`Pool of ${d.length} ${d.length>1?'dice':'die'}`,n:String(h),u:h===1?'hit':'hits'}}
+
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='tray';st.dice=[1,2,3,4,5,6];st.roll=null;st.tags=true;st.trayLbl='ONE DIE, SIX FACES';
+   st.tally={k:'Faces that hit',n:'2',u:'of 6 faces'};
+   st.note='So one die hits <b>1 time in 3</b>, about <b>33%</b>. Hold on to that number.';
+   setHeader('A hit is a 5 or a 6','In a dice pool you roll several plain six-sided dice and count how many land on a hit.')},
+ ()=>{st.dice=[2,5,1];st.roll=null;st.tags=false;st.trayLbl='THE POOL: 3 DICE';st.tally=pool(st.dice);
+   st.note='The total of the faces (8) means nothing here. Only the <b>count of hits</b> matters.';
+   setHeader('Roll a pool of three','Throw all three at once, then count the dice showing 5 or 6. One hit.')},
+ ()=>{st.dice=[4,3,1];st.roll=null;st.tally=pool(st.dice);
+   st.note='Same pool, same odds, zero hits. A pool raises your chances. It never promises a result.';
+   setHeader('Same pool, next turn','Three dice again, and this time nothing lands. A whiff is always possible.')},
+ ()=>{st.dice=[6,2,5,5,1,3];st.roll=null;st.trayLbl='THE POOL: 6 DICE';st.tally=pool(st.dice);
+   st.note='Games grow your pool as a reward: a better weapon, a stronger skill, a helping friend. <b>More dice = more hits</b> on average.';
+   setHeader('Now a bigger pool: six dice','Twice the dice. Three hits this time.')},
+ ()=>{st.dice=[1,4,2,3,4,1];st.roll=null;st.tally=pool(st.dice);
+   st.note='Six dice with no hit happens <b>9%</b> of the time, about one roll in eleven. Rare, but your players will remember it.';
+   setHeader('Six dice can still miss','Even a big pool can come up empty.')},
+ ()=>{st.view='chart';st.chart.a=true;
+   st.cnote='Read the bars as: "If I need just <b>one</b> hit, how often will I get it?"';
+   setHeader('How much does each die help?','The chance of at least one hit, for pools of 1 to 6 dice.')},
+ ()=>{st.chart.gain=true;
+   st.cnote='The 2nd die adds <b>+23</b> points. The 6th die adds only <b>+4</b>. Each new die helps less than the last.';
+   setHeader('Diminishing returns','Look at the gain from each extra die. The steps shrink as the pool grows.')},
+ ()=>{st.chart.full=true;
+   st.cnote='A new die only matters if every other die missed. Each die catches <b>a third of what is left</b>, so the curve creeps toward 100% and never touches it.';
+   setHeader('Why the curve flattens','The more dice you already have, the less room there is to improve.')},
+ ()=>{st.view='tray';st.dice=[2,1,4];st.roll=null;st.trayLbl='THE POOL: 3 DICE';st.tally=pool(st.dice);
+   st.rr='<span class="rr">1 reroll available</span>';
+   st.note='New rule: once per roll, you may <span class="t">reroll every die that missed</span>. Hits stay where they are.';
+   setHeader('A second lever: the reroll','Three dice, zero hits. But this time the player holds a reroll.')},
+ ()=>{st.dice=[5,3,6];st.roll=[0,1,2];st.tally=pool(st.dice);
+   st.rr='<span class="rr used">reroll used</span>';
+   st.note='All three missed, so all three go again. Two hits. The pool did not grow, but it <b>got two chances</b>.';
+   setHeader('Reroll the misses','Pick up the misses and throw them again.')},
+ ()=>{st.view='chart';st.chart.b=true;
+   st.cnote='With a reroll, each die hits <span class="t">5 times in 9</span> (56%) instead of 1 in 3. Every bar jumps.';
+   setHeader('The reroll changes the whole curve','Teal bars: the same pools, with one reroll of the misses.')},
+ ()=>{st.chart.hl=true;
+   st.cnote='<b>6 dice, no reroll: 91%.</b> &nbsp; <span class="t">3 dice with a reroll: 91%.</span> A designer can make a player stronger without handing out more dice.';
+   setHeader('Three dice plus a reroll = six dice','Two different levers reach the same odds.')},
+ ()=>{st.view='end';setHeader('What designers take from this','Pool size and rerolls: two dials on the same odds.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  render(false);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>

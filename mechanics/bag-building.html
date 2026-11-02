@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Bag Building</title>
+<style>
+:root{--bg:#141a12;--panel:#222b1d;--panel2:#2b3624;--ink:#f4f6ec;--muted:#b9c6a8;--line:rgba(230,245,210,.14);
+  --sprout:#6cc24a;--sprout2:#3e8a2a;--bloom:#ff6fa5;--bloom2:#c93a74;--gold:#ffd166;--weed:#8a7a62;--weed2:#5a4d3b;
+  --cloth:#a8744a;--cloth2:#7a4f2e}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#2c3a22 0%,#141a12 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+#header{position:absolute;left:40px;right:40px;top:22px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka","Nunito",sans-serif;font-size:38px;font-weight:600;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1180px}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.panel{position:absolute;opacity:0;pointer-events:none;transition:opacity .6s}
+.panel.on{opacity:1}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35)}
+.lbl{font-size:19px;font-weight:800;letter-spacing:.6px;color:var(--muted)}
+
+/* tokens */
+.tok{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:"Fredoka",sans-serif;font-size:26px;font-weight:700;color:#fff;position:relative;
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.22),inset 0 3px 0 rgba(255,255,255,.25),0 5px 10px rgba(0,0,0,.45);
+  transition:opacity .5s,transform .5s,filter .5s}
+.tok.S{background:radial-gradient(circle at 35% 30%,#a6ec82,var(--sprout) 45%,var(--sprout2))}
+.tok.B{background:radial-gradient(circle at 35% 30%,#ffc2da,var(--bloom) 45%,var(--bloom2));
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.22),0 0 0 3px var(--gold),0 0 16px rgba(255,209,102,.6),0 5px 10px rgba(0,0,0,.45)}
+.tok.W{background:radial-gradient(circle at 35% 30%,#b3a387,var(--weed) 45%,var(--weed2));color:#2a2218;border:3px dashed #3b3226}
+.tok.out{opacity:.18;transform:scale(.8);filter:grayscale(1)}
+.tok.new{animation:pop .6s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes pop{from{transform:scale(0) rotate(-90deg);opacity:0}to{transform:none;opacity:1}}
+
+/* title */
+#title{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#title .big{font-family:"Fredoka",sans-serif;font-size:140px;font-weight:700;line-height:1;
+  background:linear-gradient(90deg,var(--sprout),var(--gold),var(--bloom));-webkit-background-clip:text;background-clip:text;color:transparent}
+#title h2{margin:0;font-size:36px;font-weight:700}
+#title .row{display:flex;gap:22px;margin:24px 0 8px}
+#title .row .tok{width:80px;height:80px;font-size:36px;animation:bob 2.2s ease-in-out infinite}
+#title .row .tok:nth-child(2){animation-delay:.2s}#title .row .tok:nth-child(3){animation-delay:.4s}
+#title .row .tok:nth-child(4){animation-delay:.6s}#title .row .tok:nth-child(5){animation-delay:.8s}
+@keyframes bob{50%{transform:translateY(-14px)}}
+#title .press{font-size:20px;color:var(--muted)}
+
+/* bag */
+#bagWrap{left:40px;top:140px;width:420px;height:450px}
+#bag{position:absolute;left:10px;right:10px;top:46px;bottom:0;border-radius:46% 46% 34% 34%/26% 26% 30% 30%;
+  background:repeating-linear-gradient(35deg,rgba(0,0,0,.06) 0 5px,transparent 5px 10px),radial-gradient(circle at 40% 30%,#c48d5f,var(--cloth) 50%,var(--cloth2));
+  box-shadow:inset 0 -18px 40px rgba(0,0,0,.4),inset 0 10px 20px rgba(255,230,200,.15),0 16px 34px rgba(0,0,0,.5)}
+#bag::before{content:"";position:absolute;left:60px;right:60px;top:-22px;height:40px;border-radius:50%;
+  background:linear-gradient(180deg,#5a3a20,#3c2614);box-shadow:0 4px 8px rgba(0,0,0,.4)}
+#bag::after{content:"";position:absolute;left:30%;right:30%;top:-34px;height:16px;border-radius:10px;border:4px solid #e7cf9a;border-bottom:none}
+#bagTok{position:absolute;left:40px;right:40px;top:50px;bottom:60px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px 10px;place-items:center;align-content:center}
+#bagCount{position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:21px;font-weight:800;color:#fff3df;text-shadow:0 2px 4px rgba(0,0,0,.5)}
+#bagLbl{position:absolute;left:0;right:0;top:0;text-align:center}
+
+/* draw */
+#draw{left:490px;top:140px;width:400px;height:300px;padding:20px 22px}
+#slots{display:flex;gap:16px;justify-content:center;margin-top:24px}
+.slot{width:76px;height:118px;border-radius:14px;border:2px dashed rgba(230,245,210,.22);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:10px;gap:8px}
+.slot .tok{width:58px;height:58px}
+.slot .tok.fly{animation:fly .65s cubic-bezier(.25,.9,.35,1.15) both}
+@keyframes fly{from{transform:translate(-330px,80px) scale(.3);opacity:0}to{transform:none;opacity:1}}
+.slot .nm{font-size:18px;font-weight:800}
+#score{margin-top:20px;text-align:center;font-size:24px;font-weight:800}
+#score b{font-family:"Fredoka",sans-serif;font-size:40px;color:var(--gold);vertical-align:-4px}
+#buy{left:490px;top:458px;width:400px;height:132px;padding:16px 22px;font-size:21px;line-height:1.35;opacity:0}
+#buy.on{opacity:1}
+#buy .row{display:flex;gap:10px;margin-top:10px;align-items:center}
+#buy .tok{width:42px;height:42px;font-size:20px}
+#buy b{color:var(--gold)}
+
+/* odds */
+#odds{left:920px;top:140px;width:320px;height:450px;padding:20px 22px;display:flex;flex-direction:column;align-items:center}
+.pie{width:170px;height:170px;flex-shrink:0;border-radius:50%;margin:16px 0 12px;position:relative;
+  box-shadow:0 0 0 6px rgba(0,0,0,.25),0 10px 24px rgba(0,0,0,.45)}
+.pie::after{content:"";position:absolute;inset:48px;border-radius:50%;background:var(--panel)}
+.pct{font-family:"Fredoka",sans-serif;font-size:56px;font-weight:700;color:var(--bloom);line-height:1}
+.pctl{font-size:19px;color:var(--muted);text-align:center;margin-top:4px}
+#legend{margin-top:auto;width:100%;font-size:20px;font-weight:700}
+#legend div{display:flex;align-items:center;gap:10px;margin:6px 0}
+#legend i{width:18px;height:18px;border-radius:50%;display:inline-block}
+#legend span{margin-left:auto;font-weight:900}
+
+#note{left:40px;right:40px;top:612px;font-size:22px;line-height:1.35;text-align:center}
+#note b{color:var(--gold)}#note .p{color:var(--bloom)}#note .w{color:#cdb894}
+
+/* compare rounds */
+#rounds{left:40px;right:40px;top:150px;height:430px;display:flex;gap:24px;justify-content:center}
+#rounds .rc{width:270px;padding:20px;display:flex;flex-direction:column;align-items:center;opacity:0;transform:translateY(16px);transition:opacity .5s,transform .5s}
+#rounds .rc.on{opacity:1;transform:none}
+#rounds .rc .pie{width:150px;height:150px;margin:16px 0 12px}
+#rounds .rc .pie::after{inset:42px}
+#rounds .rc .pct{font-size:44px}
+#rounds .rc .pts{margin-top:14px;font-size:22px;font-weight:800}
+#rounds .rc .pts b{color:var(--gold);font-size:30px}
+#rounds .rc .ch{margin-top:10px;font-size:19px;color:var(--muted);text-align:center;line-height:1.3}
+#rounds .rc.junk{border-color:#cdb894;box-shadow:0 0 0 2px rgba(205,184,148,.5),0 12px 32px rgba(0,0,0,.45)}
+
+/* deck vs bag */
+#vs{left:40px;right:40px;top:150px;height:440px;display:flex;gap:30px}
+#vs .side{flex:1;padding:24px 28px}
+#vs h3{margin:0 0 14px;font-family:"Fredoka",sans-serif;font-size:30px;font-weight:600}
+#vs .flow{display:flex;align-items:center;gap:7px;margin:8px 0 20px;flex-wrap:wrap}
+#vs .chip{padding:7px 11px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid var(--line);font-size:18px;font-weight:800}
+#vs .arr{font-size:20px;color:var(--muted)}
+#vs ul{margin:0;padding-left:24px}
+#vs li{font-size:21px;line-height:1.4;margin-bottom:10px}
+#vs .deck h3{color:#8fb6ff}#vs .bagS h3{color:var(--gold)}
+#vs b{color:var(--gold)}
+
+/* end */
+#end{left:0;right:0;bottom:0;top:118px;display:flex;align-items:center;justify-content:center;background:rgba(12,16,10,.9);z-index:20}
+#end .card{width:1000px;padding:28px 46px}
+#end h2{margin:0 0 18px;font-family:"Fredoka",sans-serif;font-size:36px;font-weight:600;color:var(--gold)}
+#end ol{margin:0;padding-left:30px}
+#end li{font-size:23px;line-height:1.4;margin-bottom:14px}
+#end li b{color:var(--gold)}
+#end .see{margin-top:20px;font-size:21px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+#dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:rgba(230,245,210,.22);transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.35)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1></h1><p></p></div>
+
+  <div id="title" class="panel">
+    <div class="big">Bag Building</div>
+    <h2>Fill the bag. Then draw blind.</h2>
+    <div class="row"><div class="tok S">1</div><div class="tok B">3</div><div class="tok S">1</div><div class="tok W">0</div><div class="tok B">3</div></div>
+    <div class="press">Press SPACE to reach in</div>
+  </div>
+
+  <div id="bagWrap" class="panel">
+    <div id="bag"><div id="bagTok"></div><div id="bagCount"></div></div>
+  </div>
+
+  <div id="draw" class="panel card">
+    <div class="lbl" id="drawLbl">DRAWN THIS ROUND</div>
+    <div id="slots"></div>
+    <div id="score"></div>
+  </div>
+  <div id="buy" class="panel card"></div>
+
+  <div id="odds" class="panel card">
+    <div class="lbl">ODDS OF ONE DRAW</div>
+    <div class="pie" id="pie"></div>
+    <div class="pct" id="pct"></div>
+    <div class="pctl">chance it is a <b style="color:var(--bloom)">Bloom</b></div>
+    <div id="legend"></div>
+  </div>
+
+  <div id="note" class="panel"></div>
+
+  <div id="rounds" class="panel"></div>
+
+  <div id="vs" class="panel">
+    <div class="side card deck">
+      <h3>Deck building</h3>
+      <div class="flow"><span class="chip">Draw pile</span><span class="arr">→</span><span class="chip">Hand</span><span class="arr">→</span><span class="chip">Discard</span><span class="arr">→</span><span class="chip">Reshuffle</span></div>
+      <ul>
+        <li>A new card goes to the <b>discard pile</b>. It waits until the deck runs out and reshuffles.</li>
+        <li>Every card shows up <b>once per pass</b> through the deck. You know it is coming.</li>
+      </ul>
+    </div>
+    <div class="side card bagS">
+      <h3>Bag building</h3>
+      <div class="flow"><span class="chip">Bag</span><span class="arr">→</span><span class="chip">Draw</span><span class="arr">→</span><span class="chip">Back in the bag</span></div>
+      <ul>
+        <li>Everything goes back <b>every round</b>. A new token can come out on the very next draw.</li>
+        <li>No guarantee: the same token can come out twice in a row, or not at all. You control the <b>odds</b>, never the draw.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="end" class="panel"><div class="card">
+    <h2>What designers take from this</h2>
+    <ol>
+      <li><b>Buying changes the odds, not the result.</b> Each Bloom raised the chance of a good draw: 30%, 42%, 50%.</li>
+      <li><b>Junk dilutes the bag.</b> Two Weeds pulled the odds back down to 44% without removing a single good token. Forcing junk on players is a quiet attack.</li>
+      <li><b>A bag reshuffles every draw.</b> New tokens work at once, but nothing is promised. It feels luckier than a deck, and more forgiving.</li>
+    </ol>
+    <div class="see">You'll see this in: Orléans, The Quacks of Quedlinburg, Dungeon Alliance.</div>
+  </div></div>
+
+  <div id="dots"></div>
+</div>
+
+<script>
+const S=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+const VAL={S:1,B:3,W:0},NAME={S:'Sprout',B:'Bloom',W:'Weed'};
+const dotsEl=$('dots');
+let cur=0,st,bagKey='',drawKey='';
+
+function setHeader(t,s){
+  const h=$('header');h.querySelector('h1').textContent=t;h.querySelector('p').textContent=s||'';
+  h.classList.remove('anim');void h.offsetWidth;h.classList.add('anim');
+}
+const count=(bag,t)=>bag.filter(x=>x.t===t).length;
+const pctB=bag=>Math.round(count(bag,'B')/bag.length*100);
+function pieCSS(bag){
+  const n=bag.length,b=count(bag,'B')/n*100,s=count(bag,'S')/n*100;
+  return `conic-gradient(var(--bloom) 0 ${b}%,var(--sprout) ${b}% ${b+s}%,var(--weed) ${b+s}% 100%)`;
+}
+
+// fixed scramble so the bag looks mixed
+const START='SBSSBSSSBS'.split('');
+function reset(){
+  st={view:'title',bag:START.map((t,i)=>({t,id:i})),nextId:10,fresh:[],out:[],drawn:[],drawLbl:'DRAWN THIS ROUND',
+      buy:'',note:'',rounds:0,history:[]};
+  bagKey='';drawKey='';
+}
+function add(t,n){for(let i=0;i<n;i++){st.bag.push({t,id:st.nextId});st.fresh.push(st.nextId++)}}
+function draw(types,lbl){
+  st.fresh=[];st.out=[];
+  types.forEach((t,k)=>{const c=st.bag.filter(x=>x.t===t&&!st.out.includes(x.id));st.out.push(c[(k*2)%c.length].id)});
+  st.drawn=types;st.drawLbl=lbl;
+}
+function returnAll(){st.out=[];st.drawn=[];st.drawLbl='NEXT DRAW'}
+
+function render(anim){
+  ['title','bagWrap','draw','buy','odds','note','rounds','vs','end'].forEach(id=>$(id).classList.remove('on'));
+  if(st.view==='title'){$('title').classList.add('on');return}
+  if(st.view==='play'){
+    ['bagWrap','draw','odds','note'].forEach(id=>$(id).classList.add('on'));
+    const bk=st.bag.map(x=>x.id).join()+'|'+st.out.join()+'|'+st.fresh.join();
+    if(bk!==bagKey){bagKey=bk;
+      $('bagTok').innerHTML=st.bag.map(x=>`<div class="tok ${x.t} ${st.out.includes(x.id)?'out':''} ${anim&&st.fresh.includes(x.id)?'new':''}">${VAL[x.t]}</div>`).join('');
+    }
+    $('bagCount').textContent=`${st.bag.length} tokens in the bag`;
+    const dk=st.drawn.join()+st.drawLbl;
+    if(dk!==drawKey){drawKey=dk;
+      $('slots').innerHTML=[0,1,2,3].map(i=>{const t=st.drawn[i];
+        return `<div class="slot">${t?`<div class="tok ${t} ${anim?'fly':''}" style="animation-delay:${i*160}ms">${VAL[t]}</div><div class="nm">${NAME[t]}</div>`:''}</div>`}).join('');
+    }
+    $('drawLbl').textContent=st.drawLbl;
+    const pts=st.drawn.reduce((a,t)=>a+VAL[t],0);
+    $('score').innerHTML=st.drawn.length?`Score this round: <b>${pts}</b>`:'<span style="color:var(--muted)">Draw 4 tokens, add their numbers.</span>';
+    $('buy').innerHTML=st.buy;$('buy').classList.toggle('on',!!st.buy);
+    $('pie').style.background=pieCSS(st.bag);
+    $('pct').textContent=pctB(st.bag)+'%';
+    $('legend').innerHTML=['B','S','W'].filter(t=>count(st.bag,t)).map(t=>
+      `<div><i class="tok ${t}" style="width:18px;height:18px;border:none"></i>${NAME[t]} (${VAL[t]})<span>${count(st.bag,t)}</span></div>`).join('');
+    $('note').innerHTML=st.note;
+  }
+  if(st.view==='rounds'){
+    $('rounds').classList.add('on');
+    $('rounds').innerHTML=st.history.map((h,i)=>`<div class="rc card ${h.junk?'junk':''} on" style="transition-delay:${anim?i*180:0}ms">
+      <div class="lbl">ROUND ${i+1}</div><div class="pie" style="background:${h.pie}"></div><div class="pct">${h.p}%</div>
+      <div class="pts">Scored <b>${h.pts}</b></div><div class="ch">${h.ch}</div></div>`).join('');
+    if(anim)[...$('rounds').children].forEach(c=>{c.classList.remove('on');void c.offsetWidth;c.classList.add('on')});
+  }
+  if(st.view==='vs')$('vs').classList.add('on');
+  if(st.view==='end'){$('vs').classList.add('on');$('end').classList.add('on')}
+}
+function snap(ch,junk){const pts=st.drawn.reduce((a,t)=>a+VAL[t],0);st.history.push({pie:pieCSS(st.bag),p:pctB(st.bag),pts,ch,junk})}
+
+const steps=[
+ ()=>{st.view='title';setHeader('','')},
+ ()=>{st.view='play';
+   st.note='Every player has a bag like this. Blooms are the good tokens. Right now only <b>3 in 10</b> are Blooms.';
+   setHeader('Your bag: 10 tokens','7 Sprouts worth 1 point and 3 Blooms worth 3. You cannot see inside when you draw.')},
+ ()=>{draw(['S','B','S','S'],'ROUND 1: DRAW 4');snap('Starting bag');
+   st.note='One Bloom, three Sprouts. About what a 30% bag should give: the average is <b>1.2 Blooms</b> in 4 draws.';
+   setHeader('Round 1: reach in and draw four','Draw blind, score the numbers. 6 points.')},
+ ()=>{returnAll();add('B',2);
+   st.buy='Spend your points: buy <b>2 Blooms</b>.<div class="row"><div class="tok B">3</div><div class="tok B">3</div><span>→ into the bag</span></div>';
+   st.note='All four drawn tokens go back too. The bag now holds 12 tokens, and <span class="p">5 are Blooms</span>.';
+   setHeader('Buy better tokens','Points buy new tokens. They go straight into the bag, with everything you drew.')},
+ ()=>{st.buy='';draw(['B','S','B','S'],'ROUND 2: DRAW 4');snap('+2 Blooms');
+   st.note='Two Blooms this time. The new tokens can come out right away. <b>8 points.</b>';
+   setHeader('Round 2: better odds, better draw','42% of the bag is Blooms now.')},
+ ()=>{returnAll();add('B',2);
+   st.buy='Buy <b>2 more Blooms</b>.<div class="row"><div class="tok B">3</div><div class="tok B">3</div><span>→ into the bag</span></div>';
+   st.note='14 tokens, <span class="p">7 Blooms</span>. Half the bag is good now.';
+   setHeader('Keep improving the bag','Every purchase shifts the pie chart toward pink.')},
+ ()=>{st.buy='';draw(['B','B','S','B'],'ROUND 3: DRAW 4');snap('+2 Blooms');
+   st.note='Three Blooms. <b>10 points.</b> The player built this luck one purchase at a time.';
+   setHeader('Round 3: the bag pays off','At 50%, a strong draw is no longer a surprise.')},
+ ()=>{returnAll();add('W',2);
+   st.buy='A rival\'s card forces <b>2 Weeds</b> into your bag.<div class="row"><div class="tok W">0</div><div class="tok W">0</div><span>→ junk</span></div>';
+   st.note='No Bloom was taken away, but there are more tokens to dig through. The Bloom share drops from 50% to <span class="w">44%</span>.';
+   setHeader('Junk goes in','Some games push worthless tokens into your bag. Watch the pie.')},
+ ()=>{st.buy='';draw(['W','S','B','S'],'ROUND 4: DRAW 4');snap('+2 Weeds',true);
+   st.note='A Weed took one of the four draws. <b>5 points</b>, the worst round since the start.';
+   setHeader('Round 4: the junk shows up','Only 4 draws a round, and one of them was wasted.')},
+ ()=>{st.view='rounds';
+   setHeader('Four rounds side by side','Buying Blooms raised the odds every round. Two Weeds undid most of a purchase.')},
+ ()=>{st.view='vs';
+   setHeader('Bag building is not deck building','Both are about improving what you draw. The difference is when things come back.')},
+ ()=>{st.view='end';setHeader('What designers take from this','You build the odds. The bag still decides.')}
+];
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  render(false);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);render(true);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>
