@@ -5,7 +5,9 @@ The viewer (`watch.html`) shows it in an iframe next to the designer's notes fro
 `mechanics.js`. No interactive features: the viewer only steps forward and back.
 
 ## Must have
-- One HTML file, no build step, no external JS. Google Fonts `<link>` allowed (with system fallbacks).
+- One HTML file, no build step, **nothing loaded from the internet** (the Atlas must run offline).
+  Fonts: `<link rel="stylesheet" href="../fonts/fonts.css">` gives Fredoka, Nunito, Cinzel and IM Fell English.
+  To add a font, download its woff2 into `fonts/` and add an `@font-face` to `fonts.css`.
 - A fixed stage `#stage`, **1280×720**, scaled to fit the window (letterboxed, centred), `overflow:hidden` on body.
 - A `steps` array of functions. `steps[i](instant)` applies beat *i* on top of beats 0..i-1.
   `goTo(n)` resets and replays 0..n instantly (add class `instant` to kill transitions), so Back works.
