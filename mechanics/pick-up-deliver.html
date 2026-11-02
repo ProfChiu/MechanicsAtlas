@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<title>Pick-Up &amp; Deliver</title>
+<style>
+:root{--bg:#142019;--panel:#22342a;--panel2:#1a2a21;--ink:#f4efe0;--muted:#aebfae;--line:#35503f;
+  --field:#cfd9a8;--field2:#b5c588;--road:#7a5532;--roadL:#e9d7ae;--brown:#3b2a1a;
+  --a:#ef7d2d;--aL:#ffb27a;--b:#1fa58f;--bL:#6fe0cc;--gold:#ffc53d;--good:#7bd67b;
+  --glass:#5ad1e6;--salt:#f3efe4;--wool:#ec9fc3;--ore:#9a8573;--fish:#4f86d9}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Nunito","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% 15%,#21362a 0%,#142019 62%) fixed;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center;cursor:pointer;user-select:none}
+#stage.instant,#stage.instant *{transition:none!important;animation:none!important}
+
+/* header */
+#header{position:absolute;left:40px;right:40px;top:18px;z-index:10}
+#header h1{margin:0;font-family:"Fredoka",sans-serif;font-weight:600;font-size:36px;letter-spacing:.3px}
+#header p{margin:6px 0 0;font-size:20px;color:var(--muted);max-width:1200px;line-height:1.3}
+.anim{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* map */
+#map{position:absolute;left:30px;top:120px;width:800px;height:570px;border-radius:18px;
+  box-shadow:0 0 0 3px #6d5a35,0 0 0 7px #2a2014,0 18px 40px rgba(0,0,0,.55);transition:opacity .6s}
+#map.faint{opacity:.18}
+#map text{font-family:"Fredoka",sans-serif;font-weight:600}
+.tlabel{font-size:23px;fill:var(--brown)}
+.road-o{stroke:#4a3420;stroke-width:22;stroke-linecap:round}
+.road-f{stroke:var(--road);stroke-width:15;stroke-linecap:round}
+.road-c{stroke:var(--roadL);stroke-width:3;stroke-dasharray:10 12;stroke-linecap:round}
+.rtag{opacity:0;transition:opacity .5s}
+.rtag.on{opacity:1}
+.rtag rect{fill:#2a2014;stroke:var(--roadL);stroke-width:2}
+.rtag text{fill:#fff;font-size:17px!important}
+.route{fill:none;stroke-width:40;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .6s}
+.route.on{opacity:.42}
+#routeA{stroke:var(--a)}#routeB{stroke:var(--b)}
+.ring{fill:none;stroke:var(--gold);stroke-width:6;opacity:0;transition:opacity .5s}
+.ring.on{opacity:1;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+/* cart + crates (HTML over the map) */
+#cart{position:absolute;width:108px;height:64px;margin:-32px 0 0 -54px;z-index:5;opacity:0;
+  transition:left 1s ease-in-out,top 1s ease-in-out,opacity .5s}
+#cart.on{opacity:1}
+#cart .body{position:absolute;left:0;right:0;top:0;height:50px;border-radius:12px;
+  background:linear-gradient(#8b5e34,#5c3b1d);box-shadow:inset 0 -4px 0 rgba(0,0,0,.3),0 6px 12px rgba(0,0,0,.45);border:3px solid #2a1a0c}
+#cart .slot{position:absolute;top:5px;width:42px;height:34px;border-radius:7px;background:#2a1a0c;box-shadow:inset 0 3px 5px rgba(0,0,0,.6)}
+#cart .slot:nth-child(1){left:6px}#cart .slot:nth-child(2){right:6px}
+#cart .w{position:absolute;bottom:0;width:22px;height:22px;border-radius:50%;background:#2a1a0c;border:4px solid #c9a46b}
+#cart .w1{left:14px}#cart .w2{right:14px}
+#cart.moving .w{animation:spin .5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.crate{position:absolute;width:38px;height:34px;margin:-17px 0 0 -19px;border-radius:6px;z-index:6;
+  display:grid;place-items:center;font-family:"Fredoka",sans-serif;font-weight:700;font-size:21px;color:#1c1408;
+  border:3px solid rgba(0,0,0,.45);box-shadow:0 3px 6px rgba(0,0,0,.4),inset 0 -3px 0 rgba(0,0,0,.18);
+  opacity:0;transform:scale(.4);
+  transition:left 1s ease-in-out,top 1s ease-in-out,opacity .45s,transform .45s cubic-bezier(.3,1.6,.5,1)}
+.crate.on{opacity:1;transform:none}
+.crate.gone{opacity:0;transform:scale(1.8) translateY(-14px)}
+.pop{position:absolute;z-index:8;font-family:"Fredoka",sans-serif;font-weight:700;font-size:40px;color:var(--gold);
+  -webkit-text-stroke:2px #2a1a0c;opacity:0;transform:translate(-50%,-50%);pointer-events:none}
+.pop.go{animation:rise 2.6s ease-out forwards}
+@keyframes rise{0%{opacity:0;transform:translate(-50%,-20%) scale(.6)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}
+  25%{transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-110%)}}
+#pill{position:absolute;left:46px;top:136px;z-index:7;padding:6px 16px;border-radius:20px;font-size:20px;font-weight:800;
+  background:#2a2014;border:2px solid var(--muted);opacity:0;transition:opacity .4s,border-color .4s}
+#pill.on{opacity:1}
+#pill.A{border-color:var(--a);color:var(--aL)}#pill.B{border-color:var(--b);color:var(--bL)}
+.callout{position:absolute;z-index:7;width:236px;padding:8px 12px;border-radius:12px;background:rgba(26,42,33,.95);
+  border:2px solid var(--bL);font-size:20px;line-height:1.25;box-shadow:0 8px 18px rgba(0,0,0,.45);
+  opacity:0;transform:scale(.85);transition:opacity .5s,transform .5s cubic-bezier(.3,1.6,.5,1)}
+.callout.on{opacity:1;transform:none}
+.callout b{color:var(--gold)}
+.callout.gl{border-color:var(--glass)}
+
+/* right column */
+.col{position:absolute;left:860px;width:390px;border-radius:16px;background:var(--panel);
+  box-shadow:inset 0 0 0 2px var(--line),0 10px 26px rgba(0,0,0,.4);opacity:0;transform:translateX(30px);transition:opacity .5s,transform .5s}
+.col.on{opacity:1;transform:none}
+#orders{top:120px;height:318px;padding:12px 14px;background:transparent;box-shadow:none}
+#orders h3{margin:0 0 6px 4px;font-size:21px;color:var(--gold)}
+.order{position:relative;height:50px;margin-bottom:7px;border-radius:12px;background:var(--panel);
+  box-shadow:inset 0 0 0 2px var(--line),0 4px 10px rgba(0,0,0,.35);display:flex;align-items:center;gap:12px;padding:0 12px;
+  opacity:0;transform:translateX(30px);transition:opacity .45s,transform .45s,box-shadow .4s,background .4s}
+.order.on{opacity:1;transform:none}
+.order .chip{width:30px;height:28px;border-radius:5px;border:2px solid rgba(0,0,0,.45);display:grid;place-items:center;
+  font-family:"Fredoka",sans-serif;font-weight:700;font-size:17px;color:#1c1408;flex:none}
+.order .nm{font-size:20px;font-weight:800;width:62px}
+.order .rt{font-size:20px;color:var(--muted);flex:1;white-space:nowrap}
+.order .pay{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:700;color:var(--gold);min-width:52px;text-align:right}
+.order.hot{box-shadow:inset 0 0 0 3px var(--gold),0 0 22px rgba(255,197,61,.45)}
+.order.done{background:#1f3b2a}
+.order.done .pay{color:var(--good)}
+.order.done .rt{text-decoration:line-through}
+.pane{top:452px;height:238px;padding:16px 20px}
+.pane h3{margin:0 0 8px;font-size:22px;color:var(--gold)}
+.pane ul{margin:0;padding-left:22px}
+.pane li{font-size:20px;line-height:1.3;margin:6px 0}
+.pane b{color:var(--gold)}
+#ledger table{border-collapse:collapse;width:100%}
+#ledger th{font-size:18px;color:var(--muted);font-weight:700;padding:4px 0;text-align:center}
+#ledger td{font-size:22px;font-weight:800;text-align:center;padding:8px 0;border-top:1px solid var(--line)}
+#ledger td:first-child,#ledger th:first-child{text-align:left}
+#ledger td.pa{color:var(--aL)}#ledger td.pb{color:var(--bL)}
+#ledger td.v{transition:color .4s}
+#ledger td.v.new{color:var(--gold)}
+#ledger td.tot{color:var(--gold)}
+#ledger .foot{font-size:19px;color:var(--muted);margin-top:10px;line-height:1.3}
+
+/* compare panel */
+#cmp{position:absolute;left:30px;top:120px;width:800px;height:570px;z-index:9;padding:20px 22px;
+  opacity:0;transition:opacity .6s;display:flex;gap:22px}
+#cmp.on{opacity:1}
+.plan{flex:1;border-radius:18px;background:var(--panel);padding:16px 18px;box-shadow:inset 0 0 0 3px var(--line),0 12px 28px rgba(0,0,0,.45)}
+.plan.A{box-shadow:inset 0 0 0 3px var(--a),0 12px 28px rgba(0,0,0,.45)}
+.plan.B{box-shadow:inset 0 0 0 3px var(--b),0 12px 28px rgba(0,0,0,.45)}
+.plan h4{margin:0;font-family:"Fredoka",sans-serif;font-size:27px;font-weight:600}
+.plan.A h4{color:var(--aL)}.plan.B h4{color:var(--bL)}
+.plan .sub{white-space:nowrap;font-size:18px;color:var(--muted);margin-top:2px}
+.bars{display:flex;gap:26px;align-items:flex-end;height:178px;margin:12px 0 4px 10px;border-bottom:3px solid var(--muted)}
+.bcol{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:62px;height:100%}
+.bcol .val{font-family:"Fredoka",sans-serif;font-size:24px;font-weight:700;margin-bottom:4px}
+.bcol .bar{width:56px;height:0;border-radius:8px 8px 0 0;transition:height .8s cubic-bezier(.3,1.4,.5,1)}
+.plan.A .bar{background:linear-gradient(var(--aL),var(--a))}.plan.B .bar{background:linear-gradient(var(--bL),var(--b))}
+.blab{display:flex;gap:26px;margin-left:10px}
+.blab span{width:62px;text-align:center;font-size:19px;color:var(--muted);font-weight:700}
+.sum{font-size:21px;margin-top:10px;line-height:1.35}
+.big{font-family:"Fredoka",sans-serif;font-size:40px;font-weight:700;color:var(--gold);margin-top:2px}
+.slots{display:flex;gap:6px;margin-top:6px;align-items:center}
+.slots b{margin-left:10px;font-size:22px;color:var(--gold)}
+.slots i{width:26px;height:22px;border-radius:4px;border:2px solid #5d7a66}
+.slots i.f{background:var(--muted);border-color:var(--muted)}
+
+/* overlays */
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:20;opacity:0;pointer-events:none;transition:opacity .6s}
+.overlay.on{opacity:1}
+#title .card2{background:rgba(20,32,25,.92);border:2px solid #6d5a35;border-radius:24px;padding:34px 60px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#title h2{margin:0;font-family:"Fredoka",sans-serif;font-weight:600;font-size:64px;color:var(--field)}
+#title p{margin:12px 0 0;font-size:26px;color:var(--muted)}
+#title .row{margin-top:20px;display:flex;gap:12px;justify-content:center}
+#title .row i{width:40px;height:34px;border-radius:6px;border:3px solid rgba(0,0,0,.45);animation:bob 1.6s ease-in-out infinite}
+#title .row i:nth-child(2){animation-delay:.2s}#title .row i:nth-child(3){animation-delay:.4s}
+#title .row i:nth-child(4){animation-delay:.6s}#title .row i:nth-child(5){animation-delay:.8s}
+@keyframes bob{50%{transform:translateY(-12px)}}
+#end{background:rgba(10,18,13,.86)}
+#end .card2{background:var(--panel);border:2px solid #6d5a35;border-radius:24px;padding:34px 48px;width:980px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#end h2{margin:0 0 14px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:38px}
+#end li{font-size:23px;margin:12px 0;line-height:1.35}
+#end b{color:var(--gold)}
+#end .seen{margin-top:18px;font-size:21px;color:var(--muted)}
+
+#dots{position:absolute;bottom:4px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:30}
+#dots i{width:9px;height:9px;border-radius:50%;background:#34503f;transition:background .3s,transform .3s}
+#dots i.on{background:var(--gold);transform:scale(1.4)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header"><h1 id="h1"></h1><p id="cap"></p></div>
+  <svg id="map" viewBox="0 0 800 570"></svg>
+  <div id="pill"></div>
+  <div id="cart"><div class="body"><div class="slot"></div><div class="slot"></div></div><div class="w w1"></div><div class="w w2"></div></div>
+  <div id="crates"></div>
+  <div id="pops"></div>
+  <div class="callout" id="c1">At <b>Ridge</b>: salt off,<br>wool + ore on.</div>
+  <div class="callout" id="c2">At <b>Brine</b>: wool off,<br>fish on.</div>
+  <div class="callout gl" id="c3" style="width:214px">Ends at <b>Tallow</b>, one road from the 9-coin glass.</div>
+
+  <div class="col" id="orders"><h3>Order cards</h3><div id="orderList"></div></div>
+
+  <div class="col pane" id="rules"><h3>How the cart works</h3><ul>
+    <li>Move <b>one road</b> per turn.</li>
+    <li>Loading and unloading in town is <b>free</b>.</li>
+    <li>The cart holds <b>2 crates</b>.</li>
+    <li>Drop a crate at its town: <b>get paid</b>.</li></ul></div>
+  <div class="col pane" id="ledger"><h3>Coins earned</h3>
+    <table><tr><th></th><th>T1</th><th>T2</th><th>T3</th><th>Total</th><th>/turn</th></tr>
+      <tr><td class="pa">Plan A</td><td class="v" id="A1">·</td><td class="v" id="A2">·</td><td class="v" id="A3">·</td><td class="tot" id="AT">·</td><td class="tot" id="AP">·</td></tr>
+      <tr><td class="pb">Plan B</td><td class="v" id="B1">·</td><td class="v" id="B2">·</td><td class="v" id="B3">·</td><td class="tot" id="BT">·</td><td class="tot" id="BP">·</td></tr></table>
+    <div class="foot" id="foot">Same map, same orders, same 3 turns.</div></div>
+
+  <div id="cmp">
+    <div class="plan A"><h4>Plan A: biggest first</h4><div class="sub">Mossford → Kiln → Tallow → Brine</div>
+      <div class="bars"><div class="bcol"><div class="val">0</div><div class="bar" data-h="0"></div></div>
+        <div class="bcol"><div class="val">0</div><div class="bar" data-h="0"></div></div>
+        <div class="bcol"><div class="val">9</div><div class="bar" data-h="9"></div></div></div>
+      <div class="blab"><span>T1</span><span>T2</span><span>T3</span></div>
+      <div class="sum">9 coins ÷ 3 turns =</div><div class="big">3 per turn</div>
+      <div class="sum">Cargo slots full while driving:</div>
+      <div class="slots"><i></i><i></i><i class="f"></i><i></i><i class="f"></i><i></i><b>2 of 6</b></div></div>
+    <div class="plan B"><h4>Plan B: chained route</h4><div class="sub">Mossford → Ridge → Brine → Tallow</div>
+      <div class="bars"><div class="bcol"><div class="val">4</div><div class="bar" data-h="4"></div></div>
+        <div class="bcol"><div class="val">3</div><div class="bar" data-h="3"></div></div>
+        <div class="bcol"><div class="val">8</div><div class="bar" data-h="8"></div></div></div>
+      <div class="blab"><span>T1</span><span>T2</span><span>T3</span></div>
+      <div class="sum">15 coins ÷ 3 turns =</div><div class="big">5 per turn</div>
+      <div class="sum">Cargo slots full while driving:</div>
+      <div class="slots"><i class="f"></i><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><b>5 of 6</b></div></div>
+  </div>
+
+  <div class="overlay" id="title"><div class="card2"><h2>Pick-Up &amp; Deliver</h2>
+    <p>One cart, five towns, and the route that pays.</p>
+    <div class="row"><i style="background:var(--glass)"></i><i style="background:var(--salt)"></i><i style="background:var(--wool)"></i><i style="background:var(--ore)"></i><i style="background:var(--fish)"></i></div></div></div>
+  <div class="overlay" id="end"><div class="card2"><h2>What designers take from this</h2><ul>
+    <li><b>Price the trip, not the cargo.</b> Players should judge an order by coins per turn, so distance is part of every price.</li>
+    <li><b>Chains are the skill.</b> When drop-off towns are also pickup towns, good players link orders and empty miles disappear.</li>
+    <li><b>Capacity sets the puzzle.</b> Two slots let a cart carry one order while chasing the next. One more slot changes every route.</li></ul>
+    <div class="seen">You'll see this in: Istanbul, Merchants &amp; Marauders, Firefly: The Game, Steam.</div></div></div>
+  <div id="dots"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), map=$('map'), dotsEl=$('dots');
+let cur=0, token=0;
+const MX=30, MY=120; // map origin on the stage
+const T={K:{n:'Kiln',x:130,y:300,ly:250,pop:[130,215]},M:{n:'Mossford',x:300,y:140,ly:90,pop:[300,215]},
+  R:{n:'Ridge',x:620,y:140,ly:90,pop:[620,215]},B:{n:'Brine',x:680,y:430,ly:500,pop:[680,355]},
+  L:{n:'Tallow',x:330,y:470,ly:540,pop:[330,395]}};
+const ROADS=[['K','M'],['M','R'],['R','B'],['B','L'],['L','K']];
+const G={ // goods: letter, colour, from, to, pay, home spot on the map
+  glass:{n:'Glass',c:'var(--glass)',f:'K',t:'B',p:9,hx:130,hy:362},
+  salt:{n:'Salt',c:'var(--salt)',f:'M',t:'R',p:4,hx:202,hy:140},
+  ore:{n:'Ore',c:'var(--ore)',f:'R',t:'L',p:4,hx:758,hy:140},
+  fish:{n:'Fish',c:'var(--fish)',f:'B',t:'L',p:4,hx:772,hy:430},
+  wool:{n:'Wool',c:'var(--wool)',f:'R',t:'B',p:3,hx:716,hy:140}};
+const W={}; // world state
+const pts=r=>r.split('').map(k=>T[k].x+','+T[k].y).join(' ');
+
+function drawMap(){
+  let h=`<defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9e2b3"/><stop offset="1" stop-color="#b9c98c"/></linearGradient></defs>
+    <rect width="800" height="570" rx="18" fill="url(#pg)"/>
+    <g fill="#a9bb7c" opacity=".8"><ellipse cx="470" cy="300" rx="120" ry="60"/><ellipse cx="90" cy="500" rx="80" ry="40"/><ellipse cx="740" cy="270" rx="50" ry="70"/></g>
+    <g fill="#6f8f4e">${[[440,280],[465,292],[490,278],[515,300],[60,480],[85,495],[750,250],[735,285],[560,520],[585,530]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="11"/>`).join('')}</g>
+    <path d="M0 40 C120 60 160 20 240 40" stroke="#8fb3c9" stroke-width="10" fill="none" opacity=".7"/>
+    <polyline id="routeA" class="route" points="${pts('MKLB')}"/><polyline id="routeB" class="route" points="${pts('MRBL')}"/>`;
+  ROADS.forEach(([a,b])=>{const c=`x1="${T[a].x}" y1="${T[a].y}" x2="${T[b].x}" y2="${T[b].y}"`;
+    h+=`<line class="road-o" ${c}/><line class="road-f" ${c}/><line class="road-c" ${c}/>`});
+  ROADS.forEach(([a,b])=>{const x=(T[a].x+T[b].x)/2,y=(T[a].y+T[b].y)/2;
+    h+=`<g class="rtag"><rect x="${x-38}" y="${y-15}" width="76" height="30" rx="15"/><text x="${x}" y="${y+6}" text-anchor="middle">1 turn</text></g>`});
+  Object.entries(T).forEach(([k,t])=>{
+    h+=`<circle class="ring" id="ring${k}" cx="${t.x}" cy="${t.y}" r="48"/>
+      <circle cx="${t.x}" cy="${t.y}" r="26" fill="#f4ecd4" stroke="#4a3420" stroke-width="4"/>
+      <path d="M${t.x-11} ${t.y+10} v-11 l11 -10 l11 10 v11 z" fill="#b5532f" stroke="#4a3420" stroke-width="2.5"/>
+      <text class="tlabel" x="${t.x}" y="${t.ly}" text-anchor="middle">${t.n}</text>`});
+  map.innerHTML=h;
+}
+function buildDOM(){
+  $('crates').innerHTML=Object.entries(G).map(([k,g])=>`<div class="crate" id="cr-${k}" style="background:${g.c}">${g.n[0]}</div>`).join('');
+  $('orderList').innerHTML=Object.entries(G).map(([k,g])=>`<div class="order" id="o-${k}"><i class="chip" style="background:${g.c}">${g.n[0]}</i>
+    <span class="nm">${g.n}</span><span class="rt">${T[g.f].n} → ${T[g.t].n}</span><span class="pay">${g.p}</span></div>`).join('');
+  $('pops').innerHTML='';
+}
+function place(el,x,y){el.style.left=(MX+x)+'px';el.style.top=(MY+y)+'px'}
+function layout(){
+  const c=T[W.cart];place($('cart'),c.x,c.y);
+  Object.keys(G).forEach(k=>{const el=$('cr-'+k),s=W.crates[k];
+    if(s.slot!=null)place(el,c.x+(s.slot?25:-25),c.y-10);
+    else if(!s.gone)place(el,G[k].hx,G[k].hy);
+    el.classList.toggle('gone',!!s.gone);});
+}
+function resetWorld(){
+  W.cart='M';W.crates={};Object.keys(G).forEach(k=>W.crates[k]={slot:null,gone:false});
+  document.querySelectorAll('.order').forEach(o=>{o.classList.remove('done','hot');o.querySelector('.pay').textContent=G[o.id.slice(2)].p});
+  layout();
+}
+function reset(){
+  drawMap();buildDOM();map.setAttribute('class','');
+  document.querySelectorAll('.col,.overlay,.callout,#cmp,#cart,#pill').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('#ledger td.v,#ledger td.tot').forEach(td=>{td.textContent='·';td.classList.remove('new')});
+  document.querySelectorAll('#cmp .bar').forEach(b=>b.style.height='0');
+  $('foot').textContent='Same map, same orders, same 3 turns.';
+  resetWorld();
+}
+function setHeader(t,c){const h=$('h1'),p=$('cap');h.textContent=t;p.textContent=c;
+  [h,p].forEach(e=>{e.classList.remove('anim');void e.offsetWidth;e.classList.add('anim')})}
+const on=(...ids)=>ids.forEach(i=>$(i).classList.add('on'));
+const off=(...ids)=>ids.forEach(i=>$(i).classList.remove('on'));
+const showCrates=()=>Object.keys(G).forEach((k,i)=>{const e=$('cr-'+k);e.style.transitionDelay=`0s,0s,${i*.12}s,${i*.12}s`;e.classList.add('on')});
+function pill(plan,turn){const p=$('pill');p.className='on '+plan;p.textContent=`Plan ${plan} · Turn ${turn} of 3`}
+
+// timeline helper: run phases at given ms, or all at once when instant
+function seq(instant,...ph){const tk=token;ph.forEach(([ms,fn])=>{if(instant)fn();else setTimeout(()=>{if(tk===token)fn()},ms)})}
+function load(k,slot){W.crates[k].slot=slot;$('cr-'+k).style.transitionDelay='0s';layout()}
+function drive(to,instant){W.cart=to;const c=$('cart');layout();if(!instant){c.classList.add('moving');setTimeout(()=>c.classList.remove('moving'),1000)}}
+function deliver(keys,cell,sum,instant){
+  let tot=0;keys.forEach(k=>{W.crates[k].slot=null;W.crates[k].gone=true;tot+=G[k].p;
+    const o=$('o-'+k);o.classList.add('done');o.classList.remove('hot');o.querySelector('.pay').textContent='✓ '+G[k].p});
+  layout();
+  if(!instant&&tot){const t=T[W.cart],p=document.createElement('div');p.className='pop';p.textContent='+'+tot;
+    place(p,t.pop[0],t.pop[1]);$('pops').appendChild(p);void p.offsetWidth;p.classList.add('go')}
+  setCell(cell,(tot?'+':'')+tot);
+}
+function setCell(id,v){const c=$(id);c.textContent=v;c.classList.add('new')}
+function settle(){document.querySelectorAll('#ledger td.v').forEach(td=>td.classList.remove('new'))}
+
+const steps=[
+ ()=>{map.classList.add('faint');on('title');
+   setHeader('Pick-Up & Deliver','Load goods here, carry them there, get paid on arrival.')},
+ ()=>{off('title');map.classList.remove('faint');document.querySelectorAll('.rtag').forEach(t=>t.classList.add('on'));
+   setHeader('The map: five towns, five roads','Every road takes exactly one turn to drive. Distance is counted in turns.')},
+ ()=>{document.querySelectorAll('.rtag').forEach(t=>t.classList.remove('on'));on('cart','rules','ringM');
+   setHeader('Your cart starts in Mossford','It has two cargo slots. Loading and unloading are free, so the only real cost is time on the road.')},
+ ()=>{off('ringM');on('orders');showCrates();
+   document.querySelectorAll('.order').forEach((o,i)=>{o.style.transitionDelay=(i*120)+'ms';o.classList.add('on')});
+   setHeader('Five order cards are open','Each card says what to carry, from where, to where, and what it pays. The crates wait in their towns.')},
+ ()=>{document.querySelectorAll('.order').forEach(o=>o.style.transitionDelay='0ms');
+   $('o-glass').classList.add('hot');on('routeA','ringK');off('rules');on('ledger');
+   setHeader('Plan A: take the biggest order first','Glass pays 9, more than double any other card. Plan A drives to Kiln, then straight to Brine.')},
+ (i)=>{off('ringK');pill('A',1);
+   seq(i,[0,()=>drive('K',i)],[1100,()=>{load('glass',0);setCell('A1','0')}]);
+   setHeader('Plan A, turn 1: drive to Kiln, load the glass','The cart drove the whole turn empty. Nothing was delivered, so this turn earns 0.')},
+ (i)=>{settle();pill('A',2);
+   seq(i,[0,()=>drive('L',i)],[1100,()=>setCell('A2','0')]);
+   setHeader('Plan A, turn 2: drive to Tallow','One slot full, one slot empty. Tallow has nothing for this cart. Another turn at 0.')},
+ (i)=>{settle();pill('A',3);
+   seq(i,[0,()=>drive('B',i)],[1100,()=>{deliver(['glass'],'A3',9,i);$('AT').textContent='9';$('AP').textContent='3'}]);
+   setHeader('Plan A, turn 3: reach Brine, deliver the glass, +9','9 coins in 3 turns. That is 3 coins per turn, and two of those turns paid nothing.')},
+ ()=>{settle();off('routeA','pill');resetWorld();on('routeB','ringR','ringB');$('o-salt').classList.add('hot');
+   setHeader('Plan B: chain the small orders','Rewind. Pick orders whose drop-off town is where the next pickup waits: salt to Ridge, wool to Brine.')},
+ (i)=>{off('ringR','ringB');pill('B',1);
+   seq(i,[0,()=>load('salt',0)],[550,()=>drive('R',i)],[1650,()=>deliver(['salt'],'B1',4,i)],
+     [2000,()=>{load('wool',0);load('ore',1)}]);
+   setHeader('Plan B, turn 1: carry salt to Ridge, +4','At Ridge the salt comes off and two new crates go on: wool for Brine, ore for Tallow. Both slots full.')},
+ (i)=>{settle();pill('B',2);
+   seq(i,[0,()=>drive('B',i)],[1100,()=>deliver(['wool'],'B2',3,i)],[1450,()=>load('fish',0)]);
+   setHeader('Plan B, turn 2: drop wool at Brine, +3','The freed slot takes the fish right away. Ore and fish are both headed for Tallow.')},
+ (i)=>{settle();pill('B',3);
+   seq(i,[0,()=>drive('L',i)],[1100,()=>{deliver(['ore','fish'],'B3',8,i);$('BT').textContent='15';$('BP').textContent='5'}]);
+   setHeader('Plan B, turn 3: drop ore and fish at Tallow, +8','Two deliveries in one stop. 4 + 3 + 8 = 15 coins in the same 3 turns.')},
+ (i)=>{settle();off('pill','routeB');map.classList.add('faint');on('cmp');
+   document.querySelectorAll('#cmp .bar').forEach((b,k)=>{b.style.transitionDelay=(i?0:200+k*150)+'ms';b.style.height=(b.dataset.h*15)+'px'});
+   $('foot').textContent='Plan B skipped the richest card and still earned 6 more coins.';
+   setHeader('The richest order was not the best one','Plan B earns 5 coins per turn to Plan A’s 3, because its cart almost never drives empty.')},
+ ()=>{off('cmp');map.classList.remove('faint');on('routeB','c1','c2','c3','ringR','ringB');
+   setHeader('Each drop-off was on the way to the next pickup','That is the whole skill. And Plan B ends one road from Kiln, so the 9-coin glass is still in reach.')},
+ ()=>{on('end');
+   setHeader('What designers take from this','Price the trip, reward chains, and let cart capacity shape the route.')}
+];
+
+drawMap();
+// callout positions (map coords)
+place($('c1'),356,180);place($('c2'),392,338);place($('c3'),18,392);
+
+dotsEl.innerHTML=steps.map(()=>'<i></i>').join('');
+const updateDots=()=>[...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+
+function goTo(n){
+  token++;S.classList.add('instant');reset();
+  for(let i=0;i<=n;i++)steps[i](true);
+  cur=n;void S.offsetWidth;S.classList.remove('instant');updateDots();
+}
+function next(){if(cur<steps.length-1){cur++;steps[cur](false);updateDots()}}
+function back(){if(cur>0)goTo(cur-1)}
+
+addEventListener('keydown',e=>{
+  if([' ','ArrowRight','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+  else if(e.key==='r'||e.key==='R')goTo(0);
+});
+S.addEventListener('click',next);
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);S.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+goTo(0);
+window.ATLAS={cur:()=>cur,total:()=>steps.length};
+</script>
+<script src="../atlas-bridge.js"></script>
+</body>
+</html>
